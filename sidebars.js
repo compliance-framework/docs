@@ -17,17 +17,18 @@ const sidebars = {
     {
       type: 'category',
       label: 'Introduction',
-      items: ['introduction/what-is-argus'],
+      items: ['introduction/what-is-argus', 'introduction/why-argus'],
     },
     {
       type: 'category',
       label: 'Architecture',
       link: {type: 'doc', id: 'architecture/index'},
       items: [
-        'architecture/argus_core',
+        'architecture/argus-core',
         'architecture/application-gateway',
         'architecture/event-bus',
-        'architecture/core_diagrams'
+        'architecture/assessment-runtime',
+        'architecture/core-diagrams'
       ],
     },
   ],

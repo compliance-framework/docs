@@ -1,5 +1,6 @@
 ---
 sidebar_label: Argus Core
+description: Core components of the framework
 ---
 
 # Argus Core

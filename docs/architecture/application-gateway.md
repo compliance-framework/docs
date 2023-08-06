@@ -1,5 +1,6 @@
 ---
 sidebar_label: Application Gateway
+description: Runtime and event bus bridge
 ---
 
 # Application Gateway
