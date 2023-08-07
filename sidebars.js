@@ -26,9 +26,9 @@ const sidebars = {
       link: {type: 'doc', id: 'architecture/index'},
       items: [
         'architecture/argus-core',
+        'architecture/assessment-runtime',
         'architecture/application-gateway',
         'architecture/event-bus',
-        'architecture/assessment-runtime',
         'architecture/core-diagrams'
       ],
     },
