@@ -17,7 +17,8 @@ const sidebars = {
     {
       type: 'category',
       label: 'Introduction',
-      items: ['introduction/what-is-argus', 'introduction/why-argus'],
+      link: {type: 'doc', id: 'introduction/index'},
+      items: ['introduction/why-argus'],
     },
     {
       type: 'category',
