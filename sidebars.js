@@ -25,8 +25,18 @@ const sidebars = {
       label: 'Architecture',
       link: {type: 'doc', id: 'architecture/index'},
       items: [
-        'architecture/argus-core',
-        'architecture/assessment-runtime',
+        {
+          type: 'category',
+          label: 'Argus Core',
+          link: {type: 'doc', id: 'architecture/core/index'},
+          items: ['architecture/core/configuration-service', 'architecture/core/runtime-orchestrator'],
+        },
+        {
+          type: 'category',
+          label: 'Assessment Runtime',
+          link: {type: 'doc', id: 'architecture/assessment-runtime'},
+          items: ['architecture/assessment-runtime/authentication'],
+        },
         'architecture/application-gateway',
         'architecture/event-bus',
         'architecture/core-diagrams'
