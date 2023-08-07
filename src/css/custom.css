@@ -6,6 +6,8 @@
  @tailwind base;
  @tailwind components;
  @tailwind utilities;
+
+ @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
  
 /* You can override the default Infima variables here. */
 :root {
@@ -17,6 +19,7 @@
   --ifm-color-primary-lighter: #359962;
   --ifm-color-primary-lightest: #3cad6e;
   --ifm-code-font-size: 95%;
+  --ifm-font-family-base: 'Open Sans';
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
