@@ -2,7 +2,7 @@
 
 Assessment Runtime is a robust application, developed using Rust, designed to execute and manage assessment plugins in the form of WebAssembly (WASM) modules. It serves as a crucial interface between these plugins and the Argus control plane, orchestrating assessments and channeling results back to the control plane for thorough analysis.
 
-<iframe src="https://s.icepanel.io/XZjDErdNZMZBJ0/YjLQ" height="800" width="1000" title="Argus Architecture" style={{borderRadius: '16px', border: 'none'}}></iframe>
+<iframe src="https://s.icepanel.io/XZjDErdNZMZBJ0/YjLQ" height="800" width="1200" title="Argus Architecture" style={{borderRadius: '16px', border: 'none'}}></iframe>
 
 The core components of Assessment Runtime include:
 
