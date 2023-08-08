@@ -2,8 +2,7 @@ name: Test Build
 
 on:
   # Runs on pushes to any branch
-  push:
-    branches: ['*']
+  push: {}
   
 permissions:
   contents: read
