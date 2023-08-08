@@ -47,6 +47,6 @@ participant CFComponent
     end
 ```
 
-::: Note
+:::note
 Plugin cycle should not be part of this flow, we need to separate it as stated in https://github.com/compliance-framework/website/issues/11
 :::
