@@ -21,7 +21,7 @@ sequenceDiagram
     Assessment Runtime ->> Configuration API: Authenticate
 ```
 
-:::tip
+:::note
 The gateway is not shown in the diagrams to clearly illustrate the general flow. It is safe to assume that all communication will go through the gateway and be validated as such.
 
 The diagram also doesn’t include the UI to administer the runtimes. It will be included in the future when the UI development is done.
