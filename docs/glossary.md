@@ -3,6 +3,8 @@ sidebar_position: 1
 sidebar_label: Glossary
 ---
 
+# Glossary
+
 | Name | Definition |
 | ---- | ---------- |
 | Attestation | Recorded evidence that a control has been implemented |

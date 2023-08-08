@@ -23,12 +23,6 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Glossary',
-      link: {type: 'doc', id: 'introduction/index'},
-      items: ['introduction/glossary'],
-    },
-    {
-      type: 'category',
       label: 'Architecture',
       link: {type: 'doc', id: 'architecture/index'},
       items: [
@@ -59,9 +53,10 @@ const sidebars = {
         'architecture/application-gateway',
         'architecture/event-bus',
         'architecture/core-erd',
-        'architecture/core-diagrams'
+        'architecture/core-diagrams',
       ],
     },
+    'glossary',
   ],
 };
 
