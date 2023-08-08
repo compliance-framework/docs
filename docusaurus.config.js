@@ -3,7 +3,7 @@
 
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
-const organizationName = '<github-organization-name>';
+const organizationName = 'compliance-framework';
 const projectName = 'docs';
 
 /** @type {import('@docusaurus/types').Config} */
