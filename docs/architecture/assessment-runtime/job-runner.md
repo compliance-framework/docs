@@ -8,6 +8,7 @@ box AssessmentRuntime
     participant RuntimeJobManager
     participant RuntimeConfStore
     participant RuntimeConfSync
+    participant Configuration
 end
 participant Configuration
     loop Every <config_sync_interval>
