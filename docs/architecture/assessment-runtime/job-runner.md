@@ -1,4 +1,4 @@
-# Job Manager and Job Runner
+# Job Manager and Job Runner 
 Job Manager and Runner are the abstraction responsible to run Attestations. Job Manager is responsible for managing Job Specs and actually verifying how much new specs it can handle, and request them to the Configuration. It also starts Jobrunner instances, according to its queue. Job Runner is responsible for running a given plugin and collect its results and for posting AttestationResults back to the Event Hub.
 #### JobManager workflow
 ```mermaid
