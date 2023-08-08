@@ -145,7 +145,7 @@ const config = {
       mermaid: {
         options: {
           fontFamily: "Victor Mono, sans-serif",
-          fontSize: '14px',
+          fontSize: '12px',
         }
       }
     }),
