@@ -29,7 +29,10 @@ const sidebars = {
           type: 'category',
           label: 'Argus Core',
           link: {type: 'doc', id: 'architecture/core/index'},
-          items: ['architecture/core/configuration-service', 'architecture/core/runtime-orchestrator'],
+          items: [
+            'architecture/core/configuration-service', 
+            'architecture/core/runtime-orchestrator'
+          ],
         },
         {
           type: 'category',
@@ -48,6 +51,7 @@ const sidebars = {
         },
         'architecture/application-gateway',
         'architecture/event-bus',
+        'architecture/core-erd',
         'architecture/core-diagrams'
       ],
     },
