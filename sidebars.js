@@ -42,7 +42,7 @@ const sidebars = {
             'architecture/assessment-runtime/plugin-manager',
             'architecture/assessment-runtime/job-runner',
             'architecture/assessment-runtime/plugin-store',
-            'architecture/assessment-runtime/hearthbeat',
+            'architecture/assessment-runtime/heartbeat',
             'architecture/assessment-runtime/results-collector',
           ],
         },

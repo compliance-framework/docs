@@ -18,7 +18,7 @@ The core components of Assessment Runtime include:
 
 **Plugin Store:** The plugin store component is a local storage system for all downloaded plugins. While the implementation details for the storage of the WASM modules are yet to be determined, this component ensures a local repository for seamless access to plugins.
 
-**Hearthbeat:** This hearthbeat component provides real-time health check information to the Argus control plane. It ensures that it is available and operating in accordance with its configured parameters.
+**Heartbeat:** This heartbeat component provides real-time health check information to the Argus control plane. It ensures that it is available and operating in accordance with its configured parameters.
 
 **Results Collector:** The Results Collector component plays a key role in ensuring that the results of the assessments conducted by the plugins are accurately aggregated and communicated back to the Argus control plane. It collects the output from each plugin post-assessment and relays it to the control plane via the application gateway. This guarantees that the control plane is always informed of the latest assessment outcomes, facilitating timely and informed decision-making.
 
