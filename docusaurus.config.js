@@ -57,6 +57,7 @@ const config = {
       ({
         docs: {
           routeBasePath: '/',
+          sidebarPath: require.resolve('./sidebars.js'),
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -77,6 +78,12 @@ const config = {
           src: 'img/logo.svg',
         },
         items: [
+          {
+            type: 'docSidebar',
+            sidebarId: 'docsSidebar',
+            position: 'left',
+            label: 'Docs',
+          },
           {
             href: 'https://github.com/compliance-framework',
             label: 'GitHub',
