@@ -1,5 +1,7 @@
-# Configuration Service
-Configuration Service is responsible for managing any configuration updates to the database, including CRUD operations for Components, Controls, Assessments, Attestations and to some extent on AttestationJobSpecs (configuration might not be responsible for creating the attestationJobSpecs themselves, though). It is also responsible for book keeping any registering/deregistering runtimes. 
+# Configuration Manager
+
+The Configuration Manager is a designed to manage the synchronization between the local configuration and the Configuration Service running in the Control Plane. Its primary role is to ensure that the local system's settings align with those maintained by the Configuration Service. To enable this, the Configuration Manager retrieves the necessary configuration data from the Configuration Service and then stores it locally in the Configuration Store.
+
 ## Configuration<->Assessment Sequence Diagrams
 How does a Job Spec gets generated:
 ```mermaid
