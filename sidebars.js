@@ -31,6 +31,7 @@ const sidebars = {
           label: 'Argus Core',
           link: {type: 'doc', id: 'architecture/core/index'},
           items: [
+            'architecture/core/concepts', 
             'architecture/core/configuration-service', 
             'architecture/core/runtime-orchestrator'
           ],
