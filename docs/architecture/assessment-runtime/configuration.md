@@ -2,7 +2,7 @@
 
 The Configuration Manager is a designed to manage the synchronization between the local configuration and the Configuration Service running in the Control Plane. Its primary role is to ensure that the local system's settings align with those maintained by the Configuration Service. To enable this, the Configuration Manager retrieves the necessary configuration data from the Configuration Service and then stores it locally in the Configuration Store.
 
-## Configuration<->Assessment Sequence Diagrams
+## Configuration<->Assessment Sequence Diagram
 How does a Job Spec gets generated:
 ```mermaid
 flowchart LR
