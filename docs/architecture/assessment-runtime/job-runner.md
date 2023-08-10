@@ -12,7 +12,7 @@ sequenceDiagram
     participant JR as JobRunner
     participant RM as ResourceMonitor
 
-    CM->>JM: read_configuration(config)
+    JM->>CM: read_configuration(config)
     JM->>PM: init_plugins(plugin_urls)
     loop Downloading Plugins
         PM->>PM: download_plugin(url)
@@ -72,7 +72,7 @@ sequenceDiagram
 ### Sequence Flow:
 
 1. **Initialization**:
-   - **Configuration Manager** sends the initial configuration to **Job Manager**.
+   - **Job Manager** read the initial configuration from **Configuration Manager**.
    - **Job Manager** requests **Plugin Manager** to download and initialize all required plugins.
 
 2. **Configuration Monitoring Loop**:
