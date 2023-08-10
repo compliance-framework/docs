@@ -45,7 +45,6 @@ const sidebars = {
             'architecture/assessment-runtime/scheduler',
             'architecture/assessment-runtime/plugin-manager',
             'architecture/assessment-runtime/job-runner',
-            'architecture/assessment-runtime/plugin-store',
             'architecture/assessment-runtime/heartbeat',
             'architecture/assessment-runtime/results-collector',
           ],
@@ -56,6 +55,7 @@ const sidebars = {
         'architecture/core-diagrams',
       ],
     },
+    'architecture/assessment-runtime/plugin-registry',
     'glossary',
   ],
 };
