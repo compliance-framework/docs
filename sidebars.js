@@ -42,7 +42,6 @@ const sidebars = {
           items: [
             'architecture/assessment-runtime/authentication',
             'architecture/assessment-runtime/configuration',
-            'architecture/assessment-runtime/scheduler',
             'architecture/assessment-runtime/plugin-manager',
             'architecture/assessment-runtime/job-runner',
             'architecture/assessment-runtime/plugin-store',
