@@ -31,3 +31,110 @@ erDiagram
     Assessment ||--o{ Risk: photo
 ```
 
+### ER Diagram for OSCAL Metadata
+
+```mermaid
+erDiagram
+    Metadata {
+        string Title
+        datetime LastModified
+        string Version
+        string OscalVersion
+    }
+    Revision {
+        string Title
+        datetime Published
+        datetime LastModified
+        string Version
+        string OscalVersion
+    }
+    Role {
+        string Title
+        string ShortName
+        string Description
+    }
+    Party {
+        string Name
+        string ShortName
+    }
+    ContactInformation {
+    }
+    Property {
+    }
+    ResponsibleParty {
+    }
+
+    Metadata ||--o{ Revision : Revisions
+    Metadata ||--o{ Role : Roles
+    Metadata ||--o{ Party : Parties
+    Metadata ||--o{ ResponsibleParty : ResponsibleParties
+    Revision ||--o{ Property : Properties
+    Role ||--o{ Property : Properties
+    Party ||--o{ ContactInfomation : ContactInformation
+    ResponsibleParty ||--o{ Role : Role
+    ResponsibleParty ||--o{ Party : Party
+```
+
+### ER Diagram for Control Catalog
+
+```mermaid
+erDiagram
+    Catalog {
+        string ID
+        string Title
+        string Description
+        Parameter[] Parameters
+        Control[] Controls
+        Group[] Groups
+    }
+    Control {
+        string ID
+        string Title
+        string Description
+        Parameter[] Parameters
+        Part[] Parts
+        Property[] Properties
+        Control[] Controls
+    }
+    Group {
+        string ID
+        string Title
+        string Description
+    }
+    Parameter { 
+        string ID
+        string Name
+        string Description
+        string Values
+    }
+    Part {
+        string ID
+        string Name
+        string Prose
+    }
+    Property {
+        string Name
+        string Value
+    }
+    BackMatter {
+        string ID
+    }
+    Resource {
+        string Title
+        string Description
+        string URL
+    }
+    
+    Catalog ||--o{ Control : contains
+    Group ||--o{ Control : groups
+    Catalog ||--o{ BackMatter : has
+    Catalog ||--o{ Parameter : has
+    Group ||--o{ Parameter : has
+    Group ||--o{ Property : has
+    Group ||--o{ Part : has
+    Control ||--o{ Parameter : has
+    Control ||--o{ Property : has
+    Control ||--o{ Part : has
+    BackMatter ||--o{ Resource : contains
+
+```
