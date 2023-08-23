@@ -125,16 +125,103 @@ erDiagram
         string URL
     }
     
+    Catalog ||--o{ Group : contains
     Catalog ||--o{ Control : contains
-    Group ||--o{ Control : groups
-    Catalog ||--o{ BackMatter : has
+    Catalog ||--o| BackMatter : has
     Catalog ||--o{ Parameter : has
+    Group ||--o{ Control : groups
+    Group ||--o{ Group : groups
     Group ||--o{ Parameter : has
     Group ||--o{ Property : has
     Group ||--o{ Part : has
+    Control ||--o{ Control : contains
+    Control ||--o{ Link : has
     Control ||--o{ Parameter : has
     Control ||--o{ Property : has
     Control ||--o{ Part : has
     BackMatter ||--o{ Resource : contains
 
+```
+
+### ER Diagram for Control Profile
+
+```mermaid
+erDiagram
+    Addition {
+        string ById
+        string Position
+    }
+    Alteration {
+        string ControlId
+    }
+    CombinationRule {
+        string Method
+    }
+    CustomGrouping {
+    }
+    InsertControls {
+        boolean IncludeAll
+        string Order
+    }
+    MatchControlsByPattern {
+        string Pattern
+    }
+    ProfileImport {
+        boolean IncludeAll
+        string Href
+    }
+    ProfileMerge {
+        bool AsIs
+    }
+    ProfileModify {
+    }
+    ParameterSetting {
+        string Class
+        string DependsOn
+        string Label
+        string ParamId
+        Selection Select
+        string Usage
+    }
+    Removal {
+        string ByClass
+        string ById
+        string ByItemName
+        string ByName
+        string ByNs
+    }
+    SelectControl {
+        string[] WithChildControls
+        string[] WithIds
+    }
+    Profile {
+        map[string] Metadata
+        string UUID
+    }
+    Profile ||--o| BackMatter: has
+    Profile ||--o{ ProfileImport: contains
+    Profile ||--o| ProfileMerge: allows
+    Profile ||--o| ProfileModify: allows
+    SelectControl ||--o{ MatchControlsByPattern: contains
+    ParameterSetting ||--o{ Constraint: has
+    ParameterSetting ||--o{ Guideline: has
+    ParameterSetting ||--o{ Link: has
+    ParameterSetting ||--o{ Property: has
+    ParameterSetting ||--o| Selection: links
+    ProfileModify ||--o{ Alteration: has
+    ProfileModify ||--o{ ParameterSetting: has
+    ProfileMerge ||--o| CombinationRule: contains
+    ProfileMerge ||--o| CustomGrouping: contains
+    ProfileImport ||--o{ SelectControl: includes
+    ProfileImport ||--o{ SelectControl: excludes
+    InsertControls ||--o{ SelectControl: includes
+    InsertControls ||--o{ SelectControl: excludes
+    CustomGrouping ||--o{ ControlGroup: contains
+    CustomGrouping ||--o{ InsertControls: contains
+    Alteration ||--o{ Addition: contains
+    Alteration ||--o{ Removal: contains
+    Addition  ||--o{ Link: has
+    Addition  ||--o{ Parameter: has
+    Addition  ||--o{ Part: has
+    Addition  ||--o{ Property: has
 ```
