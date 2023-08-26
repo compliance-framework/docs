@@ -1,11 +1,10 @@
 ---
 sidebar_position: 2
-sidebar_label: What is Argus?
+sidebar_label: Argus
 ---
 
-# What is Argus Cloud Compliance Framework?
+# Argus Cloud Compliance Framework
 
-# Argus
 
 Argus is an open-source cloud compliance framework crafted to streamline and automate compliance processes in a cloud environment. Its aim is to simplify compliance challenges and promote continuous collaboration within the community.
 
