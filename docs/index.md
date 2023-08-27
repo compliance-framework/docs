@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: Argus?
+sidebar_position: 1
+sidebar_label: Argus
 ---
 
 # Argus Cloud Compliance Framework
