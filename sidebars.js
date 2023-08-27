@@ -14,11 +14,10 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    'welcome',
     {
       type: 'category',
       label: 'Introduction',
-      link: {type: 'doc', id: 'introduction/index'},
+      link: {type: 'doc', id: 'index'},
       items: ['introduction/why-argus'],
     },
     {
