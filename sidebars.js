@@ -14,14 +14,13 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    // 'welcome',
-    'index',
-    // {
-    //   type: 'category',
-    //   label: 'Argus',
-    //   link: {type: 'doc', id: 'index'},
-    //   items: ['Argus'],
-    // },
+    'welcome',
+    {
+      type: 'category',
+      label: 'Introduction',
+      link: {type: 'doc', id: 'introduction/index'},
+      items: ['introduction/why-argus'],
+    },
     {
       type: 'category',
       label: 'Architecture',
