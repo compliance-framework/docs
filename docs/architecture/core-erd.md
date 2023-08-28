@@ -205,8 +205,9 @@ erDiagram
     SelectControl ||--o{ MatchControlsByPattern: contains
     ParameterSetting ||--o{ Constraint: has
     ParameterSetting ||--o{ Guideline: has
+    ParameterSetting ||--o{ Link: has
+    ParameterSetting ||--o{ Property: has
     ParameterSetting ||--o| Selection: links
-    ProfileModify ||--o{ Alteration: has
     ProfileModify ||--o{ ParameterSetting: has
     ProfileMerge ||--o| CombinationRule: contains
     ProfileMerge ||--o| CustomGrouping: contains
@@ -219,6 +220,8 @@ erDiagram
     Alteration ||--o{ Addition: contains
     Alteration ||--o{ Removal: contains
     Addition  ||--o{ Parameter: has
+    Addition  ||--o{ Property: has
+    Addition  ||--o{ Link: has
     Addition  ||--o{ Part: has
 ```
 
@@ -411,14 +414,11 @@ erDiagram
     ComponentControlImplementation ||--o| Export: allows
     ComponentControlImplementation ||--o| ImplementationStatus: has
     ComponentControlImplementation ||--o{ InheritedControlImplementation: has
-    ComponentControlImplementation ||--o{ ResponsibleRole: has
     ComponentControlImplementation ||--o{ SatisfiedControlImplementationResponsibility: has
     ComponentControlImplementation ||--o{ ImplementationCommonSetParameter: has
     ControlBasedRequirement ||--o{ ComponentControlImplementation: has
-    ControlBasedRequirement ||--o{ ResponsibleRole: has
     ControlBasedRequirement ||--o{ SetParameterValue: has
     ControlBasedRequirement ||--o{ SystemStatement: has
-    ControlImplementationResponsibility ||--o{ ResponsibleRole: has
     DataFlow ||--o{ Diagram: has
     Export ||--o{ ProvidedControlImplementation: has
     Export ||--o{ ControlImplementationResponsibility: has
@@ -427,17 +427,14 @@ erDiagram
     InformationType ||--o| SystemImpact: Availability
     InformationType ||--o| SystemImpact: Confidentiality
     InformationType ||--o| SystemImpact: Integrity
-    InheritedControlImplementation ||--o{ ResponsibleRole: has
     NetworkArchitecture ||--o{ Diagram: has
     CommonInventoryItem ||--o{ ResponsibleParty: has
     CommonInventoryItem ||--o{ ImplementedComponent: has
-    SystemComponent ||--o{ ResponsibleRole: has
     SystemComponent ||--o{ ServiceProtocolInformation: has
     CommonSystemUser ||--o{ CommonAuthorizedPrivilege: has
     SystemPlanControlImplementation ||--o{ ControlBasedRequirement: has
     SystemPlanControlImplementation ||--o{ ImplementationCommonSetParameter: has
     SystemStatement ||--o{ ComponentControlImplementation: has
-    SystemStatement ||--o{ ResponsibleRole: has
     SystemCharacteristics ||--o| AuthorizationBoundary: has
     SystemCharacteristics ||--o| DataFlow: has
     SystemCharacteristics ||--o| NetworkArchitecture: has
@@ -450,8 +447,6 @@ erDiagram
     SystemImplementation ||--o{ CommonInventoryItem: has
     SystemImplementation ||--o{ LeveragedAuthorization: has
     SystemImplementation ||--o{ CommonSystemUser: has
-    ProvidedControlImplementation ||--o{ ResponsibleRole: has
-    SatisfiedControlImplementationResponsibility ||--o{ ResponsibleRole: has
     SystemInformation ||--o{ InformationType: has
     SystemSecurityPlan ||--o| BackMatter: has
     SystemSecurityPlan ||--o| Metadata: has
