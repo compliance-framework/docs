@@ -208,6 +208,7 @@ erDiagram
     ParameterSetting ||--o{ Link: has
     ParameterSetting ||--o{ Property: has
     ParameterSetting ||--o| Selection: links
+    ProfileModify ||--o{ Alteration: has
     ProfileModify ||--o{ ParameterSetting: has
     ProfileMerge ||--o| CombinationRule: contains
     ProfileMerge ||--o| CustomGrouping: contains
@@ -227,7 +228,205 @@ erDiagram
 
 
 ### ER Diagram for SystemSecurityPlan
-Note: almost all of these entities also has links and properties. These have been omited for brevity.
+Note: The diagrams are split into subdiagrams for the ease of use.
+
+### System Characteristics
+```mermaid
+erDiagram
+    AuthorizationBoundary {
+        string Description
+        string Remarks
+    }
+    SystemSecurityPlan {
+        string uuid
+    }
+    BackMatter {
+        string ID
+    }
+    SystemPlanControlImplementation {
+        string description
+    }
+    ControlBasedRequirement {
+        string ControlId
+        string Remarks
+        string UUID
+    }
+    ComponentControlImplementation {
+        string ComponentUuid
+        string description
+        string Remarks
+        string UUID
+    }
+
+    Export {
+        string Description
+        string Remarks
+    }
+    ProvidedControlImplementation {
+        string Description
+        string Remarks
+        string UUID
+    }
+    ControlImplementationResponsibility {
+        string Description
+        string ProvidedUuid
+        string Remarks
+        string UUID
+    }
+    DataFlow {
+        string Description
+        string Remarks
+    }    
+    Diagram {
+        string Caption
+        string Remarks
+        string UUID
+    }
+    ImplementedComponent {
+        string ComponentUuid
+        string Remarks
+    }
+    InformationType {
+        string Description
+        string Title
+        string UUID
+    }
+    InformationTypeCategorization {
+        string[] InformationTypeIds
+        string system
+    }
+    ImplementationStatus {
+        string Remarks
+        Interface State
+    }
+    Status {
+        string Remarks
+        Interface State
+    }
+    SystemIdentification {
+        string ID
+        Interface IdentifierType
+    }
+    SystemInformation {
+
+    }
+    InheritedControlImplementation {
+        string Description
+        string ProvidedUuid
+        string UUID
+    }
+    LeveragedAuthorization {
+        DateTime DateAuthorized
+        string PartyUuid
+        string Remarks
+        string Title
+        string UUID
+    }
+    NetworkArchitecture {
+        string Description
+        string Remarks
+    }
+    CommonAuthorizedPrivilege {
+        string Description
+        string[] FunctionsPerformed
+        string Title
+    }
+    CommonInventoryItem {
+        string Description
+        string Remarks
+        string UUID
+
+    }
+    SystemImpact {
+        string AdjustmentNotification
+        string Base
+        string Selected
+    }
+
+    SatisfiedControlImplementationResponsibility {
+        string Description
+        string Remarks
+        string ResponsibilityUuid
+        string UUID
+    }
+    SecurityImpactLevel {
+        string SecurityObjectiveAvailability
+        string SecurityObjectiveConfidentiality
+        string SecurityObjectiveIntegrity
+    }
+
+    ResponsibleRole {
+
+    }
+    SetParameterValue {
+
+    }
+    SystemStatement {
+        string remarks
+        string StatementId
+        string UUID
+    }
+    ImplementationCommonSetParameter {
+        string ParamId
+        string Remarks
+        string[] Values   
+    }
+    SystemComponent { 
+        string Description
+        string Purpose
+        string Title
+        string Type
+        string UUID
+        string Remarks
+    }
+    CommonSystemUser {
+        string Description
+        string Remarks
+        string[] RoleIds
+        string ShortName
+        string Title
+        string UUID
+    }
+    ServiceProtocolInformation {
+        string Name
+        string Title
+        string UUID
+    }
+    CommonPortRange {
+        Interface End
+        Interface Start
+        Interface Transport
+    }
+    ImportProfile {
+        string Href
+        string Remarks
+    }
+    SystemCharacteristics {
+        DateTime DateAuthorized
+        string description
+        string remarks
+        string SecuritySensitivityLevel
+        string SystemName
+        string SystemNameShort
+    }
+    SystemImplementation {
+        string Remarks
+    }
+    SystemCharacteristics ||--o| AuthorizationBoundary: has
+    SystemCharacteristics ||--o| DataFlow: has
+    SystemCharacteristics ||--o| NetworkArchitecture: has
+    SystemCharacteristics ||--o{ ResponsibleParty: has
+    SystemCharacteristics ||--o| SecurityImpactLevel: has
+    SystemCharacteristics ||--o| Status: has
+    SystemCharacteristics ||--o{ SystemIdentification: has
+    SystemCharacteristics ||--o| SystemInformation: has
+    AuthorizationBoundary ||--o{ Diagram: has
+    DataFlow ||--o{ Diagram: has
+    NetworkArchitecture ||--o{ Diagram: has
+    SystemInformation ||--o{ InformationType: has
+```
+
+
 
 ```mermaid
 erDiagram
@@ -455,16 +654,4 @@ erDiagram
     SystemSecurityPlan ||--o| SystemCharacteristics: has
     SystemSecurityPlan ||--o| SystemImplementation: has
     ServiceProtocolInformation ||--o{ CommonPortRange: has
-    
-    
-
-    
-
-
-
-
-
-
-
-
 ```
