@@ -233,45 +233,41 @@ Note: The diagrams are split into subdiagrams for the ease of use.
 ### System Characteristics
 ```mermaid
 erDiagram
+    SystemCharacteristics ||--o| AuthorizationBoundary: has
+    SystemCharacteristics ||--o| DataFlow: has
+    SystemCharacteristics ||--o| NetworkArchitecture: has
+    SystemCharacteristics ||--o{ ResponsibleParty: has
+    SystemCharacteristics ||--o| SecurityImpactLevel: has
+    SystemCharacteristics ||--o| Status: has
+    SystemCharacteristics ||--o{ SystemIdentification: has
+    SystemCharacteristics ||--o| SystemInformation: has
+    SystemCharacteristics ||--o| Link: has
+    SystemCharacteristics ||--o| Property: has
+    AuthorizationBoundary ||--o{ Diagram: has
+    AuthorizationBoundary ||--o{ Link: has
+    AuthorizationBoundary ||--o{ Property: has
+    DataFlow ||--o{ Diagram: has
+    Diagram ||--o{ Link: has
+    Diagram ||--o{ Property: has
+    DataFlow ||--o{ Link: has
+    DataFlow ||--o{ Property: has
+    NetworkArchitecture ||--o{ Diagram: has
+    NetworkArchitecture ||--o{ Link: has
+    NetworkArchitecture ||--o{ Property: has
+    SystemInformation ||--o{ InformationType: has
+    InformationType ||--o{ InformationTypeCategorization: has
+    InformationType ||--o| SystemImpact: Availability
+    InformationType ||--o| SystemImpact: Integrity
+    InformationType ||--o| SystemImpact: Confidentiality
+    SystemImpact ||--o{ Link: has
+    SystemImpact ||--o{ Property: has
+    InformationType ||--o{ Link: has
+    InformationType ||--o{ Property: has
+    SystemInformation ||--o{ Link: has
+    SystemInformation ||--o{ Property: has
     AuthorizationBoundary {
         string Description
         string Remarks
-    }
-    SystemSecurityPlan {
-        string uuid
-    }
-    BackMatter {
-        string ID
-    }
-    SystemPlanControlImplementation {
-        string description
-    }
-    ControlBasedRequirement {
-        string ControlId
-        string Remarks
-        string UUID
-    }
-    ComponentControlImplementation {
-        string ComponentUuid
-        string description
-        string Remarks
-        string UUID
-    }
-
-    Export {
-        string Description
-        string Remarks
-    }
-    ProvidedControlImplementation {
-        string Description
-        string Remarks
-        string UUID
-    }
-    ControlImplementationResponsibility {
-        string Description
-        string ProvidedUuid
-        string Remarks
-        string UUID
     }
     DataFlow {
         string Description
@@ -282,10 +278,6 @@ erDiagram
         string Remarks
         string UUID
     }
-    ImplementedComponent {
-        string ComponentUuid
-        string Remarks
-    }
     InformationType {
         string Description
         string Title
@@ -293,11 +285,7 @@ erDiagram
     }
     InformationTypeCategorization {
         string[] InformationTypeIds
-        string system
-    }
-    ImplementationStatus {
-        string Remarks
-        Interface State
+        string System
     }
     Status {
         string Remarks
@@ -310,96 +298,14 @@ erDiagram
     SystemInformation {
 
     }
-    InheritedControlImplementation {
-        string Description
-        string ProvidedUuid
-        string UUID
-    }
-    LeveragedAuthorization {
-        DateTime DateAuthorized
-        string PartyUuid
-        string Remarks
-        string Title
-        string UUID
-    }
     NetworkArchitecture {
         string Description
         string Remarks
-    }
-    CommonAuthorizedPrivilege {
-        string Description
-        string[] FunctionsPerformed
-        string Title
-    }
-    CommonInventoryItem {
-        string Description
-        string Remarks
-        string UUID
-
-    }
-    SystemImpact {
-        string AdjustmentNotification
-        string Base
-        string Selected
-    }
-
-    SatisfiedControlImplementationResponsibility {
-        string Description
-        string Remarks
-        string ResponsibilityUuid
-        string UUID
     }
     SecurityImpactLevel {
         string SecurityObjectiveAvailability
         string SecurityObjectiveConfidentiality
         string SecurityObjectiveIntegrity
-    }
-
-    ResponsibleRole {
-
-    }
-    SetParameterValue {
-
-    }
-    SystemStatement {
-        string remarks
-        string StatementId
-        string UUID
-    }
-    ImplementationCommonSetParameter {
-        string ParamId
-        string Remarks
-        string[] Values   
-    }
-    SystemComponent { 
-        string Description
-        string Purpose
-        string Title
-        string Type
-        string UUID
-        string Remarks
-    }
-    CommonSystemUser {
-        string Description
-        string Remarks
-        string[] RoleIds
-        string ShortName
-        string Title
-        string UUID
-    }
-    ServiceProtocolInformation {
-        string Name
-        string Title
-        string UUID
-    }
-    CommonPortRange {
-        Interface End
-        Interface Start
-        Interface Transport
-    }
-    ImportProfile {
-        string Href
-        string Remarks
     }
     SystemCharacteristics {
         DateTime DateAuthorized
@@ -409,37 +315,48 @@ erDiagram
         string SystemName
         string SystemNameShort
     }
-    SystemImplementation {
-        string Remarks
-    }
-    SystemCharacteristics ||--o| AuthorizationBoundary: has
-    SystemCharacteristics ||--o| DataFlow: has
-    SystemCharacteristics ||--o| NetworkArchitecture: has
-    SystemCharacteristics ||--o{ ResponsibleParty: has
-    SystemCharacteristics ||--o| SecurityImpactLevel: has
-    SystemCharacteristics ||--o| Status: has
-    SystemCharacteristics ||--o{ SystemIdentification: has
-    SystemCharacteristics ||--o| SystemInformation: has
-    AuthorizationBoundary ||--o{ Diagram: has
-    DataFlow ||--o{ Diagram: has
-    NetworkArchitecture ||--o{ Diagram: has
-    SystemInformation ||--o{ InformationType: has
 ```
 
-
+### System Control Implementation
 
 ```mermaid
 erDiagram
-    AuthorizationBoundary {
-        string Description
-        string Remarks
-    }
-    SystemSecurityPlan {
-        string uuid
-    }
-    BackMatter {
-        string ID
-    }
+    SystemPlanControlImplementation ||--o{ ControlBasedRequirement: has
+    ControlBasedRequirement ||--o{ ComponentControlImplementation: has
+    ComponentControlImplementation ||--o| Export: allows
+    Export ||--o{ ProvidedControlImplementation: has
+    ProvidedControlImplementation ||--o{ Link: has
+    ProvidedControlImplementation ||--o{ Property: has
+    ProvidedControlImplementation ||--o{ ResponsibleRole: has
+    Export ||--o{ ControlImplementationResponsibility: has
+    ControlImplementationResponsibility ||--o{ Link: has
+    ControlImplementationResponsibility ||--o{ Property: has
+    ControlImplementationResponsibility ||--o{ ResponsibleRole: has
+    Export ||--o{ Link: has
+    Export ||--o{ Property: has
+    ComponentControlImplementation ||--o| ImplementationStatus: has
+    ComponentControlImplementation ||--o{ InheritedControlImplementation: has
+    InheritedControlImplementation ||--o{ Link: has
+    InheritedControlImplementation ||--o{ Property: has
+    InheritedControlImplementation ||--o{ ResponsibleRole: has
+    ComponentControlImplementation ||--o{ SatisfiedControlImplementationResponsibility: has
+    SatisfiedControlImplementationResponsibility ||--o{ Link: has
+    SatisfiedControlImplementationResponsibility ||--o{ Property: has
+    SatisfiedControlImplementationResponsibility ||--o{ ResponsibleRole: has
+    ComponentControlImplementation ||--o{ ImplementationCommonSetParameter: has
+    ComponentControlImplementation ||--o{ Link: has
+    ComponentControlImplementation ||--o{ Property: has
+    ComponentControlImplementation ||--o{ ResponsibleRole: has
+    ControlBasedRequirement ||--o{ SetParameterValue: has
+    ControlBasedRequirement ||--o{ SystemStatement: has
+    ControlBasedRequirement ||--o{ Link: has
+    ControlBasedRequirement ||--o{ Property: has
+    ControlBasedRequirement ||--o{ ResponsibleRole: has
+    SystemStatement ||--o{ ComponentControlImplementation: has
+    SystemStatement ||--o{ Link: has
+    SystemStatement ||--o{ Property: has
+    SystemStatement ||--o{ ResponsibleRole: has
+    SystemPlanControlImplementation ||--o{ ImplementationCommonSetParameter: has
     SystemPlanControlImplementation {
         string description
     }
@@ -470,90 +387,20 @@ erDiagram
         string Remarks
         string UUID
     }
-    DataFlow {
-        string Description
-        string Remarks
-    }    
-    Diagram {
-        string Caption
-        string Remarks
-        string UUID
-    }
-    ImplementedComponent {
-        string ComponentUuid
-        string Remarks
-    }
-    InformationType {
-        string Description
-        string Title
-        string UUID
-    }
-    InformationTypeCategorization {
-        string[] InformationTypeIds
-        string system
-    }
     ImplementationStatus {
         string Remarks
         Interface State
-    }
-    Status {
-        string Remarks
-        Interface State
-    }
-    SystemIdentification {
-        string ID
-        Interface IdentifierType
-    }
-    SystemInformation {
-
     }
     InheritedControlImplementation {
         string Description
         string ProvidedUuid
         string UUID
     }
-    LeveragedAuthorization {
-        DateTime DateAuthorized
-        string PartyUuid
-        string Remarks
-        string Title
-        string UUID
-    }
-    NetworkArchitecture {
-        string Description
-        string Remarks
-    }
-    CommonAuthorizedPrivilege {
-        string Description
-        string[] FunctionsPerformed
-        string Title
-    }
-    CommonInventoryItem {
-        string Description
-        string Remarks
-        string UUID
-
-    }
-    SystemImpact {
-        string AdjustmentNotification
-        string Base
-        string Selected
-    }
-
     SatisfiedControlImplementationResponsibility {
         string Description
         string Remarks
         string ResponsibilityUuid
         string UUID
-    }
-    SecurityImpactLevel {
-        string SecurityObjectiveAvailability
-        string SecurityObjectiveConfidentiality
-        string SecurityObjectiveIntegrity
-    }
-
-    ResponsibleRole {
-
     }
     SetParameterValue {
 
@@ -568,6 +415,56 @@ erDiagram
         string Remarks
         string[] Values   
     }
+```
+### System Implementation
+```mermaid
+erDiagram
+    SystemImplementation ||--o{ SystemComponent: has
+    SystemComponent ||--o{ ServiceProtocolInformation: has
+    SystemComponent ||--o{ Property: has
+    SystemComponent ||--o{ Link: has
+    SystemComponent ||--o{ ResponsibleRole: has
+    ServiceProtocolInformation ||--o{ CommonPortRange: has
+    SystemImplementation ||--o{ CommonInventoryItem: has
+    CommonInventoryItem ||--o{ ResponsibleParty: has
+    CommonInventoryItem ||--o{ ImplementedComponent: has
+    CommonInventoryItem ||--o{ Link: has
+    CommonInventoryItem ||--o{ Property: has
+    ImplementedComponent ||--o{ ResponsibleParty: has
+    ImplementedComponent ||--o{ Link: has
+    ImplementedComponent ||--o{ Property: has
+    SystemImplementation ||--o{ LeveragedAuthorization: has
+    LeveragedAuthorization ||--o{ Link: has
+    LeveragedAuthorization ||--o{ Property: has
+    SystemImplementation ||--o{ CommonSystemUser: has
+    CommonSystemUser ||--o{ CommonAuthorizedPrivilege: has
+    CommonSystemUser ||--o{ Link: has
+    CommonSystemUser ||--o{ Property: has
+    SystemImplementation ||--o{ Link: has
+    SystemImplementation ||--o{ Property: has
+    LeveragedAuthorization {
+        DateTime DateAuthorized
+        string PartyUuid
+        string Remarks
+        string Title
+        string UUID
+    }
+    CommonAuthorizedPrivilege {
+        string Description
+        string[] FunctionsPerformed
+        string Title
+    }
+    CommonInventoryItem {
+        string Description
+        string Remarks
+        string UUID
+    }
+
+    ImplementedComponent {
+        string ComponentUuid
+        string Remarks
+    }
+
     SystemComponent { 
         string Description
         string Purpose
@@ -594,6 +491,26 @@ erDiagram
         Interface Start
         Interface Transport
     }
+    SystemImplementation {
+        string Remarks
+    }
+```
+
+### System Security Plan
+```mermaid
+erDiagram
+    SystemSecurityPlan {
+        string uuid
+    }
+    BackMatter {
+        string ID
+    }
+    Metadata {
+
+    }
+    SystemPlanControlImplementation {
+        string description
+    }
     ImportProfile {
         string Href
         string Remarks
@@ -609,49 +526,10 @@ erDiagram
     SystemImplementation {
         string Remarks
     }
-    AuthorizationBoundary ||--o{ Diagram: has
-    ComponentControlImplementation ||--o| Export: allows
-    ComponentControlImplementation ||--o| ImplementationStatus: has
-    ComponentControlImplementation ||--o{ InheritedControlImplementation: has
-    ComponentControlImplementation ||--o{ SatisfiedControlImplementationResponsibility: has
-    ComponentControlImplementation ||--o{ ImplementationCommonSetParameter: has
-    ControlBasedRequirement ||--o{ ComponentControlImplementation: has
-    ControlBasedRequirement ||--o{ SetParameterValue: has
-    ControlBasedRequirement ||--o{ SystemStatement: has
-    DataFlow ||--o{ Diagram: has
-    Export ||--o{ ProvidedControlImplementation: has
-    Export ||--o{ ControlImplementationResponsibility: has
-    ImplementedComponent ||--o{ ResponsibleParty: has
-    InformationType ||--o{ InformationTypeCategorization: has
-    InformationType ||--o| SystemImpact: Availability
-    InformationType ||--o| SystemImpact: Confidentiality
-    InformationType ||--o| SystemImpact: Integrity
-    NetworkArchitecture ||--o{ Diagram: has
-    CommonInventoryItem ||--o{ ResponsibleParty: has
-    CommonInventoryItem ||--o{ ImplementedComponent: has
-    SystemComponent ||--o{ ServiceProtocolInformation: has
-    CommonSystemUser ||--o{ CommonAuthorizedPrivilege: has
-    SystemPlanControlImplementation ||--o{ ControlBasedRequirement: has
-    SystemPlanControlImplementation ||--o{ ImplementationCommonSetParameter: has
-    SystemStatement ||--o{ ComponentControlImplementation: has
-    SystemCharacteristics ||--o| AuthorizationBoundary: has
-    SystemCharacteristics ||--o| DataFlow: has
-    SystemCharacteristics ||--o| NetworkArchitecture: has
-    SystemCharacteristics ||--o{ ResponsibleParty: has
-    SystemCharacteristics ||--o| SecurityImpactLevel: has
-    SystemCharacteristics ||--o| Status: has
-    SystemCharacteristics ||--o{ SystemIdentification: has
-    SystemCharacteristics ||--o| SystemInformation: has
-    SystemImplementation ||--o{ SystemComponent: has
-    SystemImplementation ||--o{ CommonInventoryItem: has
-    SystemImplementation ||--o{ LeveragedAuthorization: has
-    SystemImplementation ||--o{ CommonSystemUser: has
-    SystemInformation ||--o{ InformationType: has
     SystemSecurityPlan ||--o| BackMatter: has
     SystemSecurityPlan ||--o| Metadata: has
     SystemSecurityPlan ||--o| SystemPlanControlImplementation: has
     SystemSecurityPlan ||--o| ImportProfile: has
     SystemSecurityPlan ||--o| SystemCharacteristics: has
     SystemSecurityPlan ||--o| SystemImplementation: has
-    ServiceProtocolInformation ||--o{ CommonPortRange: has
 ```
