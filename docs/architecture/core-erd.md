@@ -225,3 +225,293 @@ erDiagram
     Addition  ||--o{ Part: has
     Addition  ||--o{ Property: has
 ```
+
+
+### ER Diagram for SystemSecurityPlan
+
+```mermaid
+erDiagram
+    AuthorizationBoundary {
+        string Description
+        string Remarks
+    }
+    SystemSecurityPlan {
+        string uuid
+    }
+    BackMatter {
+        string ID
+    }
+    SystemPlanControlImplementation {
+        string description
+    }
+    ControlBasedRequirement {
+        string ControlId
+        string Remarks
+        string UUID
+    }
+    ComponentControlImplementation {
+        string ComponentUuid
+        string description
+        string Remarks
+        string UUID
+    }
+
+    Export {
+        string Description
+        string Remarks
+    }
+    ProvidedControlImplementation {
+        string Description
+        string Remarks
+        string UUID
+    }
+    ControlImplementationResponsibility {
+        string Description
+        string ProvidedUuid
+        string Remarks
+        string UUID
+    }
+    DataFlow {
+        string Description
+        string Remarks
+    }    
+    Diagram {
+        string Caption
+        string Remarks
+        string UUID
+    }
+    ImplementedComponent {
+        string ComponentUuid
+        string Remarks
+    }
+    InformationType {
+        string Description
+        string Title
+        string UUID
+    }
+    InformationTypeCategorization {
+        string[] InformationTypeIds
+        string system
+    }
+    ImplementationStatus {
+        string Remarks
+        Interface State
+    }
+    Status {
+        string Remarks
+        Interface State
+    }
+    SystemIdentification {
+        string ID
+        Interface IdentifierType
+    }
+    SystemInformation {
+
+    }
+    InheritedControlImplementation {
+        string Description
+        string ProvidedUuid
+        string UUID
+    }
+    LeveragedAuthorization {
+        DateTime DateAuthorized
+        string PartyUuid
+        string Remarks
+        string Title
+        string UUID
+    }
+    NetworkArchitecture {
+        string Description
+        string Remarks
+    }
+    CommonAuthorizedPrivilege {
+        string Description
+        string[] FunctionsPerformed
+        string Title
+    }
+    CommonInventoryItem {
+        string Description
+        string Remarks
+        string UUID
+
+    }
+    SystemImpact {
+        string AdjustmentNotification
+        string Base
+        string Selected
+    }
+
+    SatisfiedControlImplementationResponsibility {
+        string Description
+        string Remarks
+        string ResponsibilityUuid
+        string UUID
+    }
+    SecurityImpactLevel {
+        string SecurityObjectiveAvailability
+        string SecurityObjectiveConfidentiality
+        string SecurityObjectiveIntegrity
+    }
+
+    Link {
+
+    }
+    Property {
+
+    }
+    ResponsibleRole {
+
+    }
+    SetParameterValue {
+
+    }
+    SystemStatement {
+        string remarks
+        string StatementId
+        string UUID
+    }
+    ImplementationCommonSetParameters {
+        string ParamId
+        string Remarks
+        string[] Values   
+    }
+    SystemComponent { 
+        string Description
+        string Purpose
+        string Title
+        string Type
+        string UUID
+        string Remarks
+    }
+    CommonSystemUser {
+        string Description
+        string Remarks
+        string[] RoleIds
+        string ShortName
+        string Title
+        string UUID
+    }
+
+
+    ImportProfile {
+        string Href
+        string Remarks
+    }
+    SystemCharacteristics {
+        DateTime DateAuthorized
+        string description
+        string remarks
+        string SecuritySensitivityLevel
+        string SystemName
+        string SystemNameShort
+    }
+    SystemImplementation {
+        string Remarks
+    }
+    AuthorizationBoundary ||--o{ Diagram: has
+    AuthorizationBoundary ||--o{ Link: has
+    AuthorizationBoundary ||--o{ Property: has
+    ComponentControlImplementation ||--o| Export: allows
+    ComponentControlImplementation ||--o| ImplementationStatus: has
+    ComponentControlImplementation ||--o{ InheritedControlImplementation: has
+    ComponentControlImplementation ||--o{ Link: has
+    ComponentControlImplementation ||--o{ Property: has
+    ComponentControlImplementation ||--o{ ResponsibleRole: has
+    ComponentControlImplementation ||--o{ SatisfiedControlImplementationResponsibility: has
+    ComponentControlImplementation ||--o{ ImplementationCommonSetParameter: has
+    ControlBasedRequirement ||--o{ ComponentControlImplementation: has
+    ControlBasedRequirement ||--o{ Link: has
+    ControlBasedRequirement ||--o{ Property: has
+    ControlBasedRequirement ||--o{ ResponsibleRole: has
+    ControlBasedRequirement ||--o{ SetParameterValue: has
+    ControlBasedRequirement ||--o{ SystemStatement: has
+    ControlImplementationResponsibility ||--o{ Link: has
+    ControlImplementationResponsibility ||--o{ Property: has
+    ControlImplementationResponsibility ||--o{ ResponsibleRole: has
+    DataFlow ||--o{ Link: has
+    DataFlow ||--o{ Property: has
+    DataFlow ||--o{ Diagram: has
+    Diagram ||--o{ Link: has
+    Diagram ||--o{ Property: has
+    Export ||--o{ Link: has
+    Export ||--o{ Property: has
+    Export ||--o{ ProvidedControlImplementation: has
+    Export ||--o{ ControlImplementationResponsibility: has
+    ImplementedComponent ||--o{ Link: has
+    ImplementedComponent ||--o{ Property: has
+    ImplementedComponent ||--o{ ResponsibleParty: has
+    InformationType ||--o{ Link: has
+    InformationType ||--o{ Property: has
+    InformationType ||--o{ InformationTypeCategorization: has
+    InformationType ||--o| SystemImpact: Availability
+    InformationType ||--o| SystemImpact: Confidentiality
+    InformationType ||--o| SystemImpact: Integrity
+    InheritedControlImplementation ||--o{ Link: has
+    InheritedControlImplementation ||--o{ Property: has
+    InheritedControlImplementation ||--o{ ResponsibleRole: has
+    LeveragedAuthorization ||--o{ Link: has
+    LeveragedAuthorization ||--o{ Property: has
+    NetworkArchitecture ||--o{ Link: has
+    NetworkArchitecture ||--o{ Property: has
+    NetworkArchitecture ||--o{ Diagram: has
+    CommonInventoryItem ||--o{ Link: has
+    CommonInventoryItem ||--o{ Property: has
+    CommonInventoryItem ||--o{ ResponsibleParty: has
+    CommonInventoryItem ||--o{ ImplementedComponent: has
+    SystemComponent ||--o{ Link: has
+    SystemComponent ||--o{ Property: has
+    SystemComponent ||--o{ ResponsibleRole: has
+    SystemComponent ||--o{ ServiceProtocolInformation: has
+    CommonSystemUser ||--o{ Link: has
+    CommonSystemUser ||--o{ Property: has
+    CommonSystemUser ||--o{ CommonAuthorizedPrivilege: has
+    SystemPlanControlImplementation ||--o{ ControlBasedRequirement: has
+    SystemPlanControlImplementation ||--o{ ImplementationCommonSetParameter: has
+    SystemImpact ||--o{ Link: has
+    SystemImpact ||--o{ Property: has
+    SystemStatement ||--o{ ComponentControlImplementation: has
+    SystemStatement ||--o{ Link: has
+    SystemStatement ||--o{ Property: has
+    SystemStatement ||--o{ ResponsibleRole: has
+    SystemCharacteristics ||--o{ Link: has
+    SystemCharacteristics ||--o{ Property: has
+    SystemCharacteristics ||--o| NetworkArchitecture: has
+    SystemCharacteristics ||--o| SecurityImpactLevel: has
+    SystemCharacteristics ||--o| SystemInformation: has
+    SystemCharacteristics ||--o| Status: has
+    SystemCharacteristics ||--o{ ResponsibleParty: has
+    SystemCharacteristics ||--o{ SystemIdentification: has
+    SystemImplementation ||--o{ Link: has
+    SystemImplementation ||--o{ Property: has
+    SystemImplementation ||--o{ SystemComponent: has
+    SystemImplementation ||--o{ CommonInventoryItem: has
+    SystemImplementation ||--o{ LeveragedAuthorization: has
+    SystemImplementation ||--o{ CommonSystemUser: has
+    ProvidedControlImplementation ||--o{ Link: has
+    ProvidedControlImplementation ||--o{ Property: has
+    ProvidedControlImplementation ||--o{ ResponsibleRole: has
+    SatisfiedControlImplementationResponsibility ||--o{ Link: has
+    SatisfiedControlImplementationResponsibility ||--o{ Property: has
+    SatisfiedControlImplementationResponsibility ||--o{ ResponsibleRole: has
+    SystemInformation ||--o{ Link: has
+    SystemInformation ||--o{ Property: has
+    SystemInformation ||--o{ InformationType: has
+    SystemSecurityPlan ||--o| BackMatter: has
+    SystemSecurityPlan ||--o| Metadata: has
+    SystemSecurityPlan ||--o| SystemPlanControlImplementation: has
+    SystemSecurityPlan ||--o| ImportProfile: has
+    SystemSecurityPlan ||--o| SystemCharacteristics: has
+    SystemSecurityPlan ||--o| SystemImplementation: has
+    
+    
+
+    
+
+
+
+
+
+
+
+
+```
