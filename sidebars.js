@@ -55,6 +55,14 @@ const sidebars = {
       ],
     },
     'architecture/assessment-runtime/plugin-registry',
+    {
+      type: 'category',
+      label: 'Proposals',
+      link: {type: 'doc', id: 'proposals/index'},
+      items: [
+        'proposals/system-design-for-assessment-runtimes',
+      ],
+    },
     'glossary',
   ],
 };
