@@ -68,6 +68,6 @@ Compliance Framework is an open-source project that aims to streamline and autom
 
 - Adaptable compliance framework
 
-As an open-source project, Compliance Framework seeks to foster a dynamic and collaborative community that continuously enhances and evolves its features. It aims to provide an essential tool for managing cloud compliance, making the process as seamless as enjoying a morning coffee.
+As an open-source project, Compliance Framework seeks to foster a dynamic and collaborative community that continuously enhances and evolves its features. It aims to provide an essential tool for managing compliance in a Cloud Native way, making the process as seamless as enjoying a morning coffee.
 
 Users of Compliance Framework can customize the framework to suit their unique needs, enabling them to not only maintain and demonstrate compliance at all levels, but also automate it.

@@ -72,9 +72,9 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'Cloud Compliance Framework',
+        title: 'Compliance Framework',
         logo: {
-          alt: 'Cloud Compliance Framework Logo',
+          alt: 'Compliance Framework Logo',
           src: 'img/logo.svg',
         },
         items: [

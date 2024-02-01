@@ -1,6 +1,6 @@
 import DocCardList from '@theme/DocCardList';
 
-# Architecture of Cloud Compliance Framework
+# Architecture of Compliance Framework
 
 This architecture represents a distributed, event-driven system designed to monitor and report real-time compliance across multiple environments, such as Azure and on-premise networks. It leverages the OSCAL model proposal and encompasses an assessment runtime for compliance checking and an event bus for communication.
 
