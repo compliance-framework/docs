@@ -1,4 +1,4 @@
-# Why Argus?
+# Why Compliance Framework?
 
 ## Change Management Issues
 
