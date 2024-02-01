@@ -14,12 +14,11 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    'welcome',
     {
       type: 'category',
       label: 'Introduction',
       link: {type: 'doc', id: 'introduction/index'},
-      items: ['introduction/why-argus'],
+      items: ['introduction/why-compliance-framework'],
     },
     {
       type: 'category',
@@ -28,10 +27,10 @@ const sidebars = {
       items: [
         {
           type: 'category',
-          label: 'Argus Core',
+          label: 'Compliance Framework Core',
           link: {type: 'doc', id: 'architecture/core/index'},
           items: [
-            'architecture/core/configuration-service', 
+            'architecture/core/configuration-service',
             'architecture/core/runtime-orchestrator'
           ],
         },

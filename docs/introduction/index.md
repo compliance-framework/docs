@@ -1,13 +1,13 @@
 ---
 sidebar_position: 2
-sidebar_label: What is Argus?
+sidebar_label: What is Compliance Framework?
 ---
 
-# What is Argus Cloud Compliance Framework?
+# What is Compliance Framework?
 
-# Argus
+# Compliance Framework
 
-Argus is an open-source cloud compliance framework crafted to streamline and automate compliance processes in a cloud environment. Its aim is to simplify compliance challenges and promote continuous collaboration within the community.
+Compliance Framework is an open-source project that aims to streamline and automate compliance processes in a cloud native way. Its aim is to simplify compliance challenges and promote continuous collaboration within the governance, risk and control (GRC) community.
 
 ---
 
@@ -68,6 +68,6 @@ Argus is an open-source cloud compliance framework crafted to streamline and aut
 
 - Adaptable compliance framework
 
-As an open-source project, Argus seeks to foster a dynamic and collaborative community that continuously enhances and evolves its features. It aims to provide an essential tool for managing cloud compliance, making the process as seamless as enjoying a morning coffee.
+As an open-source project, Compliance Framework seeks to foster a dynamic and collaborative community that continuously enhances and evolves its features. It aims to provide an essential tool for managing cloud compliance, making the process as seamless as enjoying a morning coffee.
 
-Users of Argus can customize the framework to suit their unique needs, enabling them to not only maintain and demonstrate compliance at all levels, but also automate it.
+Users of Compliance Framework can customize the framework to suit their unique needs, enabling them to not only maintain and demonstrate compliance at all levels, but also automate it.

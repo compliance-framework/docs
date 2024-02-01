@@ -8,8 +8,8 @@ const projectName = 'docs';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Argus - Cloud Compliance Framework',
-  tagline: 'Argus is a cloud compliance framework that helps you to manage your cloud compliance requirements.',
+  title: 'Compliance Framework',
+  tagline: 'Compliance Framework is an open source project that helps you manage your compliance needs in a Cloud Native way.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -22,7 +22,7 @@ const config = {
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'compliance-framework', // Usually your GitHub org/user name.
   projectName: 'docs', // Usually your repo name.
-  
+
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
@@ -126,7 +126,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Argus CCF. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Compliance Framwwork. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
