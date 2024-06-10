@@ -47,7 +47,6 @@ const sidebars = {
             'architecture/assessment-runtime/results-publisher',
           ],
         },
-        'architecture/application-gateway',
         'architecture/event-bus',
         'architecture/core-erd',
         'architecture/core-diagrams',
