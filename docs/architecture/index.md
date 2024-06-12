@@ -5,7 +5,7 @@ import CFArchImageUrl from '@site/static/img/CFArch.drawio.svg';
 
 This architecture represents a distributed, event-driven system designed to monitor and report real-time compliance across multiple environments, such as Azure and on-premise networks. It leverages the OSCAL model proposal and encompasses an assessment runtime for compliance checking and an event bus for communication.
 
-<img src={CFArchImageUrl} />;
+<CFArchImageUrl />;
 
 The assessment runtime, capable of being deployed anywhere based on requirements, conducts compliance checks and publishes results to an event bus through an app gateway. The gateway provides an additional layer of protection and control, allowing secure and controlled communication with the event bus.
 
