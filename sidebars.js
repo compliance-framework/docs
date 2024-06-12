@@ -45,6 +45,7 @@ const sidebars = {
             'architecture/assessment-runtime/job-runner',
             'architecture/assessment-runtime/heartbeat',
             'architecture/assessment-runtime/results-publisher',
+            'architecture/assessment-runtime/plugin-registry',
           ],
         },
         'architecture/event-bus',
@@ -52,7 +53,12 @@ const sidebars = {
         'architecture/core-diagrams',
       ],
     },
-    'architecture/assessment-runtime/plugin-registry',
+    {
+      type: 'category',
+      label: 'OSCAL Developer Notes',
+      link: {type: 'doc', id: 'oscal/index'},
+      items: ['oscal/risks-findings-observations'],
+    },
     'glossary',
   ],
 };
