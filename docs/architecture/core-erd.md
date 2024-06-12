@@ -4,7 +4,7 @@ sidebar_label: ERD
 
 # Entity Relationship Diagrams for Configuration
 
-The purpose of this diagram is to give a high-level view (with no details on fields) of the main entities in the configuration service, which should connect to OSCAL.
+The purpose of this diagram is to give a high-level view (with no details on fields) of the main entities in the configuration service, which should follow the OSCAL model where possible.
 
 ### Full OSCAL diagram
 ```mermaid
@@ -101,7 +101,7 @@ erDiagram
         string Title
         string Description
     }
-    Parameter { 
+    Parameter {
         string ID
         string Name
         string Description
@@ -124,7 +124,7 @@ erDiagram
         string Description
         string URL
     }
-    
+
     Catalog ||--o{ Group : contains
     Catalog ||--o{ Control : contains
     Catalog ||--o| BackMatter : has
