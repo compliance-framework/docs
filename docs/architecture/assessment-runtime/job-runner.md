@@ -1,4 +1,4 @@
-# Job Manager and Job Runner 
+# Job Manager and Job Runner
 
 Job Manager and Runner are the abstraction responsible to run Attestations. Job Manager is responsible for managing Job Specs and actually verifying how much new specs it can handle, and request them to the Configuration. It also starts Jobrunner instances, according to its queue. Job Runner is responsible for running a given plugin and collect its results and for posting AttestationResults back to the Event Hub.
 
@@ -13,8 +13,8 @@ sequenceDiagram
     participant RM as ResourceMonitor
 
     JM->>CM: read_configuration(config)
-    JM->>PM: init_plugins(plugin_urls)
-    loop Downloading Plugins
+    JM->>PM: init_providers(plugin_urls)
+    loop Downloading Providers
         PM->>PM: download_plugin(url)
     end
     loop Configuration Monitoring
@@ -57,13 +57,13 @@ sequenceDiagram
 
 ### Components:
 
-**Configuration Manager (CM)**: Responsible for managing the configuration of the system, including jobs, plugins, and other settings.
+**Configuration Manager (CM)**: Responsible for managing the configuration of the system, including jobs, providers, and other settings.
 
 **Job Manager (JM)**: Responsible for scheduling jobs, handling configuration changes, including job cancellations and additions, and coordinating the other components.
 
-**Plugin Manager (PM)**: Responsible for downloading and managing plugins that are executed by the Job Runners.
+**Plugin Manager (PM)**: Responsible for downloading and managing providers that are executed by the Job Runners.
 
-**Job Runner (JR)**: Responsible for running individual plugins with a given context and collecting observations (results) from the plugins.
+**Job Runner (JR)**: Responsible for running individual providers with a given context and collecting observations (results) from the providers.
 
 **Resource Monitor (RM)**: Continuously monitors global and individual job memory and CPU usage.
 
@@ -73,7 +73,7 @@ sequenceDiagram
 
 1. **Initialization**:
    - **Job Manager** read the initial configuration from **Configuration Manager**.
-   - **Job Manager** requests **Plugin Manager** to download and initialize all required plugins.
+   - **Job Manager** requests **Plugin Manager** to download and initialize all required providers.
 
 2. **Configuration Monitoring Loop**:
    - **Configuration Manager** continuously checks for configuration updates and notifies **Job Manager** if changes occur.
