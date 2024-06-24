@@ -1,7 +1,7 @@
-# Provider Registry
+# Plugin Registry
 
-### 1. **Provider Repository on GitHub**:
-The designated GitHub repository stores all providers as Go binaries. Each provider is versioned and audited for security.
+### 1. **Plugin Repository on GitHub**:
+The designated GitHub repository stores all plugins as Go binaries. Each plugin is versioned and audited for security.
 
 #### Steps:
 1. **Trigger**: Responds to a new pull request or push.
@@ -15,7 +15,7 @@ The designated GitHub repository stores all providers as Go binaries. Each provi
 :::
 
 ### 3. **Security Auditing Using GitHub Actions**:
-The system automates security checks and audits for providers.
+The system automates security checks and audits for plugins.
 
 #### Steps:
 1. **Trigger**: Integrates with the compilation workflow or operates as a separate step.
@@ -30,15 +30,15 @@ The system automates security checks and audits for providers.
 :::
 
 ### 4. **Assessment Runtime Initialization**:
-Administrators configure required provider versions for specific Assessment Runtime instances in the Configuration Service. Upon initialization, the Assessment Runtime pulls this configuration from the control plane and downloads the necessary providers from the provider registry.
+Administrators configure required plugin versions for specific Assessment Runtime instances in the Configuration Service. Upon initialization, the Assessment Runtime pulls this configuration from the control plane and downloads the necessary plugins from the plugin registry.
 
 ### 5. **Validation & Security Service**:
-The system ensures that downloaded providers meet security and integrity standards.
+The system ensures that downloaded plugins meet security and integrity standards.
 
 :::info Considerations
-- **Signature Verification**: Validates that downloaded providers match audited versions.
+- **Signature Verification**: Validates that downloaded plugins match audited versions.
 - **Compatibility Checks**: Ensures platform compatibility.
 :::
 
 ### **Conclusion**:
-This design capitalizes on GitHub for hosting provider and GitHub Actions for compiling and security auditing. Administrators define required providers in a centralized configuration, and the Assessment Runtime initializes by downloading these providers as configure in the control plane. Leveraging GitHub's infrastructure, this design promotes consistency, automation, and an efficient provider development lifecycle.
+This design capitalizes on GitHub for hosting plugin and GitHub Actions for compiling and security auditing. Administrators define required plugins in a centralized configuration, and the Assessment Runtime initializes by downloading these plugins as configure in the control plane. Leveraging GitHub's infrastructure, this design promotes consistency, automation, and an efficient plugin development lifecycle.
