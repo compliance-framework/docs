@@ -1,6 +1,4 @@
 import DocCardList from '@theme/DocCardList';
-import CFArchImageUrl from '@site/static/img/CFArch.drawio.svg';
-
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 
