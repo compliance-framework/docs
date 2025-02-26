@@ -37,7 +37,12 @@ Cloud Providers, Security Vulnerabilities, Container Vulnerabilities etc.
 
 ### Representing the data as JSON
 
-Once the plugin has gathered the necessary data to make ascertions against, it turns the collected data into a 
-JSON object. This is necessary to write policies against, and verify that specific keys and values are within limits 
-or bounds of the specific policies or the organisation. 
+Once the plugin has gathered the necessary data to make assertions, it turns the collected data into a 
+JSON object. This is necessary in order to write policies against the collected data, and verify that specific keys and 
+values are within limits or bounds of the specific policies for the organisation, or regulations. 
+
+### Compiling policy output into OSCAL results
+
+Lastly, the plugin is responsible for executing the policies for each of its relevant data points, gathering 
+the results, and converting these into OSCAL-compliant results which are then passed to the agent to persist to the API. 
 
