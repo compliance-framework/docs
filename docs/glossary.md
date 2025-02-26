@@ -83,7 +83,7 @@ These terms are when we refer to the internal architecture that composes Complia
 
 | Name                          | Definition                                                                                                                                                                                                                                      |
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Assessment Runtime            | See [Assessment Runtime](/docs/architecture/assessment-runtime.md)                                                                                                                                                                              |
+| Assessment Runtime            | See [Assessment Runtime](/docs/archive/assessment-runtime.md)                                                                                                                                                                              |
 | Core Services                 | See [Compliance Framework Core](/docs/architecture/core/index.md)                                                                                                                                                                               |
 | Portal                        | See [...]                                                                                                                                                                                                                                       |
 

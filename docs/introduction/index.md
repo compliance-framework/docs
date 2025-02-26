@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: What is Compliance Framework?
+sidebar_position: 1
+sidebar_label: The Continuous Compliance Framework
 ---
 
 # What is The Continuous Compliance Framework?
@@ -16,89 +16,81 @@ working groups to build the future of automated compliance and reporting.
 
 ## Key Features
 
-### Integrate third party tools
+### Open Source
 
-Githiub
-Gitlab
-Snyk
-Blackduck
-Kubernetes
+CCF is Open Source.
 
-### Automated Compliance Verification
+### Automated, Continuous Compliance Verification
 
-Uses Rego-based policies to validate compliance against security and operational requirements.
+CCF enables organisations to continuously, and automatically collect evidence and validate compliance against regulatory 
+security & operational requirements, reducing the manual effort involved in compliance reporting.
+
+Real-time notifications and alerts allow fast response to requirement drifts.
 
 ### Centralized Compliance API
 
 Powered by MongoDB, it acts as the single source of truth for compliance data.
 
-### Pluggable GRPC Architecture 
+### Open To Extension
 
-Enables extensible compliance checks via plugins, allowing seamless integration with various infrastructure components.
+The CCF API accepts OSCAL-compliant data from anywhere. This allows your favourite tools to send compliance-related 
+information to it, and include it as part of your overall compliance reporting.
+
+This makes it easy to integrate with third party tools such as 
+* Cloud Service Providers
+  * AWS
+  * Azure
+  * GCP
+  * Alibaba
+  * Oracle
+  * etc.
+* Container Runtimes
+  * Kubernetes
+  * etc.
+* Version Control Systems
+  * Github 
+  * Gitlab
+  * etc.
+* Container Vulnerability Scanners
+  * Clair
+  * Trivy
+  * Docker
+  * etc.
+* Infrastructure Security Scanners
+  * Terraform
+  * Gitlab
+  * Snyk
+* Open Source Software and License compliance scanners (SCA, SAST, DAST, etc.)
+  * Sonarqube, 
+  * Gitlab, 
+  * Snyk, 
+  * Blackduck, 
+  * etc.
+
+### Pluggable GRPC Architecture
+
+CCF agents are lightweight, plugin-based programs which collect compliance information continuously, validate them
+against code-based policies, and report the results to the central CCF API.
+
+The plugin-based system enables easy creation of new types of compliance checks and validations, making it simple to
+add more diverse data to the final compliance footprint.
+
+### Policy as Code
+
+CCF uses Rego from OPA, and Kyverno-JSON as policy engines to validate the information collected by plugins.
+This allows organisations to continuously and iteratively manage their organisation policies, and directly map these
+to regulatory controls for easy reporting to auditory bodies.
+
+### OCI capable plugins and policies
+
+CCF supports staged rollouts of compliance policies and plugins via OCI registries, ensuring smooth adoption of updates.
 
 ### OSCAL-Compliant Reporting
 
-Generates structured compliance reports in NIST's OSCAL format, making audit readiness easier.
+Generates structured compliance reports in NIST's OSCAL format which can be directly shared with auditory bodies to 
+verify regulatory compliance, and manage the full GRC lifecycle.
 
-### Versioned Policy Deployment
-
-Supports staged rollouts of compliance policies and agent binaries via OCI registries, ensuring smooth adoption of updates.
-
-### Knowledge and Control Management
-
-- Centralized compliance information
-- Control mapping and lifecycle management
-
-### Real-Time Tracking & Alerting
-
-- Real-time notifications and alerts
-- Tracking of requirement drifts
-
-### Policy & Compliance Enforcement
-
-- Compliance enforcement tools for applications/infrastructure
-- Integration with reactive tools such as OPA, Cloud-Custodian
-
-### Reporting & Auditing
-
+- Real-time compliance dashboards
 - Comprehensive compliance reports
-- Maintenance of audit trails
 - Automation of reporting and auditing processes
-
-### Integration & Customization
-
-- Integration with open-source rules repositories
-- Customizable architecture for input, output, and validation
-- Logging of changes in compliance rules
-
-### Documentation
-
-- Export of compliance data and reports in PDF format
-
----
-
-## Additional Features
-
-### AI-Powered Compliance Assessment
-
-- Tools for regular assessments and identification of potential issues
-
-### Regular Compliance Training
-
-- Training modules for keeping up with latest regulations
-
-### Compliance Dashboard
-
-- Real-time visibility and status updates
-
-### Third-Party Validation
-
-- Features supporting independent compliance validation
-
-### Continuous Improvement Process
-
-- Adaptable compliance framework
-
-As an open-source project, Compliance Framework seeks to foster a dynamic and collaborative community that continuously enhances and evolves its features. It aims to provide an essential tool for managing compliance in a Cloud Native way, making the process as seamless as enjoying a morning coffee.
-
-Users of Compliance Framework can customize the framework to suit their unique needs, enabling them to not only maintain and demonstrate compliance at all levels, but also automate it.
+- Export of compliance data and reports in PDF and OSCAL format

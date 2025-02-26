@@ -14,43 +14,45 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    {
-      type: 'category',
-      label: 'Introduction',
-      link: {type: 'doc', id: 'introduction/index'},
-      items: ['introduction/why-compliance-framework'],
-    },
+    'introduction/index',
+    // {
+    //   // type: 'category',
+    //   label: 'Introduction',
+    //   link: {type: 'doc', id: 'introduction/index'},
+    //   // items: ['introduction/why-compliance-framework'],
+    // },
     {
       type: 'category',
       label: 'Architecture',
       link: {type: 'doc', id: 'architecture/index'},
       items: [
-        {
-          type: 'category',
-          label: 'Compliance Framework Core',
-          link: {type: 'doc', id: 'architecture/core/index'},
-          items: [
-            'architecture/core/configuration-service',
-            'architecture/core/runtime-orchestrator'
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Assessment Runtime',
-          link: {type: 'doc', id: 'architecture/assessment-runtime'},
-          items: [
-            'architecture/assessment-runtime/authentication',
-            'architecture/assessment-runtime/configuration',
-            'architecture/assessment-runtime/plugin-manager',
-            'architecture/assessment-runtime/job-runner',
-            'architecture/assessment-runtime/heartbeat',
-            'architecture/assessment-runtime/results-publisher',
-            'architecture/assessment-runtime/plugin-registry',
-          ],
-        },
-        'architecture/event-bus',
-        'architecture/core-erd',
-        'architecture/core-diagrams',
+        'architecture/agents',
+        // {
+        //   type: 'category',
+        //   label: 'Compliance Framework Core',
+        //   link: {type: 'doc', id: 'architecture/core/index'},
+        //   items: [
+        //     'architecture/core/configuration-service',
+        //     'architecture/core/runtime-orchestrator'
+        //   ],
+        // },
+        // {
+        //   type: 'category',
+        //   label: 'Assessment Runtime',
+        //   link: {type: 'doc', id: 'architecture/assessment-runtime'},
+        //   items: [
+        //     'architecture/assessment-runtime/authentication',
+        //     'architecture/assessment-runtime/configuration',
+        //     'architecture/assessment-runtime/plugin-manager',
+        //     'architecture/assessment-runtime/job-runner',
+        //     'architecture/assessment-runtime/heartbeat',
+        //     'architecture/assessment-runtime/results-publisher',
+        //     'architecture/assessment-runtime/plugin-registry',
+        //   ],
+        // },
+        // 'architecture/event-bus',
+        // 'architecture/core-erd',
+        // 'architecture/core-diagrams',
       ],
     },
     {
