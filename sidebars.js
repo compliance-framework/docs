@@ -27,6 +27,7 @@ const sidebars = {
       link: {type: 'doc', id: 'architecture/index'},
       items: [
         'architecture/agents',
+        'architecture/plugins',
         // {
         //   type: 'category',
         //   label: 'Compliance Framework Core',

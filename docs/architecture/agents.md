@@ -1,9 +1,8 @@
 ---
 sidebar_position: 2
-sidebar_label: Agents
+sidebar_label: Agent
 ---
 
-import DocCardList from '@theme/DocCardList';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 
@@ -33,7 +32,7 @@ The CCF agent has a few main responsibilities.
 ### Running plugins
 
 First and foremost, the agent runs compliance plugins, which verify the continuous compliance of system components. 
-For more information on CCF Plugins, refer to [Plugins](./plugins.md)
+For more information on CCF Plugins, refer to [Plugins](./plugins)
 
 It does this using the same system used by Hashicorp for Terraform Providers: https://github.com/hashicorp/go-plugin
 
