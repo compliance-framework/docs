@@ -23,6 +23,17 @@ objects, allowing policies to be written to verify their correctness.
     }}
 />
 
+## Security
+
+In order to keep the data collected by CCF Plugins secure, the CCF plugins keep all data collected in memory, and pass 
+these directly to the policy engine for verification. 
+
+Once completed, the CCF Plugins generate OSCAL-compliant results, which excludes the sensitive data collected, and sends 
+these to the CCF Agent. The sensitive data is then forgotten until the next compliance checkpoint. 
+
+This means that nothing - not even the CCF Agent - has access to any sensitive data collected by the CCF Plugins, and 
+it is kept private throughout the entire compliance lifecycle.x 
+
 ## Responsibilities
 
 The Plugin has a few responsibilities

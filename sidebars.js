@@ -28,6 +28,8 @@ const sidebars = {
       items: [
         'architecture/agents',
         'architecture/plugins',
+        'architecture/policies',
+        'architecture/external',
         // {
         //   type: 'category',
         //   label: 'Compliance Framework Core',
