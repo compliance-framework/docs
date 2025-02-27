@@ -81,11 +81,11 @@ If there is a dispute about the meaning of a term in an issue, then this should 
 
 These terms are when we refer to the internal architecture that composes Compliance Framework. We should stick to it to not make our lives harder.
 
-| Name                          | Definition                                                                                                                                                                                                                                      |
-|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Assessment Runtime            | See [Assessment Runtime](/docs/architecture/assessment-runtime.md)                                                                                                                                                                              |
-| Core Services                 | See [Compliance Framework Core](/docs/architecture/core/index.md)                                                                                                                                                                               |
-| Portal                        | See [...]                                                                                                                                                                                                                                       |
+| Name         | Definition                                     |
+|--------------|------------------------------------------------|
+| CCF Agent    | See [Agent](/docs/architecture/agents.md)      |
+| CCF Plugins  | See [Plugins](/docs/architecture/plugins.md)   |
+| CCF Policies | See [Policies](/docs/architecture/policies.md) |
 
 ## Links and References
 
