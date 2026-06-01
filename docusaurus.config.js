@@ -127,7 +127,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Compliance Framwwork. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Compliance Framework. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
