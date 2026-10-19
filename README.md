@@ -43,7 +43,7 @@ Every push to `main` builds the site and deploys it to GitHub Pages with the [De
 |---|---|
 | `docs/` | The general pages (Markdown and MDX), served from the site root |
 | `sidebars.js` | The sidebar of the general pages |
-| `api/` | The API's current (unreleased) docs; `api_versioned_docs/` holds its released lines (see [CONTRIBUTING.md](CONTRIBUTING.md)) |
+| `api/`, `ui/`, `agent/` | The current (unreleased) docs of the API, UI and agent instances; `<id>_versioned_docs/` holds each one's released lines (see [CONTRIBUTING.md](CONTRIBUTING.md)) |
 | `openapi/<id>/<line>.yaml` | The OpenAPI spec of each released line of an instance with `openapi`, rendered at `/<route>/<line>/reference` by `src/plugins/openapi-reference.ts`, from a display copy with deeply nested schemas collapsed (`scripts/openapi-display.mjs`) |
 | `instances.yaml` | The versioned docs instances, one per CCF repository. `docusaurus.config.ts` builds the docs plugins, navbar and version dropdowns from it |
 | `scripts/` | `gen-sidebars.mjs`, which validates `instances.yaml` against `instances.schema.json` and writes the sidebars; `gen-config-ref.mjs`, which writes a configuration reference from the repository's code; the shared loaders `instances.mjs` and `openapi.mjs`; and `openapi-display.mjs`, which makes the reference page's display copy of a spec. `yarn test` runs its tests |

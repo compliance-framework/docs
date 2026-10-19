@@ -35,16 +35,16 @@ A version is a **minor line** such as `0.21`, never a patch such as `0.21.1`.
   yarn docusaurus docs:version:api 0.22
   ```
 
-  For `api`, do two things **before** that command, because the cut copies `current` as it is:
+  Before that command, because the cut copies `current` as it is:
 
-  1. Add the line's OpenAPI spec as `openapi/api/0.22.yaml`, copied unchanged from the api's `docs/swagger.yaml` at the tag. The sidebar's **API reference** link points to the newest spec, and the cut freezes it.
-  2. Regenerate the configuration reference:
+  1. For `api`, add the line's OpenAPI spec as `openapi/api/0.22.yaml`, copied unchanged from the api's `docs/swagger.yaml` at the tag. The sidebar's **API reference** link points to the newest spec, and the cut freezes it.
+  2. For `api`, `ui` and `agent`, regenerate the configuration reference:
 
      ```sh
      node scripts/gen-config-ref.mjs --instance api --ref v0.22.0 --previous v0.21.0
      ```
 
-     It reads the api's `cmd/root.go` at the tag with `gh`, and fails until `scripts/config-ref/api.yaml` describes every setting the release binds.
+     It reads the instance's code at the tag with `gh`, and fails until `scripts/config-ref/<id>.yaml` describes every setting the release defines. It reads the api's `cmd/root.go`; the ui's `src/defaultconfig.json`, `src/stores/config.ts` and `env.d.ts`; and the agent's `cmd/` folder, with the api's `pkg/agentconfig/types.go` at the version the agent's `go.mod` requires.
 
 ### Where to make a change
 
