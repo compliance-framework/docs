@@ -1,0 +1,45 @@
+# The docs instances: one versioned Docusaurus docs plugin instance per CCF repository.
+#
+# docusaurus.config.ts builds the docs plugins, the navbar and the version dropdowns from this file,
+# and scripts/gen-sidebars.mjs writes a sidebar for each instance. The schema is
+# scripts/instances.schema.json; the generator validates this file against it on every
+# `yarn start` and `yarn build`.
+#
+# An instance without pages (nothing under `path` and no `<id>_versions.json`) isn't built
+# yet: it gets no docs plugin and no navbar item until its first pages land.
+version: 1
+instances:
+  - id: api
+    kind: product
+    repo: compliance-framework/api
+    path: api
+    route: api
+    label: API
+    navbar: true
+    openapi: { source: docs/swagger.yaml }
+  - id: ui
+    kind: product
+    repo: compliance-framework/ui
+    path: ui
+    route: ui
+    label: UI
+    navbar: true
+  - id: agent
+    kind: product
+    repo: compliance-framework/agent
+    path: agent
+    route: agent
+    label: Agent
+    navbar: true
+  - id: plugin-aws-ecr
+    kind: plugin
+    repo: compliance-framework/plugin-aws-ecr
+    path: plugins/aws-ecr
+    route: catalog/aws-ecr
+    label: AWS ECR
+    policies:
+      - compliance-framework/plugin-aws-ecr-image-policies
+      - compliance-framework/plugin-aws-ecr-registry-policies
+      - compliance-framework/plugin-aws-ecr-repository-policies
+build:
+  onlyIncludeVersions: { product: 6, plugin: 3 }
