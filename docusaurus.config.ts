@@ -4,6 +4,8 @@ import type {Options as DocsOptions} from '@docusaurus/plugin-content-docs';
 import type {NavbarItem} from '@docusaurus/theme-common';
 import {themes as prismThemes} from 'prism-react-renderer';
 import {loadInstances} from './scripts/instances.mjs';
+import {referenceSpecs} from './scripts/openapi.mjs';
+import openapiReferencePlugin, {type ReferenceSpec} from './src/plugins/openapi-reference';
 
 const organizationName = 'compliance-framework';
 
@@ -48,6 +50,25 @@ function docsPlugin(inst: Instance): [string, DocsOptions] {
     },
   ];
 }
+
+// The API reference of each instance with `openapi`: a page per spec in openapi/<id>/, at
+// /<route>/<line>/reference, that Redoc renders in the browser (no generated MDX).
+const referenceSpecsToBuild: ReferenceSpec[] = built
+  .filter((inst) => inst.openapi)
+  .flatMap((inst) =>
+    referenceSpecs(__dirname, inst, includedVersions(inst)).map((spec) => ({
+      ...spec,
+      title: `${inst.label} reference ${spec.line}`,
+    })),
+  );
+
+// The architecture pages moved from the general docs into the api instance: keep the old URLs.
+const movedPages: {from: string; to: string}[] = built.some((inst) => inst.id === 'api')
+  ? ['', '/agents', '/plugins', '/policies', '/external'].map((page) => ({
+      from: `/architecture${page}`,
+      to: `/api/architecture${page}`,
+    }))
+  : [];
 
 // Each navbar instance gets its sidebar link and a version dropdown. The dropdown only shows
 // on that instance's pages (src/theme/NavbarItem/DocsVersionDropdownNavbarItem.tsx).
@@ -97,6 +118,8 @@ const config: Config = {
       };
     },
     ...built.map(docsPlugin),
+    (context) => openapiReferencePlugin(context, {specs: referenceSpecsToBuild}),
+    ['@docusaurus/plugin-client-redirects', {redirects: movedPages}],
   ],
 
   presets: [

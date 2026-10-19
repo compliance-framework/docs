@@ -1,0 +1,274 @@
+# What scripts/gen-config-ref.mjs can't read from the api's code: what each setting does, its
+# type and an example, plus the default of the settings that have no viper.SetDefault in
+# cmd/root.go (their default lives in internal/config/).
+#
+# Keys are the viper keys the api binds in cmd/root.go (`viper.MustBindEnv("app_port")`), and the
+# environment variable is CCF_<KEY>. The generator fails when the api binds a key that isn't
+# listed here, when a key here isn't bound any more, or when a `default` here duplicates a
+# viper.SetDefault. Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside code.
+#
+# Checked against compliance-framework/api v0.21.0.
+version: 1
+settings:
+  agent_instance_oneshot_retention:
+    purpose: How long a one-shot agent instance (`daemon=false`) can go unseen before the prune job deletes it.
+    type: duration
+    default: "`24h`"
+    example: 48h
+  agent_instance_prune_enabled:
+    purpose: Schedules the job that prunes stale agent instances. It runs on the background worker, so it also needs `CCF_WORKER_ENABLED`.
+    type: bool
+    default: "`true`"
+    example: "false"
+  agent_instance_prune_schedule:
+    purpose: When the agent instance prune job runs, as a six-field cron expression with seconds first. The job runs at most once an hour, whatever the schedule.
+    type: string
+    default: "`0 17 * * * *`"
+    example: "\"0 30 * * * *\""
+  agent_instance_retention:
+    purpose: How long a daemon agent instance can go unseen before the prune job deletes it.
+    type: duration
+    default: "`720h`"
+    example: 336h
+  agent_instance_stale_after:
+    purpose: How recently an agent instance must have sent a heartbeat or a report to count as fresh.
+    type: duration
+    default: "`10m`"
+    example: 15m
+  agent_max_instances:
+    purpose: The most instances one agent can have that aren't due for pruning. At the cap, a new instance replaces the oldest stale one; when every instance is fresh, a report from a new instance gets `409 Conflict`.
+    type: int
+    default: "`500`"
+    example: "1000"
+  ai_api_key:
+    purpose: The API key for the AI provider that generates dashboard suggestions. Treat it as a secret.
+    type: string
+    default: none
+    example: "<your provider API key>"
+  ai_base_url:
+    purpose: Overrides the AI provider's API address, for example to go through a proxy. Empty uses the provider's default.
+    type: string
+    default: none
+    example: https://llm-proxy.example.com
+  ai_enabled:
+    purpose: Turns on AI-generated dashboard suggestions, which propose evidence filters for the controls of a system security plan.
+    type: bool
+    example: "true"
+  ai_max_calls_per_run:
+    purpose: The most model calls one suggestion run may plan. A run that would need more is refused. `0` means no limit.
+    type: int
+    example: "100"
+  ai_max_controls_per_chunk:
+    purpose: How many controls go into one model call of a suggestion run.
+    type: int
+    example: "20"
+  ai_max_label_sets_per_chunk:
+    purpose: How many evidence label sets go into one model call of a suggestion run.
+    type: int
+    example: "100"
+  ai_max_suggestions_per_run:
+    purpose: The most suggestions one run stores. Further suggestions from the run are dropped.
+    type: int
+    example: "200"
+  ai_model:
+    purpose: The model that generates dashboard suggestions.
+    type: string
+    example: claude-opus-4-8
+  ai_provider:
+    purpose: The AI provider. `anthropic` is the only supported value.
+    type: string
+    example: anthropic
+  ai_queue_workers:
+    purpose: How many suggestion jobs the background worker runs at once.
+    type: int
+    example: "2"
+  ai_request_timeout:
+    purpose: How long one model call may take.
+    type: duration
+    example: 300s
+  api_allowed_origins:
+    purpose: The origins allowed to call the API from a browser (CORS), comma separated. Set it to the address of your UI.
+    type: list
+    default: "`http://localhost:3000`"
+    example: https://ccf.example.com,https://ccf-staging.example.com
+  app_port:
+    purpose: The address the API listens on. A bare port such as `8080` is read as `:8080`.
+    type: string
+    example: ":8443"
+  authz_cache_ttl:
+    purpose: How long the `authzen` driver caches each decision. Empty, `0` or an invalid value turns the cache off.
+    type: duration
+    default: "`0` (off)"
+    example: 5s
+  authz_cedar_policy_dir:
+    purpose: A directory of your own `.cedar` policy files, added to the bundled role policies. Only the `cedar` driver reads it.
+    type: string
+    default: none
+    example: /etc/ccf/policies
+  authz_driver:
+    purpose: The authorization engine. `builtin` allows every signed-in user and keeps administration to admins; `cedar` enforces the bundled roles; `authzen` asks a remote AuthZen policy decision point. See [Authentication and permissions](./authentication-and-permissions.md).
+    type: string
+    example: cedar
+  authz_endpoint:
+    purpose: The evaluation URL of the remote policy decision point. Only the `authzen` driver reads it.
+    type: string
+    default: none
+    example: https://pdp.example.com/access/v1/evaluation
+  authz_fail_mode:
+    purpose: What happens when the policy decision point can't be reached. `closed` denies the request, `open` allows it; any other value is read as `closed`.
+    type: string
+    example: closed
+  authz_role_assignments:
+    purpose: The file that assigns roles to users, groups and agents. Only the `cedar` driver reads it; a missing file authorizes agents only.
+    type: string
+    default: "`authz-roles.yaml`"
+    example: /etc/ccf/authz-roles.yaml
+  artifact_max_bytes:
+    purpose: The largest policy evaluation artifact an agent can upload, in bytes.
+    type: int
+    default: "`16777216` (16 MiB)"
+    example: "33554432"
+  artifact_max_concurrent:
+    purpose: How many artifact uploads the API stores at once. Further uploads wait briefly for a slot, then get `429 Too Many Requests`.
+    type: int
+    default: "`8`"
+    example: "16"
+  db_connection:
+    purpose: The PostgreSQL connection string.
+    type: string
+    default: "*required*"
+    example: "\"host=db user=ccf dbname=ccf port=5432 sslmode=require\""
+  db_debug:
+    purpose: Logs every SQL statement. The `--debug` flag sets it too.
+    type: bool
+    example: "true"
+  db_driver:
+    purpose: The database driver. `postgres` is the only supported value.
+    type: string
+    default: "*required*"
+    example: postgres
+  digest_enabled:
+    purpose: Schedules the digest emails.
+    type: bool
+    example: "false"
+  digest_schedule:
+    purpose: When the digest emails go out, as a cron expression or a descriptor such as `@daily`.
+    type: string
+    example: "@daily"
+  email_config:
+    purpose: The path of the email configuration file. When the file can't be loaded, the API doesn't send email.
+    type: string
+    default: "`email.yaml`"
+    example: /etc/ccf/email.yaml
+  environment:
+    purpose: The deployment environment. `local` and `development` let the sign-in cookie work over plain HTTP; anything else, including `production`, marks it `Secure`.
+    type: string
+    default: "`production`"
+    example: development
+  evidence_default_expiry_months:
+    purpose: How many months evidence stays valid when it doesn't set its own expiry. Values below `1` are read as `1`.
+    type: int
+    example: "3"
+  evidence_require_subject:
+    purpose: "What the API does with agent evidence that has no subject: `off` accepts it, `warn` accepts it and logs a warning, `enforce` rejects it."
+    type: string
+    example: warn
+  jwt_private_key:
+    purpose: The path of the PEM file with the RSA private key that signs tokens. When both key paths are set, the API creates the key files if they don't exist and loads them. When either is unset, it generates a new key pair at each start, so tokens don't survive a restart.
+    type: string
+    default: none
+    example: /etc/ccf/jwt/private.pem
+  jwt_public_key:
+    purpose: The path of the PEM file with the RSA public key that verifies tokens. See `CCF_JWT_PRIVATE_KEY`.
+    type: string
+    default: none
+    example: /etc/ccf/jwt/public.pem
+  jwt_secret:
+    purpose: A shared secret the API reads at startup and warns about when it's unset. Tokens are signed with the RSA keys, not with this secret.
+    type: string
+    default: "`change-me`"
+    example: "<a long random string>"
+  manual_evidence_require_subject:
+    purpose: Requires evidence that users submit by hand to name a subject.
+    type: bool
+    example: "true"
+  metrics_enabled:
+    purpose: Starts the Prometheus metrics server.
+    type: bool
+    example: "false"
+  metrics_port:
+    purpose: The address the metrics server listens on.
+    type: string
+    example: ":9091"
+  playback_enabled:
+    purpose: Serves `POST /api/playback/evaluate`, which runs a caller's Rego policy against a caller's input inside the API.
+    type: bool
+    default: "`true`"
+    example: "false"
+  playback_max_bytes:
+    purpose: The largest playback request body, in bytes.
+    type: int
+    default: "`2097152` (2 MiB)"
+    example: "4194304"
+  playback_max_concurrent:
+    purpose: How many playback evaluations run at once across all callers. Further requests get `429 Too Many Requests`.
+    type: int
+    default: "`4`"
+    example: "8"
+  playback_timeout:
+    purpose: How long one playback evaluation may take.
+    type: duration
+    default: "`5s`"
+    example: 10s
+  pprof_enabled:
+    purpose: Starts the Go `pprof` profiling server. Don't expose it publicly.
+    type: bool
+    example: "true"
+  pprof_port:
+    purpose: The address the `pprof` server listens on. A bare port such as `6060` is read as `:6060`.
+    type: string
+    example: "127.0.0.1:6060"
+  risk_config:
+    purpose: The path of the risk configuration file, which turns on and schedules the risk jobs such as review reminders. When the file is invalid, every risk job is off.
+    type: string
+    default: "`risk.yaml`"
+    example: /etc/ccf/risk.yaml
+  slack_config:
+    purpose: The path of the Slack configuration file. When the file can't be loaded, the Slack integration is off.
+    type: string
+    default: "`slack.yaml`"
+    example: /etc/ccf/slack.yaml
+  sso_config:
+    purpose: The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off.
+    type: string
+    default: "`sso.yaml`"
+    example: /etc/ccf/sso.yaml
+  strict_disable_public_agent_endpoints:
+    purpose: Requires a token on agent heartbeats, evidence and playback. By default these endpoints also accept requests without one.
+    type: bool
+    example: "true"
+  use_dev_logger:
+    purpose: Logs in a human-readable development format instead of JSON.
+    type: bool
+    default: "`false`"
+    example: "true"
+  web_base_url:
+    purpose: The address of the UI. The API uses it to build links in emails, such as password reset links.
+    type: string
+    default: "`http://localhost:8000`"
+    example: https://ccf.example.com
+  worker_enabled:
+    purpose: Starts the background worker that runs queued jobs such as email, digests and pruning.
+    type: bool
+    default: "`true`"
+    example: "false"
+  worker_use_polling:
+    purpose: Makes the worker poll the database for jobs instead of waiting on PostgreSQL `LISTEN`/`NOTIFY`.
+    type: bool
+    default: "`false`"
+    example: "true"
+  workflow_config:
+    purpose: The path of the workflow configuration file. When the file can't be loaded, the workflow scheduler is off.
+    type: string
+    default: "`workflow.yaml`"
+    example: /etc/ccf/workflow.yaml

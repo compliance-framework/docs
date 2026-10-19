@@ -14,21 +14,27 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "node --test scripts/openapi-display.test.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.9.2",
+    "@docusaurus/plugin-client-redirects": "3.9.2",
     "@docusaurus/preset-classic": "3.9.2",
     "@docusaurus/theme-mermaid": "3.9.2",
     "@mdx-js/react": "^3.1.1",
     "ajv": "^8.9.0",
     "autoprefixer": "^10.4.14",
     "clsx": "^2.1.1",
+    "core-js": "3.50.0",
     "js-yaml": "^4.1.0",
+    "mobx": "6.15.0",
     "postcss": "^8.4.27",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "redoc": "2.5.4",
+    "styled-components": "6.5.3",
     "tailwindcss": "^3.3.3"
   },
   "devDependencies": {

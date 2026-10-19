@@ -1,0 +1,60 @@
+# A Swagger 2.0 spec whose schemas reference each other the way GORM relations do: a chain
+# Workflow -> Step -> Execution -> Assignee -> Group -> Workflow (a cycle), plus Step -> Workflow
+# back-references, so the full expansion of one operation is much bigger than its schema count.
+swagger: "2.0"
+info: {title: Deep relations, version: "1"}
+basePath: /api
+paths:
+  /workflows/{id}:
+    get:
+      summary: Get a workflow
+      parameters:
+        - {name: id, in: path, required: true, type: string}
+      responses:
+        "200":
+          description: OK
+          schema: {$ref: '#/definitions/Response'}
+        "404":
+          description: Not found
+          schema: {$ref: '#/definitions/Error'}
+    put:
+      summary: Update a workflow
+      parameters:
+        - {name: id, in: path, required: true, type: string}
+        - {name: body, in: body, required: true, schema: {$ref: '#/definitions/Workflow'}}
+      responses:
+        "200": {description: OK, schema: {$ref: '#/definitions/Response'}}
+definitions:
+  Error:
+    type: object
+    properties:
+      message: {type: string}
+  Response:
+    type: object
+    properties:
+      data: {$ref: '#/definitions/Workflow'}
+  Workflow:
+    type: object
+    properties:
+      name: {type: string}
+      steps: {type: array, items: {$ref: '#/definitions/Step'}}
+      owner: {$ref: '#/definitions/Assignee'}
+  Step:
+    type: object
+    properties:
+      workflow: {$ref: '#/definitions/Workflow'}
+      executions: {type: array, items: {$ref: '#/definitions/Execution'}}
+      assignee: {$ref: '#/definitions/Assignee'}
+  Execution:
+    type: object
+    properties:
+      step: {$ref: '#/definitions/Step'}
+      assignee: {$ref: '#/definitions/Assignee'}
+  Assignee:
+    type: object
+    properties:
+      group: {$ref: '#/definitions/Group'}
+  Group:
+    type: object
+    properties:
+      workflows: {type: array, items: {$ref: '#/definitions/Workflow'}}
