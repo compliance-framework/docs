@@ -1,0 +1,62 @@
+# Contributing to the CCF docs
+
+Thanks for helping with the docs. This page covers how the docs are versioned, how to change them, and how pull requests get reviewed and merged. For how to write a page, see [STYLE.md](STYLE.md). To build the site locally, see the [README](README.md).
+
+## How the docs are versioned
+
+Each CCF repository has its own release cycle, so each one gets its **own versioned docs instance**: one Docusaurus docs plugin instance per repository (`api`, `ui`, `agent`, and one per plugin), each with its own versions and version dropdown. The general pages (introduction, OSCAL, glossary) stay in `docs/` and aren't versioned.
+
+> The site is moving to this layout. Until an instance exists, its pages live in `docs/` and aren't versioned.
+
+For an instance with the id `api`, the files are:
+
+| Path | What it holds |
+|---|---|
+| `api/` | `current`: the unreleased ("next") docs for the next release |
+| `api_versioned_docs/version-0.21/` | The released `0.21` line |
+| `api_versioned_sidebars/` | The sidebar of each released line |
+| `api_versions.json` | The released lines, newest first |
+
+### One version per minor line
+
+A version is a **minor line** such as `0.21`, never a patch such as `0.21.1`.
+
+- **A patch release** (`0.21.1`) edits its line in place, in `api_versioned_docs/version-0.21/`, and adds its notes to that line's release notes. It doesn't cut a new version.
+- **A minor or major release** (`0.22.0`) cuts a new version from `current`:
+
+  ```sh
+  yarn docusaurus docs:version:api 0.22
+  ```
+
+  For `api`, the release also adds the line's OpenAPI spec as `openapi/api/0.22.yaml`.
+
+### Where to make a change
+
+- **A fix that's true for a released line:** edit that line's `*_versioned_docs/version-<line>/` pages. If it's also true for the next release, make the same change in `current`.
+- **Anything for an unreleased change:** edit `current` only.
+- **Never edit a released line other than the one you're fixing.** A pull request for one release touches only that release's line.
+- **Released lines are read-only history otherwise.** Don't reword, restructure or "tidy" old lines.
+
+Release docs (notes, API reference, configuration reference, feature and upgrade guides, catalog rows and version cuts) are mostly written by the factory when a release ships. You can still open a pull request for any of them.
+
+## Pull requests
+
+1. Branch from `main` and keep each pull request to one change: one release, one fix or one new page.
+2. Follow [STYLE.md](STYLE.md) for voice, page skeletons, media and links.
+3. Run `yarn build` before you push. A broken internal link fails the build.
+4. Open the pull request against `main` and say what changed and which version lines it touches.
+
+Every push to `main` deploys the site, so a merged pull request goes live once that deploy finishes.
+
+## The factory and the `factory:hold` label
+
+The CCF factory opens, reviews and merges docs pull requests for releases. It only merges pull requests it opened itself, after its reviewer approves them and the build passes. On pull requests that people open, it only reviews.
+
+To make the factory wait, add the **`factory:hold`** label to the pull request. The factory leaves a docs pull request with that label alone: it won't merge it while the label is on. Remove the label when you're done and the factory carries on.
+
+Two other labels also stop the merge:
+
+- `do-not-merge`: don't merge this pull request, whoever asks.
+- `factory:stop`: the factory takes no further action on this pull request at all.
+
+The factory only acts on these labels. It doesn't read comments for instructions such as "please wait".

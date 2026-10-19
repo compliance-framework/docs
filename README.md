@@ -1,45 +1,48 @@
-# Website
+# Compliance Framework docs
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+The documentation site for the Continuous Compliance Framework (CCF), built with [Docusaurus 3](https://docusaurus.io/).
 
-It produces:
+It's published at [compliance-framework.github.io/docs](https://compliance-framework.github.io/docs/introduction).
 
-[https://compliance-framework.github.io/docs/](https://compliance-framework.github.io/docs/introduction)
+Before you write a page, read [STYLE.md](STYLE.md) (voice, page skeletons, media and links) and [CONTRIBUTING.md](CONTRIBUTING.md) (versioned docs, pull requests and the `factory:hold` label).
 
-### Installation
+## Requirements
 
-```
-$ yarn
-```
+- Node.js 20 (the version in [`.nvmrc`](.nvmrc), the same as CI). With [nvm](https://github.com/nvm-sh/nvm), run `nvm use`.
+- [Yarn 1](https://classic.yarnpkg.com/) (`yarn.lock` is the only lockfile; don't use `npm install`).
 
-### Local Development
+## Install
 
-```
-$ yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-### Build
-
-```
-$ yarn build
+```sh
+yarn install --frozen-lockfile
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+## Local development
 
-### Deployment
-
-Using SSH:
-
-```
-$ USE_SSH=true yarn deploy
+```sh
+yarn start
 ```
 
-Not using SSH:
+This starts a local development server and opens a browser window. Most changes show up live, without a restart.
 
-```
-$ GIT_USER=<Your GitHub username> yarn deploy
+## Build
+
+```sh
+yarn build
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+This writes the static site to `build/`. A broken internal link fails the build (`onBrokenLinks: 'throw'`), so run it before you open a pull request. To preview the built site, run `yarn serve`.
+
+## Deployment
+
+Every push to `main` builds the site and deploys it to GitHub Pages with the [Deploy to Pages](.github/workflows/deploy-pages.yml) workflow. The [Test Build](.github/workflows/test-build.yml) workflow builds every push, on any branch. There's no manual deploy step.
+
+## Layout
+
+| Path | What it holds |
+|---|---|
+| `docs/` | The pages (Markdown and MDX), served from the site root |
+| `sidebars.js` | The sidebar |
+| `src/` | Custom CSS and React components |
+| `static/img/` | Images and GIFs |
+| `.archive/` | Old pages kept for reference. They're outside the build, so don't link to them |

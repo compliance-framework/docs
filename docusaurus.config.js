@@ -24,8 +24,7 @@ const config = {
   organizationName: 'compliance-framework', // Usually your GitHub org/user name.
   projectName: 'docs', // Usually your repo name.
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
 
   trailingSlash: false,
 
@@ -70,8 +69,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
       navbar: {
         title: 'Compliance Framework',
         logo: {
@@ -98,31 +95,22 @@ const config = {
           {
             title: 'Docs',
             items: [
+              {
+                label: 'Introduction',
+                to: '/introduction',
+              },
+              {
+                label: 'Glossary',
+                to: '/glossary',
+              },
             ],
           },
           {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/compliance-framework',
               },
             ],
           },
@@ -143,6 +131,9 @@ const config = {
 
     markdown: {
       mermaid: true,
+      hooks: {
+        onBrokenMarkdownLinks: 'throw',
+      },
     },
     themes: ['@docusaurus/theme-mermaid'],
 };
