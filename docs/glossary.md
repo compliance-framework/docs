@@ -83,9 +83,9 @@ These terms are when we refer to the internal architecture that composes Complia
 
 | Name         | Definition                                     |
 |--------------|------------------------------------------------|
-| CCF Agent    | See [Agent](./architecture/agents.md)         |
-| CCF Plugins  | See [Plugins](./architecture/plugins.md)      |
-| CCF Policies | See [Policies](./architecture/policies.md)    |
+| CCF Agent    | See [Agent](/api/architecture/agents)          |
+| CCF Plugins  | See [Plugins](/api/architecture/plugins)       |
+| CCF Policies | See [Policies](/api/architecture/policies)     |
 
 ## Links and References
 
