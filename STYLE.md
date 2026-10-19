@@ -118,6 +118,8 @@ The landing page of a plugin's own versioned instance:
 <!-- The policies catalog (below). -->
 ```
 
+`scripts/sync-catalog.mjs` generates this page from the plugin's README at its release. README sections that fit none of these go under a `## How it works` section before **Requirements**, and its links under a `## Related` section at the end, as in the feature guide.
+
 ### Policies catalog
 
 A table on each plugin page, one row per policy bundle that works with the plugin (the values here are only an example):

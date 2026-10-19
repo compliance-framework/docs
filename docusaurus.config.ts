@@ -79,10 +79,18 @@ const instanceNavbarItems: NavbarItem[] = built
     {type: 'docsVersionDropdown', docsPluginId: inst.id, position: 'right'},
   ]);
 
-// The catalog links to the plugin instances, so it shows once one of them is built.
+// The catalog links to the plugin instances, so it shows once one of them is built. It stays
+// highlighted on the plugin pages, which live under /catalog/<plugin>.
 const catalogNavbarItems: NavbarItem[] = built.some((inst) => inst.kind === 'plugin')
-  ? [{to: '/catalog', label: 'Catalog'}]
+  ? [{to: '/catalog', label: 'Catalog', activeBasePath: 'catalog'}]
   : [];
+
+// Plugins get a version dropdown but no navbar link (the catalog links to them). Like the
+// products' dropdowns, each one only shows on its own instance's pages, so the navbar never
+// carries more than one.
+const pluginNavbarItems: NavbarItem[] = built
+  .filter((inst) => inst.kind === 'plugin' && !inst.navbar)
+  .map((inst): NavbarItem => ({type: 'docsVersionDropdown', docsPluginId: inst.id, position: 'right'}));
 
 const config: Config = {
   title: 'Compliance Framework',
@@ -149,6 +157,7 @@ const config: Config = {
         {type: 'doc', docId: 'introduction/index', label: 'CCF'},
         ...instanceNavbarItems,
         ...catalogNavbarItems,
+        ...pluginNavbarItems,
         {
           href: 'https://github.com/compliance-framework',
           label: 'GitHub',

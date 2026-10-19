@@ -44,10 +44,11 @@ Every push to `main` builds the site and deploys it to GitHub Pages with the [De
 | `docs/` | The general pages (Markdown and MDX), served from the site root |
 | `sidebars.js` | The sidebar of the general pages |
 | `api/`, `ui/`, `agent/` | The current (unreleased) docs of the API, UI and agent instances; `<id>_versioned_docs/` holds each one's released lines (see [CONTRIBUTING.md](CONTRIBUTING.md)) |
+| `plugins/<name>/` | The current docs of each plugin instance, with its released lines in `plugin-<name>_versioned_docs/`. `scripts/sync-catalog.mjs` generates them |
 | `openapi/<id>/<line>.yaml` | The OpenAPI spec of each released line of an instance with `openapi`, rendered at `/<route>/<line>/reference` by `src/plugins/openapi-reference.ts`, from a display copy with deeply nested schemas collapsed (`scripts/openapi-display.mjs`) |
 | `instances.yaml` | The versioned docs instances, one per CCF repository. `docusaurus.config.ts` builds the docs plugins, navbar and version dropdowns from it |
-| `scripts/` | `gen-sidebars.mjs`, which validates `instances.yaml` against `instances.schema.json` and writes the sidebars; `gen-config-ref.mjs`, which writes a configuration reference from the repository's code; the shared loaders `instances.mjs` and `openapi.mjs`; and `openapi-display.mjs`, which makes the reference page's display copy of a spec. `yarn test` runs its tests |
+| `scripts/` | `gen-sidebars.mjs`, which validates `instances.yaml` against `instances.schema.json` and writes the sidebars; `gen-config-ref.mjs`, which writes a configuration reference from the repository's code; the shared loaders `instances.mjs` and `openapi.mjs`; and `openapi-display.mjs`, which makes the reference page's display copy of a spec; and `sync-catalog.mjs` (with `catalog.mjs`), which writes the plugin instances and the catalog data from GitHub. `yarn test` runs its tests |
 | `sidebars/` | One sidebar per instance. `yarn start` and `yarn build` generate the missing ones (they're gitignored); a curated sidebar is committed |
-| `src/` | Custom CSS, React components and the local `openapi-reference` plugin |
+| `src/` | Custom CSS, React components, the local `openapi-reference` plugin, and the Catalog page (`src/pages/catalog.tsx`), which renders `src/data/catalog.json` |
 | `static/img/` | Images and GIFs |
 | `.archive/` | Old pages kept for reference. They're outside the build, so don't link to them |

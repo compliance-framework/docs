@@ -7,6 +7,13 @@
 #
 # An instance without pages (nothing under `path` and no `<id>_versions.json`) isn't built
 # yet: it gets no docs plugin and no navbar item until its first pages land.
+#
+# scripts/sync-catalog.mjs adds an entry for every released plugin that has none, and writes the
+# plugin instances' pages. A plugin's `policies` lists its policy bundles explicitly, and is
+# written by hand: the script never maps a bundle by its name, and reports the bundles no plugin
+# lists. Each mapped bundle carries a comment with its evidence, from the READMEs at the newest
+# final releases: "exact name" when a README names or links the other repository, "prose hint"
+# when the bundle's README names the plugin in words only.
 version: 1
 instances:
   - id: api
@@ -38,8 +45,185 @@ instances:
     route: catalog/aws-ecr
     label: AWS ECR
     policies:
-      - compliance-framework/plugin-aws-ecr-image-policies
-      - compliance-framework/plugin-aws-ecr-registry-policies
-      - compliance-framework/plugin-aws-ecr-repository-policies
+      - compliance-framework/plugin-aws-ecr-image-policies       # set in the docs-revamp LLD
+      - compliance-framework/plugin-aws-ecr-registry-policies    # set in the docs-revamp LLD
+      - compliance-framework/plugin-aws-ecr-repository-policies  # set in the docs-revamp LLD
+  - id: plugin-apt-versions
+    kind: plugin
+    repo: compliance-framework/plugin-apt-versions
+    path: plugins/apt-versions
+    route: catalog/apt-versions
+    label: APT Versions
+  - id: plugin-aws-acm
+    kind: plugin
+    repo: compliance-framework/plugin-aws-acm
+    path: plugins/aws-acm
+    route: catalog/aws-acm
+    label: AWS ACM
+    policies:
+      - compliance-framework/plugin-aws-acm-certificate-policies  # exact name: each README names the other repo
+  - id: plugin-aws-apigateway
+    kind: plugin
+    repo: compliance-framework/plugin-aws-apigateway
+    path: plugins/aws-apigateway
+    route: catalog/aws-apigateway
+    label: AWS API Gateway
+  - id: plugin-aws-cloudfront
+    kind: plugin
+    repo: compliance-framework/plugin-aws-cloudfront
+    path: plugins/aws-cloudfront
+    route: catalog/aws-cloudfront
+    label: AWS CloudFront
+  - id: plugin-aws-ec2
+    kind: plugin
+    repo: compliance-framework/plugin-aws-ec2
+    path: plugins/aws-ec2
+    route: catalog/aws-ec2
+    label: AWS EC2
+    policies:
+      - compliance-framework/plugin-aws-ec2-policies  # exact name: each README names the other repo
+  - id: plugin-aws-eks
+    kind: plugin
+    repo: compliance-framework/plugin-aws-eks
+    path: plugins/aws-eks
+    route: catalog/aws-eks
+    label: AWS EKS
+    policies:
+      - compliance-framework/plugin-aws-eks-addon-policies      # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-eks-nodegroup-policies  # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-eks-policies            # exact name: each README names the other repo
+  - id: plugin-aws-elb
+    kind: plugin
+    repo: compliance-framework/plugin-aws-elb
+    path: plugins/aws-elb
+    route: catalog/aws-elb
+    label: AWS ELB
+  - id: plugin-aws-rds-aurora-psql
+    kind: plugin
+    repo: compliance-framework/plugin-aws-rds-aurora-psql
+    path: plugins/aws-rds-aurora-psql
+    route: catalog/aws-rds-aurora-psql
+    label: AWS RDS Aurora PostgreSQL
+  - id: plugin-aws-s3
+    kind: plugin
+    repo: compliance-framework/plugin-aws-s3
+    path: plugins/aws-s3
+    route: catalog/aws-s3
+    label: AWS S3
+    policies:
+      - compliance-framework/plugin-aws-s3-policies  # exact name: each README names the other repo
+  - id: plugin-aws-secretsmanager
+    kind: plugin
+    repo: compliance-framework/plugin-aws-secretsmanager
+    path: plugins/aws-secretsmanager
+    route: catalog/aws-secretsmanager
+    label: AWS Secrets Manager
+    policies:
+      - compliance-framework/plugin-aws-secretsmanager-policies  # prose hint: its README says "the `aws-secretsmanager` CCF plugin"
+  - id: plugin-aws-vpc
+    kind: plugin
+    repo: compliance-framework/plugin-aws-vpc
+    path: plugins/aws-vpc
+    route: catalog/aws-vpc
+    label: AWS VPC
+    policies:
+      - compliance-framework/plugin-aws-vpc-nacl-policies    # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-vpc-policies         # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-vpc-rt-policies      # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-vpc-sg-policies      # exact name: each README names the other repo
+      - compliance-framework/plugin-aws-vpc-subnet-policies  # exact name: each README names the other repo
+  - id: plugin-cloud-custodian
+    kind: plugin
+    repo: compliance-framework/plugin-cloud-custodian
+    path: plugins/cloud-custodian
+    route: catalog/cloud-custodian
+    label: Cloud Custodian
+    policies:
+      - compliance-framework/plugin-cloud-custodian-policies  # exact name: the plugin's README names it
+  - id: plugin-dependabot
+    kind: plugin
+    repo: compliance-framework/plugin-dependabot
+    path: plugins/dependabot
+    route: catalog/dependabot
+    label: Dependabot
+    policies:
+      - compliance-framework/plugin-dependabot-granular-policies  # exact name: its README links plugin-dependabot
+  - id: plugin-file-attestation
+    kind: plugin
+    repo: compliance-framework/plugin-file-attestation
+    path: plugins/file-attestation
+    route: catalog/file-attestation
+    label: File Attestation
+    policies:
+      - compliance-framework/plugin-file-attestation-ctrf-policies   # prose hint: its README says "for use in the File Attestation plugin"
+      - compliance-framework/plugin-file-attestation-policies        # prose hint: its README says "for use in the File Attestation plugin"
+      - compliance-framework/plugin-file-attestation-sarif-policies  # prose hint: its README says "for use in the File Attestation plugin"
+  - id: plugin-github-repositories
+    kind: plugin
+    repo: compliance-framework/plugin-github-repositories
+    path: plugins/github-repositories
+    route: catalog/github-repositories
+    label: GitHub Repositories
+    policies:
+      - compliance-framework/plugin-github-repositories-custom-policies      # exact name: its README links plugin-github-repositories
+      - compliance-framework/plugin-github-repositories-dependency-policies  # exact name: its README names plugin-github-repositories
+      - compliance-framework/plugin-github-repositories-policies             # prose hint: its README says "for use in the Github Repositories plugin"
+      - compliance-framework/plugin-github-repositories-pr-policies          # prose hint: its README says "for use in the Github Repositories plugin"
+  - id: plugin-github-settings
+    kind: plugin
+    repo: compliance-framework/plugin-github-settings
+    path: plugins/github-settings
+    route: catalog/github-settings
+    label: GitHub Settings
+    policies:
+      - compliance-framework/plugin-github-settings-policies  # prose hint: its README says "for use in the Github Settings plugin"
+  - id: plugin-gitlab-repositories
+    kind: plugin
+    repo: compliance-framework/plugin-gitlab-repositories
+    path: plugins/gitlab-repositories
+    route: catalog/gitlab-repositories
+    label: GitLab Repositories
+    policies:
+      - compliance-framework/plugin-gitlab-repositories-policies  # exact name: its README links plugin-gitlab-repositories
+  - id: plugin-http-collector
+    kind: plugin
+    repo: compliance-framework/plugin-http-collector
+    path: plugins/http-collector
+    route: catalog/http-collector
+    label: HTTP Collector
+    policies:
+      - compliance-framework/plugin-http-collector-policies  # exact name: each README names the other repo
+  - id: plugin-intruder
+    kind: plugin
+    repo: compliance-framework/plugin-intruder
+    path: plugins/intruder
+    route: catalog/intruder
+    label: Intruder
+    policies:
+      - compliance-framework/plugin-intruder-policies  # prose hint: its README says "for use in the Intruder plugin"
+  - id: plugin-jira
+    kind: plugin
+    repo: compliance-framework/plugin-jira
+    path: plugins/jira
+    route: catalog/jira
+    label: Jira
+    policies:
+      - compliance-framework/plugin-jira-custom-policies  # exact name: its README links plugin-jira
+  - id: plugin-k8s
+    kind: plugin
+    repo: compliance-framework/plugin-k8s
+    path: plugins/k8s
+    route: catalog/k8s
+    label: Kubernetes
+    policies:
+      - compliance-framework/plugin-k8s-opres-policies  # exact name: each README names the other repo
+  - id: plugin-local-ssh
+    kind: plugin
+    repo: compliance-framework/plugin-local-ssh
+    path: plugins/local-ssh
+    route: catalog/local-ssh
+    label: Local SSH
+    policies:
+      - compliance-framework/plugin-local-ssh-policies  # prose hint: its README says "for use in Compliance Framework Local SSH Plugin"
 build:
   onlyIncludeVersions: { product: 6, plugin: 3 }

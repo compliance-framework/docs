@@ -46,6 +46,27 @@ A version is a **minor line** such as `0.21`, never a patch such as `0.21.1`.
 
      It reads the instance's code at the tag with `gh`, and fails until `scripts/config-ref/<id>.yaml` describes every setting the release defines. It reads the api's `cmd/root.go`; the ui's `src/defaultconfig.json`, `src/stores/config.ts` and `env.d.ts`; and the agent's `cmd/` folder, with the api's `pkg/agentconfig/types.go` at the version the agent's `go.mod` requires.
 
+### Plugins and the catalog
+
+Each released plugin has its own instance: `plugin-aws-ecr` lives in `plugins/aws-ecr/` and `plugin-aws-ecr_versioned_docs/`, and is served at `/catalog/aws-ecr`. The **Catalog** page (`/catalog`) lists every plugin with its newest release and links to it. A plugin instance has no navbar link of its own, only a version dropdown that shows on its pages.
+
+[`scripts/sync-catalog.mjs`](scripts/sync-catalog.mjs) writes the plugin pages and the catalog from GitHub:
+
+```sh
+node scripts/sync-catalog.mjs
+```
+
+It reads the org's repositories with `gh` and never writes to GitHub. For every unarchived `plugin-*` repository that isn't a `*-policies` bundle and has a final release, it:
+
+1. adds an entry to `instances.yaml` if the plugin has none;
+2. writes the plugin's page, `index.md`, from its README at that release, in the [plugin page](STYLE.md#plugin-page) layout, with the [policies catalog](STYLE.md#policies-catalog) of the bundles its entry lists (each at its newest final release, with the controls its policies' `METADATA` lists);
+3. edits the page of that release's minor line in place, or cuts the line with `docusaurus docs:version:<id> <line>` when it's new;
+4. writes `src/data/catalog.json`, which the Catalog page renders.
+
+The pages are generated: change the plugin's README or the script, not the pages. `--dry-run` reads GitHub and prints the report without writing anything.
+
+A plugin's policy bundles are the ones its `policies` list in `instances.yaml` names. Write that list by hand: bundle names don't always match their plugin's, so the script never maps a bundle by name. It ends with the released bundles no plugin lists; add each one to its plugin's `policies` once you know where it belongs, and run the script again. A bundle release only changes its row: run the script again, and it never cuts a plugin version.
+
 ### Where to make a change
 
 - **A fix that's true for a released line:** edit that line's `*_versioned_docs/version-<line>/` pages. If it's also true for the next release, make the same change in `current`.
