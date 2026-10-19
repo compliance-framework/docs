@@ -31,7 +31,7 @@ This starts a local development server and opens a browser window. Most changes 
 yarn build
 ```
 
-This writes the static site to `build/`. A broken internal link fails the build (`onBrokenLinks: 'throw'`), so run it before you open a pull request. To preview the built site, run `yarn serve`.
+This writes the static site to `build/`. Both `yarn start` and `yarn build` first run `scripts/gen-sidebars.mjs`, which fails on an invalid `instances.yaml`. The site is served under `/docs/`; set `DOCS_PROJECT` to serve it under another GitHub Pages project, for example `DOCS_PROJECT=mock-docs yarn build` for `/mock-docs/`. A broken internal link fails the build (`onBrokenLinks: 'throw'`), so run it before you open a pull request. To preview the built site, run `yarn serve`.
 
 ## Deployment
 
@@ -41,8 +41,11 @@ Every push to `main` builds the site and deploys it to GitHub Pages with the [De
 
 | Path | What it holds |
 |---|---|
-| `docs/` | The pages (Markdown and MDX), served from the site root |
-| `sidebars.js` | The sidebar |
+| `docs/` | The general pages (Markdown and MDX), served from the site root |
+| `sidebars.js` | The sidebar of the general pages |
+| `instances.yaml` | The versioned docs instances, one per CCF repository. `docusaurus.config.ts` builds the docs plugins, navbar and version dropdowns from it |
+| `scripts/` | `gen-sidebars.mjs`, which validates `instances.yaml` against `instances.schema.json` and writes the sidebars, and the shared loader `instances.mjs` |
+| `sidebars/` | One sidebar per instance. `yarn start` and `yarn build` generate the missing ones (they're gitignored); a curated sidebar is committed |
 | `src/` | Custom CSS and React components |
 | `static/img/` | Images and GIFs |
 | `.archive/` | Old pages kept for reference. They're outside the build, so don't link to them |
