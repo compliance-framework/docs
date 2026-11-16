@@ -7,7 +7,7 @@
 # listed here, when a key here isn't bound any more, or when a `default` here duplicates a
 # viper.SetDefault. Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside code.
 #
-# Checked against compliance-framework/api v0.21.0.
+# Checked against compliance-framework/api v0.22.5.
 version: 1
 settings:
   agent_instance_oneshot_retention:
@@ -239,7 +239,7 @@ settings:
     default: "`slack.yaml`"
     example: /etc/ccf/slack.yaml
   sso_config:
-    purpose: The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off.
+    purpose: The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off. See [Single sign-on](./single-sign-on.md).
     type: string
     default: "`sso.yaml`"
     example: /etc/ccf/sso.yaml
@@ -272,3 +272,53 @@ settings:
     type: string
     default: "`workflow.yaml`"
     example: /etc/ccf/workflow.yaml
+  evidence_batch_chunk_size:
+    purpose: How many evidence items one asynchronous batch job processes. Must be positive.
+    type: int
+    default: "`100`"
+    example: "50"
+  evidence_batch_max_items:
+    purpose: The most evidence items one asynchronous batch accepts. Must be positive.
+    type: int
+    default: "`1000`"
+    example: "500"
+  evidence_batch_prune_schedule:
+    purpose: When the job deletes expired batch records, as a six-field cron expression with seconds first.
+    type: string
+    default: "`0 47 * * * *`"
+    example: "\"0 15 * * * *\""
+  evidence_batch_retention:
+    purpose: How long batch records and item outcomes are kept after acceptance. The evidence itself stays. Use a positive Go duration.
+    type: duration
+    default: "`168h`"
+    example: "336h"
+  evidence_batch_workers:
+    purpose: How many asynchronous evidence batch chunks are processed at once. Must be positive.
+    type: int
+    default: "`4`"
+    example: "2"
+  lineage_cache_max_entries:
+    purpose: The most SSP and component scopes held in the Compliance Map cache. Must be positive; the oldest entry is evicted first.
+    type: int
+    default: "`8`"
+    example: "16"
+  lineage_cache_ttl:
+    purpose: How long a Compliance Map dataset is reused, as a Go duration. Set to `0` to disable caching.
+    type: duration
+    default: "`5m`"
+    example: "10m"
+  ssp_scope_auto_filters_schedule:
+    purpose: When the job creates missing automatic per-policy filters for SSPs with automatic filters enabled, as a six-field cron expression with seconds first.
+    type: string
+    default: "`0 23 * * * *`"
+    example: "\"0 10 * * * *\""
+  ssp_template_discovery_schedule:
+    purpose: When SSP template discovery runs, as a six-field cron expression with seconds first.
+    type: string
+    default: "`0 37 * * * *`"
+    example: "\"0 20 * * * *\""
+  ssp_template_stale_after:
+    purpose: How long a template-created SSP can go without evidence for its key values before it is reported as stale. Use a positive Go duration.
+    type: duration
+    default: "`168h`"
+    example: "336h"

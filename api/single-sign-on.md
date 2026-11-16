@@ -1,7 +1,7 @@
 ---
 title: Single sign-on
 description: Set up OIDC and OAuth2 sign-in for the API with Google, GitHub or any other provider, and map provider groups to CCF groups.
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # Single sign-on

@@ -94,7 +94,7 @@ agents: agent
 # anonymous: viewer
 ```
 
-A user's roles are their own role plus the role of each of their groups. In 0.21 users don't carry their groups yet, so the `groups` section has no effect: assign roles to users directly.
+A user's roles are their own role plus the role of each group they belong to: a group listed under `groups` grants its role to every member. Native CCF groups are resolved from the user's memberships, and SSO groups map to native ones.
 
 ## Write your own policies
 
