@@ -16,6 +16,7 @@ Control definitions are the requirements your systems are measured against: OSCA
 
 ## Before you start
 
+- The recordings use UI `v2.15.2` and API `v0.22.5` in a temporary environment with fictional data.
 - To see them, you need `catalog:read`, `profile:read` and `control-link:read`.
 - To change them, a role that can change OSCAL documents, such as `contributor`.
 - To bring in published catalogs and profiles, such as NIST SP 800-53, import their OSCAL JSON under **Global** > **Integrations** > **Import**. See [Administration](./administration.md).
@@ -26,12 +27,16 @@ Select **Control Definitions** > **Catalogs**. Each tab lists one kind of catalo
 
 In a catalog, **Add Group** and **Add Control** build its structure.
 
+![Select the Policies, Procedures and Standards tabs, select View on a catalog, then open a group to see its controls.](/img/ui/2.15/browse-catalog.gif)
+
 ## Profiles
 
 Select **Control Definitions** > **Profiles**.
 
 - **Create New Profile** starts an empty profile. On its **Controls** tab, **Add Catalog Import** adds a catalog, and you choose its **Included Controls** and **Excluded Controls**.
 - **Build Profile by Props** builds a profile from the controls of a catalog whose props match your rules, for example every control with a given `class`. A rule compares a prop with `equals`, `contains`, `regex` or `in`, and **Match Strategy** says whether `any` or `all` rules must match.
+
+![Select Build Profile by Props, set the title and a rule that matches controls whose sensitivity equals high, select Build Profile, then find the new profile in the list.](/img/ui/2.15/build-profile.gif)
 
 A profile's **Compliance** tab shows the compliance of its controls, and its **JSON** tab its OSCAL document.
 
@@ -43,6 +48,8 @@ Select **Control Definitions** > **Control Links**, then **Create Control Link**
 2. Choose the source: the concrete side, which implements or documents the target.
 3. Choose the **Relationship**. The form shows the direction it allows.
 4. Choose the **Target control**: the more abstract control.
+
+   ![Select Create Control Link, choose the source catalog and control, the Implements relationship, then the target catalog and control, and create the link.](/img/ui/2.15/create-control-link.gif)
 
 A catalog-level link links every control of the source catalog. **Re-sync** updates it when the source catalog's controls change.
 
