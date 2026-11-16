@@ -16,6 +16,7 @@ Workflows are recurring compliance activities with steps that people complete, s
 
 ## Before you start
 
+- The recordings use UI `v2.15.2` and API `v0.22.5` in a temporary environment with fictional data.
 - To see definitions and instances, you need `workflow-definition:read` and `workflow-instance:read`.
 - To create an instance, an active system. See [Systems](./systems.md).
 - For scheduled runs, the API's workflow scheduler must be on: see `CCF_WORKFLOW_CONFIG` in the [API configuration reference](/api/configuration).
@@ -27,6 +28,8 @@ Workflows are recurring compliance activities with steps that people complete, s
 3. On the **Steps** tab, select **Add Step** for each step. Give it a **Responsible Role**, its **Evidence Requirements**, and the steps it depends on: a step stays blocked until its **Dependencies** are complete.
 4. On the **Controls** tab, select **Link Control** to link the controls the workflow is for, so users find it when they implement those controls.
 
+   ![Select New Definition, fill in the name, description and cadence, select Create Definition, then add a step on the Steps tab.](/img/ui/2.15/create-workflow-definition.gif)
+
 ## Run a workflow for a system
 
 1. Select **This System** > **Workflow Instances**, then **New Instance**.
@@ -34,7 +37,11 @@ Workflows are recurring compliance activities with steps that people complete, s
 3. Select **Create Instance**.
 4. Open the instance and, on **Role Assignments**, assign a user to each role its steps use.
 
+   ![Select New Instance, choose a definition, name the instance and select Create Instance, then select Assign Role and pick a user for each role.](/img/ui/2.15/create-workflow-instance.gif)
+
 The instance runs on its cadence. **Execute Now**, or **Execute** in the list, starts a run at once. **Deactivate** stops the scheduled runs, and **Activate** resumes them. The **Executions** tab lists its runs. An execution's page shows each step's state and due date, and lets you **Cancel Execution** or **Retry Execution**.
+
+![Open an instance, select Execute Now and Start Execution, then read the execution's steps and their states.](/img/ui/2.15/run-workflow-instance.gif)
 
 ## Complete your tasks
 
@@ -42,6 +49,8 @@ The instance runs on its cadence. **Execute Now**, or **Execute** in the list, s
 2. Open a task and select **Start Step**.
 3. Add the evidence the step requires with **Add Evidence**. Evidence is submitted when you complete the step.
 4. Select **Complete Step**, with optional **Completion Notes**.
+
+   ![Open My Tasks from the profile menu, open a task, select Start Step, add the required evidence, then select Complete Step.](/img/ui/2.15/complete-workflow-task.gif)
 
 If you can't complete a step, select **Mark Failed** and give a reason; this can block the steps that depend on it. To hand a task to someone else, select **Reassign Task**.
 
