@@ -14,23 +14,34 @@ The controls of a system come from the profile attached to its system security p
 
 ## Before you start
 
+- The recordings use UI `v2.15.2` and API `v0.22.5` in a temporary environment with fictional data.
 - An active system whose SSP has a profile attached. See [Systems](./systems.md).
 - To change implementations, a role that can change OSCAL documents, such as `contributor`.
 
 ## Document an implementation
 
-1. Select **This System** > **Implementation**. The page lists the controls of the active system's profile, by group.
+1. Select **This System** > **Implementation**. Expand the profile to see its controls, by group.
 2. Select a control and one of its statements. If the statement has no implementation yet, select **Create Statement**.
 3. For each component that implements it, set the **Implementation Status** and describe how. To add a component the SSP doesn't have yet, create it from the same panel.
 4. Under **Linked Evidence Filters**, link the evidence filters that show the control works. **View Evidence** opens a filter's search, and **Unlink** removes it.
+
+![Open Implementation, expand the profile and a group, then open the implementation of a control to read how each component implements it.](/img/ui/2.15/document-implementation.gif)
 
 A control's implementation can also come from another system: **Inherited** marks what it inherits, and **Export** shares an implementation with other systems.
 
 When the API has AI set up, **AI evidence filter suggestions** proposes filters for the control. **Review in evidence filter suggestions** opens them; see [Evidence](./evidence.md#evidence-filters).
 
+## Check the compliance of the system
+
+Select **This System** > **Compliance**. The page shows how the active system measures up against its profiles: the number of controls that are **Satisfied**, **Inherited**, **Not Satisfied** or **Unknown**, the **Compliance** and **Assessed** percentages, the **Implementation Coverage**, and a **Group Breakdown** with the compliance of each group of controls.
+
+![Open Compliance and scroll through the compliance of the system and of each group of controls.](/img/ui/2.15/compliance-by-control.gif)
+
 ## Follow the Compliance Map
 
-Select **Global** > **Analysis** > **Compliance Map**. It shows a tree from standards to policies, controls and evidence, with the compliance of each node and the score of its open risks. Expand a node to see its children, and select it for details: its compliance in each SSP, its evidence and its inherited capabilities.
+Select **Global** > **Analysis** > **Compliance Map**. It shows a tree from standards to policies, controls and evidence, with the compliance of each node and the score of its open risks. Expand a node to see its children, down to the policies and evidence of a control, and select it for details: its compliance in each SSP, its evidence and its inherited capabilities.
+
+![Open the Compliance Map, refresh it, expand a standard, a group and a control down to its evidence, then select the control for its details.](/img/ui/2.15/follow-compliance-map.gif)
 
 Narrow the map with the bar at the top: an **SSP**, a **Component** and the **Types** of node to show. The switch next to it changes to the graph view, which shows the nodes with the worst open risk first, column by column.
 
