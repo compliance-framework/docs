@@ -3,7 +3,48 @@ title: Release notes
 sidebar_position: 90
 ---
 
-# Release notes for the 2.14 line
+# Release notes for the 2.15 line
+
+## v2.15.2 (2026-11-07)
+
+### Fixed
+
+- Keep the demo feedback dialog narrower than the screen ([#387](https://github.com/compliance-framework/ui/pull/387))
+- Patch OS packages in the UI image's `nginx:stable-alpine` base, CVE-2026-4738 ([#393](https://github.com/compliance-framework/ui/pull/393))
+
+### Breaking changes
+
+None.
+
+## v2.15.1 (2026-11-06)
+
+### Fixed
+
+- Read an assessment result's `import-ap` under its camelCased key ([#353](https://github.com/compliance-framework/ui/pull/353))
+- Show control evidence whose labels are null ([#352](https://github.com/compliance-framework/ui/pull/352))
+- Stop the SSP characteristics editor from wiping the information types ([#351](https://github.com/compliance-framework/ui/pull/351))
+
+### Breaking changes
+
+None.
+
+## v2.15.0 (2026-11-06)
+
+### Highlights
+
+- User management shows errors from the API in a consistent way, through reusable error handling.
+
+### Added
+
+- Add reusable error handling and use it in the user management screens ([#141](https://github.com/compliance-framework/ui/pull/141))
+
+### Fixed
+
+- Patch OS packages in the UI image's `nginx:stable-alpine` base, CVE-2026-107928, CVE-2026-107929, CVE-2026-111497, CVE-2026-113351 and 23 more ([#388](https://github.com/compliance-framework/ui/pull/388))
+
+### Breaking changes
+
+None.
 
 ## v2.14.0 (2026-11-02)
 

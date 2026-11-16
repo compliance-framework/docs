@@ -11,7 +11,7 @@ The Continuous Compliance Framework (CCF) UI is the web app where you work with 
 
 ## Deploy the UI
 
-The UI is a static web app. Each release publishes the container image `ghcr.io/compliance-framework/ui`, for `linux/amd64` and `linux/arm64`, tagged with the release version, such as `2.14.0` and `2.14`. The image serves the app with nginx on port `80`.
+The UI is a static web app. Each release publishes the container image `ghcr.io/compliance-framework/ui`, for `linux/amd64` and `linux/arm64`, tagged with the release version, such as `2.15.2` and `2.15`. The image serves the app with nginx on port `80`.
 
 1. Write a `config.json` with the address of the API:
 
@@ -24,7 +24,7 @@ The UI is a static web app. Each release publishes the container image `ghcr.io/
 2. Run the image with the file mounted at `/app/config.json`:
 
    ```sh
-   docker run -p 8000:80 -v "$PWD/config.json:/app/config.json:ro" ghcr.io/compliance-framework/ui:2.14.0
+   docker run -p 8000:80 -v "$PWD/config.json:/app/config.json:ro" ghcr.io/compliance-framework/ui:2.15.2
    ```
 
 3. Let the API accept calls from the UI's address: add it to the API's `CCF_API_ALLOWED_ORIGINS`, and set `CCF_WEB_BASE_URL` to it so links in emails point to the UI. See the [API configuration reference](/api/configuration).
@@ -34,7 +34,7 @@ The UI reads `config.json` each time it loads, and nginx serves it uncached, so 
 To build the UI yourself, use Node.js 20:
 
 ```sh
-git clone --branch v2.14.0 https://github.com/compliance-framework/ui.git
+git clone --branch v2.15.2 https://github.com/compliance-framework/ui.git
 cd ui
 npm install
 npm run build
