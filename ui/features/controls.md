@@ -6,7 +6,7 @@ sidebar_position: 3
 
 # Controls and the Compliance Map
 
-**Controls** is where you write how the active system implements each control it must meet, and link the evidence that shows it. The **Compliance Map** shows the result across your systems, from standards down to evidence. This page is for **compliance and GRC users**.
+**Implementation**, under **This System**, is where you write how the active system implements each control it must meet, and link the evidence that shows it. The **Compliance Map**, under **Global** > **Analysis**, shows the result across your systems, from standards down to evidence. This page is for **compliance and GRC users**.
 
 ## How it works
 
@@ -19,7 +19,7 @@ The controls of a system come from the profile attached to its system security p
 
 ## Document an implementation
 
-1. Select **Controls**. The page lists the controls of the active system's profile, by group.
+1. Select **This System** > **Implementation**. The page lists the controls of the active system's profile, by group.
 2. Select a control and one of its statements. If the statement has no implementation yet, select **Create Statement**.
 3. For each component that implements it, set the **Implementation Status** and describe how. To add a component the SSP doesn't have yet, create it from the same panel.
 4. Under **Linked Evidence Filters**, link the evidence filters that show the control works. **View Evidence** opens a filter's search, and **Unlink** removes it.
@@ -30,13 +30,13 @@ When the API has AI set up, **AI evidence filter suggestions** proposes filters 
 
 ## Follow the Compliance Map
 
-Select **Compliance Map**. It shows a tree from standards to policies, controls and evidence, with the compliance of each node and the score of its open risks. Expand a node to see its children, and select it for details: its compliance in each SSP, its evidence and its inherited capabilities.
+Select **Global** > **Analysis** > **Compliance Map**. It shows a tree from standards to policies, controls and evidence, with the compliance of each node and the score of its open risks. Expand a node to see its children, and select it for details: its compliance in each SSP, its evidence and its inherited capabilities.
 
 Narrow the map with the bar at the top: an **SSP**, a **Component** and the **Types** of node to show. The switch next to it changes to the graph view, which shows the nodes with the worst open risk first, column by column.
 
 ## Troubleshooting
 
-- **System Security Plan not selected**: choose an active system under **Systems** > **Manage Systems**.
+- **System Security Plan not selected**: choose an active system from the **Active System** menu.
 - **Your selected SSP does not have a linked profile**: attach a profile on the SSP's **Overview** tab.
 - **Showing demo fixture data — the lineage API isn't connected.**: the UI couldn't load the map from the API (`/api/lineage/roots`), so it shows sample data instead. Check that the API is reachable and that you're signed in.
 

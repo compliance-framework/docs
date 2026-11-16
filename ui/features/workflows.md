@@ -22,14 +22,14 @@ Workflows are recurring compliance activities with steps that people complete, s
 
 ## Create a workflow definition
 
-1. Select **Workflows** > **Workflow Definitions**, then **New Definition**.
+1. Select **Global** > **Integrations** > **Workflow Definitions**, then **New Definition**.
 2. On its **Overview** tab, set the **Name**, **Version**, **Suggested Cadence**, **Grace Period (Days)** and the **Required Evidence Types**.
 3. On the **Steps** tab, select **Add Step** for each step. Give it a **Responsible Role**, its **Evidence Requirements**, and the steps it depends on: a step stays blocked until its **Dependencies** are complete.
 4. On the **Controls** tab, select **Link Control** to link the controls the workflow is for, so users find it when they implement those controls.
 
 ## Run a workflow for a system
 
-1. Select **Workflows** > **Workflow Instances**, then **New Instance**.
+1. Select **This System** > **Workflow Instances**, then **New Instance**.
 2. Choose the **Workflow Definition**, give the instance a name, and choose its **Execution Cadence**, or write a six-field **Cron Expression** (second, minute, hour, day, month, weekday). Set its **Grace Period (Days)**.
 3. Select **Create Instance**.
 4. Open the instance and, on **Role Assignments**, assign a user to each role its steps use.
