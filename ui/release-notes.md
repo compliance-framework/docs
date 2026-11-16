@@ -3,7 +3,25 @@ title: Release notes
 sidebar_position: 90
 ---
 
-# Release notes for the 2.13 line
+# Release notes for the 2.14 line
+
+## v2.14.0 (2026-11-02)
+
+### Highlights
+
+- The public demo can show a **Feedback** button, set with the new `DEMO_FEEDBACK_URL` setting. Other deployments don't show it.
+
+### Added
+
+- Add a feedback button for the public demo ([#386](https://github.com/compliance-framework/ui/pull/386))
+
+### Fixed
+
+- Patch OS packages in the UI image's `nginx:stable-alpine` base, CVE-2026-111497 and CVE-2026-92392 ([#383](https://github.com/compliance-framework/ui/pull/383))
+
+### Breaking changes
+
+None.
 
 ## v2.13.0 (2026-10-28)
 
