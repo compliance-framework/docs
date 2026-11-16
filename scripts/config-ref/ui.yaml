@@ -11,7 +11,7 @@
 # Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside code. A settings example
 # is a JSON value.
 #
-# Checked against compliance-framework/ui v2.12.1.
+# Checked against compliance-framework/ui v2.13.0.
 version: 1
 settings:
   API_URL:
