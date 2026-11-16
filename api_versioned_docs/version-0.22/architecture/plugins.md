@@ -56,4 +56,3 @@ values are within limits or bounds of the specific policies for the organisation
 
 Lastly, the plugin is responsible for executing the policies for each of its relevant data points, gathering
 the results, and converting these into OSCAL-compliant results which are then passed to the agent to persist to the API.
-
