@@ -67,5 +67,6 @@ api users add
 ## Related
 
 - [Configuration reference](./configuration.md)
+- [Notifications](./notifications.md)
 - [Authentication and permissions](./authentication-and-permissions.md)
 - [Architecture](./architecture/index.md)
