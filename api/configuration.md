@@ -64,7 +64,7 @@ Single sign-on, email, Slack, workflow and risk settings live in their own YAML 
 | `CCF_PPROF_PORT` | The address the `pprof` server listens on. A bare port such as `6060` is read as `:6060`. | `string` | `:6060` | `CCF_PPROF_PORT=127.0.0.1:6060` |
 | `CCF_RISK_CONFIG` | The path of the risk configuration file, which turns on and schedules the risk jobs such as review reminders. When the file is invalid, every risk job is off. | `string` | `risk.yaml` | `CCF_RISK_CONFIG=/etc/ccf/risk.yaml` |
 | `CCF_SLACK_CONFIG` | The path of the Slack configuration file. When the file can't be loaded, the Slack integration is off. | `string` | `slack.yaml` | `CCF_SLACK_CONFIG=/etc/ccf/slack.yaml` |
-| `CCF_SSO_CONFIG` | The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off. | `string` | `sso.yaml` | `CCF_SSO_CONFIG=/etc/ccf/sso.yaml` |
+| `CCF_SSO_CONFIG` | The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off. See [Single sign-on](./single-sign-on.md). | `string` | `sso.yaml` | `CCF_SSO_CONFIG=/etc/ccf/sso.yaml` |
 | `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS` | Requires a token on agent heartbeats, evidence and playback. By default these endpoints also accept requests without one. | `bool` | `false` | `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS=true` |
 | `CCF_USE_DEV_LOGGER` | Logs in a human-readable development format instead of JSON. | `bool` | `false` | `CCF_USE_DEV_LOGGER=true` |
 | `CCF_WEB_BASE_URL` | The address of the UI. The API uses it to build links in emails, such as password reset links. | `string` | `http://localhost:8000` | `CCF_WEB_BASE_URL=https://ccf.example.com` |

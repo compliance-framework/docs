@@ -24,7 +24,7 @@ Send the token as `Authorization: Bearer <token>`. The UI uses the cookie instea
 
 To verify tokens yourself, get the API's public key from `GET /api/auth/publickey` (a JSON Web Key) or `GET /api/auth/publickey.pub` (PEM). The signing keys come from `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY`. Without them the API makes a new key pair at each start, and every token stops working when it restarts.
 
-SSO providers (OIDC or OAuth2, for example Google or GitHub) are set up in the SSO configuration file, `sso.yaml` by default (`CCF_SSO_CONFIG`).
+SSO providers (OIDC or OAuth2, for example Google or GitHub) are set up in the SSO configuration file, `sso.yaml` by default (`CCF_SSO_CONFIG`). See [Single sign-on](./single-sign-on.md).
 
 The endpoints for agent heartbeats, evidence and Rego playback also take requests without a token, unless you set `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS=true`. The authorization engine still decides whether such a request is allowed.
 
@@ -34,7 +34,7 @@ Every request goes through the authorization engine you pick with `CCF_AUTHZ_DRI
 
 | Driver | What it allows |
 |---|---|
-| `builtin` (default) | Every signed-in user can do everything except administration and agent management, which need admin access. Users who sign in with a password always have admin access. SSO users have it when they belong to one of their provider's `required_admin_groups`, or when the provider lists none. Agents may only register, send evidence and heartbeats, and sync their configuration. |
+| `builtin` (default) | Every signed-in user can do everything except administration and agent management, which need admin access. Users who sign in with a password always have admin access. SSO users have it when they belong to every group in their provider's `required_admin_groups`, or when the provider lists none. Agents may only register, send evidence and heartbeats, and sync their configuration. |
 | `cedar` | Each user, group and agent gets a role from the role assignment file, and the bundled role policies decide. Anyone without a role is denied everything. |
 | `authzen` | Every decision goes to your own policy decision point, which implements the AuthZen API, at `CCF_AUTHZ_ENDPOINT`. |
 
@@ -112,5 +112,6 @@ api authz export --format cedar
 
 ## Related
 
+- [Single sign-on](./single-sign-on.md)
 - [Configuration reference](./configuration.md): every `CCF_AUTHZ_*`, `CCF_JWT_*` and `CCF_SSO_CONFIG` setting.
 - [API overview](./index.md)
