@@ -147,11 +147,13 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/social-card.png',
     navbar: {
       title: 'Compliance Framework',
       logo: {
         alt: 'Compliance Framework Logo',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
+        srcDark: 'img/logo-dark.svg',
       },
       items: [
         {type: 'doc', docId: 'introduction/index', label: 'CCF'},
