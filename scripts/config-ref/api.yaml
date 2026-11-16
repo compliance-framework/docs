@@ -239,7 +239,7 @@ settings:
     default: "`slack.yaml`"
     example: /etc/ccf/slack.yaml
   sso_config:
-    purpose: The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off.
+    purpose: The path of the single sign-on (SSO) configuration file. When the file can't be loaded, SSO is off. See [Single sign-on](./single-sign-on.md).
     type: string
     default: "`sso.yaml`"
     example: /etc/ccf/sso.yaml
