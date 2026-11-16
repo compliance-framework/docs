@@ -17,11 +17,11 @@ An accepted risk has a review deadline. At each review you either extend the acc
 ## Before you start
 
 - To see risks, you need `risk:read`. To create and change them, a role such as `contributor` or `auditor`.
-- To see the risks of every SSP under **Admin** > **Risks**, you need `admin:manage`.
+- To see the risks of every SSP under **Global** > **Analysis** > **Risks**, you need `admin:manage`.
 
 ## Use the risk register
 
-1. Select **Risk Register** for the active system, or the **Risks** tab of an SSP. The cards at the top count **Active Risks**, **Open Risks**, **Accepted Risks** and **Overdue Reviews**.
+1. Select **This System** > **Risks** for the active system, or the **Risks** tab of an SSP. The cards at the top count **Active Risks**, **Open Risks**, **Accepted Risks** and **Overdue Reviews**.
 2. Narrow the list with **Search**, **Status**, **Likelihood**, **Impact**, **Owner**, **Review Deadline**, **Control ID** and **Evidence ID**, and order it with **Sort**. **Reset Filters** clears them.
 3. Select **Create Risk** to add one.
 4. Select risks to change them together: **Bulk Status**, **Bulk Owner**, or **Export CSV**.

@@ -11,7 +11,7 @@
 # Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside code. A settings example
 # is a JSON value.
 #
-# Checked against compliance-framework/ui v2.12.1.
+# Checked against compliance-framework/ui v2.15.2.
 version: 1
 settings:
   API_URL:
@@ -30,12 +30,21 @@ settings:
     purpose: The style of the sign-in banner. One of `info`, `warn`, `error` or `success`; any other value shows `info`.
     type: string
     example: "\"warn\""
+  DEMO_FEEDBACK_URL:
+    purpose: Public demo only. The address of the demo portal's feedback endpoint. When set, the UI shows a **Feedback** button that sends a message and the current page to it. Empty hides the button.
+    type: string
+    example: "\"https://demo.example.com/feedback\""
 build:
   VITE_API_URL:
     purpose: Builds the UI with this API address. A UI built with it never fetches `config.json`, and uses the built-in defaults for the other runtime settings unless their own variables below are set.
     type: string
     default: none
     example: http://localhost:8080
+  VITE_DEMO_FEEDBACK_URL:
+    purpose: Overrides `DEMO_FEEDBACK_URL`. Set it to an empty string to build a UI without the feedback button, whatever `config.json` says.
+    type: string
+    default: none
+    example: https://demo.example.com/feedback
   VITE_FILTER_COMPONENT_LINKING_ENABLED:
     purpose: Overrides `FILTER_COMPONENT_LINKING_ENABLED`. Only `true` and `false` count; any other value leaves the runtime setting in charge.
     type: bool

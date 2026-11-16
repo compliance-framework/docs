@@ -18,7 +18,7 @@ Control definitions are the requirements your systems are measured against: OSCA
 
 - To see them, you need `catalog:read`, `profile:read` and `control-link:read`.
 - To change them, a role that can change OSCAL documents, such as `contributor`.
-- To bring in published catalogs and profiles, such as NIST SP 800-53, import their OSCAL JSON under **Admin** > **Import**. See [Administration](./administration.md).
+- To bring in published catalogs and profiles, such as NIST SP 800-53, import their OSCAL JSON under **Global** > **Integrations** > **Import**. See [Administration](./administration.md).
 
 ## Catalogs
 

@@ -11,7 +11,7 @@ The Continuous Compliance Framework (CCF) UI is the web app where you work with 
 
 ## Deploy the UI
 
-The UI is a static web app. Each release publishes the container image `ghcr.io/compliance-framework/ui`, for `linux/amd64` and `linux/arm64`, tagged with the release version, such as `2.12.1` and `2.12`. The image serves the app with nginx on port `80`.
+The UI is a static web app. Each release publishes the container image `ghcr.io/compliance-framework/ui`, for `linux/amd64` and `linux/arm64`, tagged with the release version, such as `2.15.2` and `2.15`. The image serves the app with nginx on port `80`.
 
 1. Write a `config.json` with the address of the API:
 
@@ -24,7 +24,7 @@ The UI is a static web app. Each release publishes the container image `ghcr.io/
 2. Run the image with the file mounted at `/app/config.json`:
 
    ```sh
-   docker run -p 8000:80 -v "$PWD/config.json:/app/config.json:ro" ghcr.io/compliance-framework/ui:2.12.1
+   docker run -p 8000:80 -v "$PWD/config.json:/app/config.json:ro" ghcr.io/compliance-framework/ui:2.15.2
    ```
 
 3. Let the API accept calls from the UI's address: add it to the API's `CCF_API_ALLOWED_ORIGINS`, and set `CCF_WEB_BASE_URL` to it so links in emails point to the UI. See the [API configuration reference](/api/configuration).
@@ -34,7 +34,7 @@ The UI reads `config.json` each time it loads, and nginx serves it uncached, so 
 To build the UI yourself, use Node.js 20:
 
 ```sh
-git clone --branch v2.12.1 https://github.com/compliance-framework/ui.git
+git clone --branch v2.15.2 https://github.com/compliance-framework/ui.git
 cd ui
 npm install
 npm run build
@@ -54,7 +54,7 @@ To sign out, select **Logout** at the bottom of the sidebar or in the profile me
 ## Find your way around
 
 - The **sidebar** on the left leads to every area of the UI. You only see the entries your permissions allow. See [Navigation](./navigation.md).
-- The **header** shows **Active System**: the system security plan (SSP) that system-scoped pages, such as **Controls** and **Risk Register**, work on. Choose it under **Systems** > **Manage Systems**.
+- The **header** has the **Active System** menu, where you choose the system security plan (SSP) that the pages under **This System** in the sidebar work on.
 - The **profile menu** at the top right opens **My Tasks**, with the number of workflow tasks waiting for you, **Preferences** and **Logout**.
 
 What you can see and change depends on your roles in the API. See [Authentication and permissions](/api/authentication-and-permissions).
