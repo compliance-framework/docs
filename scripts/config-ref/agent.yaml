@@ -1,0 +1,198 @@
+# What scripts/gen-config-ref.mjs can't read from the agent's code: what each setting does, its
+# type, an example and its default.
+#
+# Three maps, one table each:
+#   - settings: the configuration file keys, as the agentconfig Config struct of
+#     compliance-framework/api defines them (pkg/agentconfig/types.go, at the api version the
+#     agent's go.mod requires). `<name>` stands for a plugin name.
+#   - environment: the environment variable names the agent's cmd/*.go files spell out.
+#   - flags: the flags of the `agent` command in cmd/agent.go, by long name.
+#
+# The generator fails when the code defines a setting that isn't listed here, when one listed here
+# isn't defined any more, or when a `default` here duplicates one the code sets (only the flags
+# have code defaults). Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside
+# code. An example is shown as written: the value for a file key, the whole flag for a flag.
+#
+# Checked against compliance-framework/agent v0.9.3 (api v0.21.1).
+version: 1
+settings:
+  daemon:
+    purpose: Runs the agent as a long-running process that runs each plugin on its `schedule`, sends heartbeats and reloads the file when it changes. Off, the agent runs every plugin once and exits.
+    type: bool
+    default: "`false`"
+    example: "true"
+  verbosity:
+    purpose: How much the agent logs. `0` logs errors, warnings and info, `1` adds debug and `2` adds trace. A negative value logs less (`-1` logs warnings and errors).
+    type: int
+    default: "`0`"
+    example: "1"
+  api.url:
+    purpose: The address of the API the agent sends evidence and heartbeats to.
+    type: string
+    default: "*required*"
+    example: https://ccf-api.example.com
+  api.auth.client_id:
+    purpose: The client ID of a service account key of the agent, which the agent signs in to the API with. It must be a UUID. Set it with `api.auth.client_secret`, or leave both unset. You can also set it with `CCF_API_AUTH_CLIENT_ID`.
+    type: string
+    default: none
+    example: 123e4567-e89b-12d3-a456-426614174000
+  api.auth.client_secret:
+    purpose: The client secret of that key. Treat it as a secret, and prefer `CCF_API_AUTH_CLIENT_SECRET` to the file.
+    type: string
+    default: none
+    example: "<the key's client secret>"
+  remote_config.mode:
+    purpose: What the agent does with the configuration overlay an administrator saves in the API. `off` doesn't report or fetch anything; `report` reports the agent's configuration but never applies an overlay; `apply_safe` applies an overlay when every change in it is safe; `apply_all` also applies unsafe changes. Without `api.auth` the mode is always `off`. Set it locally only (file, environment or flag); an overlay can't change it.
+    type: string
+    default: "`report` with `api.auth`, otherwise `off`"
+    example: apply_safe
+  remote_config.poll_interval:
+    purpose: How often the agent asks the API for a new overlay. At least `15s`.
+    type: duration
+    default: "`60s`"
+    example: 5m
+  remote_config.trusted_sources:
+    purpose: Glob patterns of plugin and policy sources an overlay may add as a safe change, such as `ghcr.io/compliance-framework/*`. `*` doesn't match `/`.
+    type: list
+    default: "`[]`"
+    example: "[\"ghcr.io/compliance-framework/*\"]"
+  remote_config.overridable_config_flags:
+    purpose: The plugin config keys an overlay may change as a safe change. An entry is a key glob for every plugin (`token`), a plugin and key glob (`github:token`), or `*`.
+    type: list
+    default: "`[]`"
+    example: "[\"github:org\", \"schedule_*\"]"
+  remote_config.allow_local_sources:
+    purpose: Lets an overlay add a plugin or policy from a local path. Even then, it only applies in `apply_all` mode.
+    type: bool
+    default: "`false`"
+    example: "true"
+  plugins.<name>.enabled:
+    purpose: Turns a plugin off without removing it. A disabled plugin isn't downloaded or run, but the agent still reports it.
+    type: bool
+    default: "`true`"
+    example: "false"
+  plugins.<name>.protocol_version:
+    purpose: The plugin protocol the plugin speaks, `1` or `2`. A version 2 plugin gets an `Init` call before each `Eval`. See [Plugins](./plugins.md).
+    type: int
+    default: the `org.ccf.plugin.protocol.version` annotation of an OCI source, otherwise `1`
+    example: "2"
+  plugins.<name>.schedule:
+    purpose: When the plugin runs in daemon mode, as a five-field cron expression (minute, hour, day of month, month, day of week) or a descriptor such as `@hourly`. If it doesn't parse, the agent logs it and skips that plugin.
+    type: string
+    default: "`* * * * *` (every minute)"
+    example: "\"0 * * * *\""
+  plugins.<name>.source:
+    purpose: Where the plugin comes from. Either a local path, to the plugin executable or to a directory with a `plugin` executable in it, or an OCI image tag, which the agent downloads for its own OS and architecture into `.compliance-framework/plugins`.
+    type: string
+    default: "*required*"
+    example: ghcr.io/compliance-framework/plugin-apt-versions:v0.7.0
+  plugins.<name>.policies:
+    purpose: The policy bundles the plugin evaluates its data against. Each is a local path or an OCI image tag, which the agent downloads into `.compliance-framework/policies`.
+    type: list
+    default: none
+    example: "[\"ghcr.io/compliance-framework/plugin-apt-versions-policies:v0.5.1\"]"
+  plugins.<name>.config:
+    purpose: The plugin's own settings, passed to it as strings. A value can use `${env:NAME}` to read the environment variable `NAME` when the agent loads its configuration, either as the whole value or inside a longer one.
+    type: map
+    default: none
+    example: "{token: \"${env:GITHUB_TOKEN}\"}"
+  plugins.<name>.labels:
+    purpose: Labels added to every evidence record the plugin sends, besides the `_agent` and `_plugin` labels the agent sets. Evidence UUIDs come from labels, so changing them starts a new evidence stream.
+    type: map
+    default: none
+    example: "{environment: production}"
+  plugins.<name>.policy_data:
+    purpose: Data the policies can read as `data` while they evaluate, such as allowed values. It can have any shape.
+    type: object
+    default: none
+    example: "{allowed_ports: [22, 443]}"
+  plugins.<name>.policy_behavior:
+    purpose: Maps a part of a policy path to a list of behaviors, for plugins that treat some policies differently. The agent passes it to the plugin unchanged.
+    type: map
+    default: none
+    example: "{privileged: [cluster-admin]}"
+  agent_evidence.enabled:
+    purpose: Makes the agent send evidence about its own runs (labels `_agent`, `tool=ccf` and `type=operations`). It's `not-satisfied` while any plugin's last run failed.
+    type: bool
+    default: "`true`"
+    example: "false"
+  agent_evidence.emit_on_run_completion:
+    purpose: Sends that evidence as soon as a run completes, and when downloading plugins or policies fails at startup.
+    type: bool
+    default: "`true`"
+    example: "false"
+  agent_evidence.interval:
+    purpose: How often a daemon sends that evidence, whatever the plugins are doing. `0s` turns the periodic evidence off. The evidence expires after five intervals.
+    type: duration
+    default: "`1h`"
+    example: 30m
+environment:
+  CCF_API_AUTH_CLIENT_ID:
+    purpose: Sets `api.auth.client_id`, even when the file doesn't. The `submit-evidence` command reads it too.
+    type: string
+    default: none
+    example: 123e4567-e89b-12d3-a456-426614174000
+  CCF_API_AUTH_CLIENT_SECRET:
+    purpose: Sets `api.auth.client_secret`, even when the file doesn't. The `submit-evidence` command reads it too. Plugins never see it.
+    type: string
+    default: none
+    example: "<the key's client secret>"
+  CCF_API_URL:
+    purpose: The API address for the `submit-evidence` command, when it has no `--api-url`. The `agent` command reads `api.url` from its file instead.
+    type: string
+    default: none
+    example: https://ccf-api.example.com
+  CCF_INSTANCE_ID:
+    purpose: Pins the agent instance's ID, so repeated one-shot runs (CI jobs, Kubernetes jobs) report as one instance. It must be a UUID. The agent doesn't store it. `--instance-id` wins over it.
+    type: string
+    default: the ID stored in the state directory, created on the first run
+    example: 0b6f8c2e-4d1a-4f5e-9a3b-7c2d1e0f9a8b
+  CCF_REMOTE_CONFIG_MODE:
+    purpose: Sets `remote_config.mode`, even when the file has no `remote_config` block.
+    type: string
+    default: none
+    example: apply_safe
+  CCF_STATE_DIR:
+    purpose: The directory where the agent keeps its instance ID and its cache of the remote configuration. Pin it to a persistent volume in a container. `--state-dir` wins over it.
+    type: string
+    default: "`.compliance-framework/state/<key>` in the working directory, where the key comes from the config file's absolute path"
+    example: /var/lib/ccf-agent/state
+  INPUT_API_URL:
+    purpose: The API address for the `submit-evidence` command when neither `--api-url` nor `CCF_API_URL` is set.
+    type: string
+    default: none
+    example: https://ccf-api.example.com
+  KUBERNETES_POD:
+    purpose: Used as the agent's `_agent` label when `api.auth.client_id` and `KUBERNETES_POD_NAME` are unset.
+    type: string
+    default: none
+    example: ccf-agent-7d9f8
+  KUBERNETES_POD_NAME:
+    purpose: Used as the agent's `_agent` label when `api.auth.client_id` is unset. Without either, the label is a hash of the plugin and agent evidence configuration.
+    type: string
+    default: none
+    example: ccf-agent-7d9f8
+flags:
+  config:
+    purpose: The configuration file.
+    type: string
+    default: "*required*"
+    example: "--config /etc/ccf-agent/config.yaml"
+  daemon:
+    purpose: Runs the agent as a daemon, like `daemon` in the file.
+    type: bool
+    example: "-d"
+  instance-id:
+    purpose: Pins the instance's ID, like `CCF_INSTANCE_ID`, and wins over it.
+    type: string
+    default: see `CCF_INSTANCE_ID`
+    example: "--instance-id 0b6f8c2e-4d1a-4f5e-9a3b-7c2d1e0f9a8b"
+  state-dir:
+    purpose: The state directory, like `CCF_STATE_DIR`, and wins over it.
+    type: string
+    default: see `CCF_STATE_DIR`
+    example: "--state-dir /var/lib/ccf-agent/state"
+  verbose:
+    purpose: Raises `verbosity` by one each time you repeat it. A remote overlay's `verbosity` wins over it.
+    type: int
+    example: "-vv"

@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/compliance-framework/docs/blob/main/scripts/instances.schema.json",
+  "title": "CCF docs instances manifest (instances.yaml)",
+  "description": "One versioned Docusaurus docs plugin instance per CCF repository. Read by docusaurus.config.ts and scripts/gen-sidebars.mjs, and kept in sync by the docs-release skill. Ids, paths and routes must also be unique across instances; scripts/instances.mjs checks that.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "instances"],
+  "properties": {
+    "version": {
+      "description": "The manifest format version.",
+      "const": 1
+    },
+    "instances": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/instance" }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "onlyIncludeVersions": {
+          "description": "How many of the newest released minor lines each kind builds; older lines are archived. Without it, every line is built.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["product", "plugin"],
+          "properties": {
+            "product": { "type": "integer", "minimum": 1 },
+            "plugin": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "repo": {
+      "description": "A GitHub repository as owner/name.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?/[A-Za-z0-9._-]+$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!\\.{1,2}(?:/|$))(?!.*/\\.{1,2}(?:/|$))[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "instance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "repo", "path", "route", "label"],
+      "properties": {
+        "id": {
+          "description": "The docs plugin id. It names the instance's files: <id>_versioned_docs/, <id>_versions.json and sidebars/<id>.ts.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "not": { "const": "default" }
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["product", "plugin"]
+        },
+        "repo": { "$ref": "#/definitions/repo" },
+        "path": {
+          "description": "The directory of the current (unreleased) docs, relative to the docs repository root.",
+          "allOf": [{ "$ref": "#/definitions/relativePath" }],
+          "not": { "const": "docs" }
+        },
+        "route": {
+          "description": "The URL path under the site's baseUrl, without leading or trailing slashes.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+        },
+        "label": {
+          "description": "The name shown in the navbar and the catalog.",
+          "type": "string",
+          "minLength": 1
+        },
+        "navbar": {
+          "description": "Show the instance and its version dropdown in the navbar.",
+          "type": "boolean",
+          "default": false
+        },
+        "openapi": {
+          "description": "Where the repository keeps its OpenAPI spec.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {
+            "source": {
+              "description": "The spec's path inside the repository at the release tag.",
+              "$ref": "#/definitions/relativePath"
+            }
+          }
+        },
+        "policies": {
+          "description": "The policy repositories whose bundles belong to this plugin, listed explicitly because the names don't always line up.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/repo" }
+        }
+      },
+      "if": { "properties": { "kind": { "const": "product" } } },
+      "then": { "properties": { "policies": false } }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+# What scripts/gen-config-ref.mjs can't read from the UI's code: what each setting does, its type
+# and an example, plus the default of the build-time variables.
+#
+# Two maps, one table each:
+#   - settings: the runtime config.json keys. They're the keys of src/defaultconfig.json, whose
+#     values are their defaults, and must match the Config interface in src/stores/config.ts.
+#   - build: the VITE_* build-time variables env.d.ts declares or src/stores/config.ts reads.
+#
+# The generator fails when the code defines a setting that isn't listed here, when one listed here
+# isn't defined any more, or when a `default` here duplicates one from src/defaultconfig.json.
+# Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside code. A settings example
+# is a JSON value.
+#
+# Checked against compliance-framework/ui v2.12.1.
+version: 1
+settings:
+  API_URL:
+    purpose: The address of the API, without `/api`. The UI calls it from the browser, so it must be reachable from your users' machines, and the API must allow the UI's address in `CCF_API_ALLOWED_ORIGINS`. Empty sends requests to the UI's own address.
+    type: string
+    example: "\"https://ccf-api.example.com\""
+  FILTER_COMPONENT_LINKING_ENABLED:
+    purpose: Shows the screens that link evidence filters to system components, the **Dashboards** drawer of a component and the **Components** field of the filter form.
+    type: bool
+    example: "true"
+  LOGIN_BANNER:
+    purpose: A notice shown above the sign-in form, which users can close. Once closed, it stays hidden in that browser until its text changes. Empty shows no banner.
+    type: string
+    example: "\"Authorized use only.\""
+  LOGIN_BANNER_SEVERITY:
+    purpose: The style of the sign-in banner. One of `info`, `warn`, `error` or `success`; any other value shows `info`.
+    type: string
+    example: "\"warn\""
+build:
+  VITE_API_URL:
+    purpose: Builds the UI with this API address. A UI built with it never fetches `config.json`, and uses the built-in defaults for the other runtime settings unless their own variables below are set.
+    type: string
+    default: none
+    example: http://localhost:8080
+  VITE_FILTER_COMPONENT_LINKING_ENABLED:
+    purpose: Overrides `FILTER_COMPONENT_LINKING_ENABLED`. Only `true` and `false` count; any other value leaves the runtime setting in charge.
+    type: bool
+    default: none
+    example: "true"
+  VITE_LOGIN_BANNER:
+    purpose: Overrides `LOGIN_BANNER`. Set it to an empty string to build a UI without a banner, whatever `config.json` says.
+    type: string
+    default: none
+    example: "\"Staging: data is reset every night.\""
+  VITE_LOGIN_BANNER_SEVERITY:
+    purpose: Overrides `LOGIN_BANNER_SEVERITY` when it's one of `info`, `warn`, `error` or `success`.
+    type: string
+    default: none
+    example: warn
