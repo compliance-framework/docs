@@ -27,7 +27,31 @@ function repoName(repo: string): string {
 export default function Catalog(): ReactNode {
   return (
     <Layout title="Catalog" description="Every CCF plugin, with its newest release and the policy bundles that work with it.">
-      <main className="container margin-vert--lg">
+      <div className="container margin-vert--lg">
+        <div className="row">
+          <aside className="col col--3">
+            <nav aria-label="Catalog menu">
+              <ul className="menu__list">
+                <li className="menu__list-item">
+                  <Link className="menu__link menu__link--active" to="/catalog">
+                    Catalog
+                  </Link>
+                  <ul className="menu__list">
+                    {[...plugins]
+                      .sort((a, b) => a.label.localeCompare(b.label))
+                      .map((p) => (
+                        <li key={p.id} className="menu__list-item">
+                          <Link className="menu__link" to={`/${p.route}`}>
+                            {p.label}
+                          </Link>
+                        </li>
+                      ))}
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </aside>
+          <main className="col col--9">
         <Heading as="h1">Catalog</Heading>
         <p>
           Every released plugin of the Continuous Compliance Framework (CCF), with its newest release and the policy
@@ -74,7 +98,9 @@ export default function Catalog(): ReactNode {
             ))}
           </tbody>
         </table>
-      </main>
+          </main>
+        </div>
+      </div>
     </Layout>
   );
 }
