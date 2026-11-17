@@ -1,6 +1,8 @@
 // node --test scripts/sync-catalog.test.mjs (or `yarn test`)
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs';
+import path from 'node:path';
 import yaml from 'js-yaml';
 import {
   absolutizeLinks,
@@ -21,7 +23,7 @@ import {
   summarize,
 } from './catalog.mjs';
 import {collect, githubSource} from './sync-catalog.mjs';
-import {PluginRefError, parsePluginRef, pluginRefValidator} from './plugin-ref.mjs';
+import {PLUGIN_REF_DIR, PluginRefError, loadPluginRef, parsePluginRef, pluginRefValidator} from './plugin-ref.mjs';
 
 test('latestFinalRelease takes the highest plain semver tag of a non-draft, non-pre-release', () => {
   const cases = [
@@ -459,4 +461,23 @@ test('removeReplacedSections drops whole sections, or only the text of one and l
   assert.deepEqual(out, ['## A', 'a', '### A1', 'a1', '## Data', 'data', '### Deep', 'deep', '## B', 'b']);
   assert.deepEqual(removeReplacedSections(lines, [{heading: 'A'}]).slice(0, 2), ['## Input', 'input']);
   assert.equal(removeReplacedSections(lines, undefined), lines);
+});
+
+// A new plugin can't ship without its policy input and subject templates: every plugin instance has a
+// reference file that matches the schema and has both parts, and its page shows both sections.
+test('every plugin instance has a reference file with a policy input and subject templates', () => {
+  const siteDir = new URL('..', import.meta.url).pathname;
+  const manifest = yaml.load(fs.readFileSync(path.join(siteDir, 'instances.yaml'), 'utf8'));
+  const plugins = manifest.instances.filter((i) => i.kind === 'plugin');
+  assert.ok(plugins.length > 0);
+  const missing = plugins.filter((i) => !fs.existsSync(path.join(siteDir, PLUGIN_REF_DIR, `${i.id}.yaml`))).map((i) => i.id);
+  assert.deepEqual(missing, [], `no reference file in ${PLUGIN_REF_DIR}/ for: ${missing.join(', ')}`);
+  for (const i of plugins) {
+    const ref = loadPluginRef(siteDir, i.id, refValidator);
+    assert.ok(ref.policyInput, `${i.id}: no policyInput`);
+    assert.ok(ref.subjectTemplates, `${i.id}: no subjectTemplates`);
+    const page = fs.readFileSync(path.join(siteDir, i.path, 'index.md'), 'utf8');
+    assert.match(page, /^## Policy input$/m, `${i.id}: page has no Policy input section`);
+    assert.match(page, /^## Subject templates$/m, `${i.id}: page has no Subject templates section`);
+  }
 });

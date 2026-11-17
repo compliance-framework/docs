@@ -17,6 +17,79 @@ where SSH configuration needs to be validated.
 
 This page is for **operators** who run the `plugin-local-ssh` plugin with the CCF Agent, and for **developers** who write policies for it. It documents [v0.5.2](https://github.com/compliance-framework/plugin-local-ssh/releases/tag/v0.5.2) and is generated from the plugin's [README at v0.5.2](https://github.com/compliance-framework/plugin-local-ssh/blob/v0.5.2/README.md).
 
+## Policy input
+
+One run reads the host's effective SSH server configuration with `sshd -T` (through `sudo` when the `sudo` setting is `true` or `1`) and evaluates every policy package against it. A policy receives the result as `input`: one key for each directive `sshd -T` prints. The plugin adds nothing of its own, so which keys exist depends on the OpenSSH version and on the host's configuration. `sshd -T` prints each directive in lower case, followed by its values separated by spaces. The plugin splits that line on spaces, so a value is always an **array of strings**, even when the directive has one value, and a directive that is printed on several lines has the values of all its lines in one array. Numbers and booleans are strings too: test `"yes" in input.passwordauthentication`, not `input.passwordauthentication == "yes"`. Because the document has no fixed fields, the table lists the directives the plugin's own example and tests use; see `man sshd_config` for the rest. A directive that is not set is missing from the document, so test for it, or give it a default. A block that `sshd -T` opens with a `{` is an object with the same shape, one level down. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
+
+| Field | Type | Description |
+|---|---|---|
+| `passwordauthentication` | array of strings | `yes` or `no`: whether password login is allowed. |
+| `pubkeyauthentication` | array of strings | `yes` or `no`: whether public key login is allowed. |
+| `permitrootlogin` | array of strings | Whether `root` can log in: `yes`, `no`, `prohibit-password` (older OpenSSH prints `without-password`) or `forced-commands-only`. |
+| `port` | array of strings | The ports the daemon listens on, such as `22`. |
+| `listenaddress` | array of strings | The addresses the daemon listens on, such as `0.0.0.0:22` and `[::]:22`. |
+| `authorizedkeysfile` | array of strings | The files in a user's home that hold authorised keys, such as `.ssh/authorized_keys`. |
+| `<directive>` | array of strings | Any other directive `sshd -T` prints, with its name in lower case, such as `maxauthtries`, `x11forwarding` or `ciphers`. A `ciphers` or `macs` value is one string of comma-separated names. |
+
+An example input:
+
+```json
+{
+  "port": [
+    "22"
+  ],
+  "listenaddress": [
+    "0.0.0.0:22",
+    "[::]:22"
+  ],
+  "permitrootlogin": [
+    "without-password"
+  ],
+  "passwordauthentication": [
+    "no"
+  ],
+  "pubkeyauthentication": [
+    "yes"
+  ],
+  "authorizedkeysfile": [
+    ".ssh/authorized_keys",
+    ".ssh/authorized_keys2"
+  ],
+  "maxauthtries": [
+    "6"
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### OpenSSH Daemon
+
+One subject per host, registered when the agent calls `Init`. Title: `OpenSSH Daemon for host: {{ .hostname }}`. Every evidence carries the `type` (`ssh`) and `hostname` labels, so the API links it to the daemon of that host.
+
+| Identity key | Description |
+|---|---|
+| `hostname` | The `HOSTNAME` environment variable of the agent's process. It is empty when the variable isn't exported, which a shell doesn't do by default for a service. |
+| `_plugin` | The name the plugin has in the agent configuration, set by the agent (`local_ssh` in the sample configuration). |
+
+Example:
+
+```json
+{
+  "name": "OpenSSH Daemon",
+  "type": "component",
+  "title": "OpenSSH Daemon for host: web-01",
+  "description": "OpenSSH Daemon running on host web-01",
+  "purpose": "Represents an OpenSSH daemon being monitored for compliance",
+  "identityLabels": {
+    "hostname": "web-01",
+    "_plugin": "local_ssh"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

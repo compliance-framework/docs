@@ -1,0 +1,74 @@
+version: 1
+policyInput:
+  description: >-
+    One run reads the host's effective SSH server configuration with `sshd -T` (through `sudo` when the `sudo` setting
+    is `true` or `1`) and evaluates every policy package against it. A policy receives the result as `input`: one key
+    for each directive `sshd -T` prints. The plugin adds nothing of its own, so which keys exist depends on the
+    OpenSSH version and on the host's configuration. `sshd -T` prints each directive in lower case, followed by its
+    values separated by spaces. The plugin splits that line on spaces, so a value is always an **array of strings**,
+    even when the directive has one value, and a directive that is printed on several lines has the values of all its
+    lines in one array. Numbers and booleans are strings too: test `"yes" in input.passwordauthentication`, not
+    `input.passwordauthentication == "yes"`. Because the document has no fixed fields, the table lists the
+    directives the plugin's own example and tests use; see `man sshd_config` for the rest. A directive that is not
+    set is missing from the document, so test for it, or give it a default. A block that `sshd -T` opens with a `{` is
+    an object with the same shape, one level down. Your own policy data from the agent configuration is in
+    `data.<key>`, not in `input`.
+  fields:
+    - name: "passwordauthentication"
+      type: "array of strings"
+      description: "`yes` or `no`: whether password login is allowed."
+    - name: "pubkeyauthentication"
+      type: "array of strings"
+      description: "`yes` or `no`: whether public key login is allowed."
+    - name: "permitrootlogin"
+      type: "array of strings"
+      description: "Whether `root` can log in: `yes`, `no`, `prohibit-password` (older OpenSSH prints `without-password`) or `forced-commands-only`."
+    - name: "port"
+      type: "array of strings"
+      description: "The ports the daemon listens on, such as `22`."
+    - name: "listenaddress"
+      type: "array of strings"
+      description: "The addresses the daemon listens on, such as `0.0.0.0:22` and `[::]:22`."
+    - name: "authorizedkeysfile"
+      type: "array of strings"
+      description: "The files in a user's home that hold authorised keys, such as `.ssh/authorized_keys`."
+    - name: "<directive>"
+      type: "array of strings"
+      description: "Any other directive `sshd -T` prints, with its name in lower case, such as `maxauthtries`, `x11forwarding` or `ciphers`. A `ciphers` or `macs` value is one string of comma-separated names."
+  example:
+    port:
+      - "22"
+    listenaddress:
+      - 0.0.0.0:22
+      - "[::]:22"
+    permitrootlogin:
+      - without-password
+    passwordauthentication:
+      - "no"
+    pubkeyauthentication:
+      - "yes"
+    authorizedkeysfile:
+      - .ssh/authorized_keys
+      - .ssh/authorized_keys2
+    maxauthtries:
+      - "6"
+subjectTemplates:
+  - name: OpenSSH Daemon
+    description: >-
+      One subject per host, registered when the agent calls `Init`. Title:
+      `OpenSSH Daemon for host: {{ .hostname }}`. Every evidence carries the `type` (`ssh`) and `hostname` labels, so
+      the API links it to the daemon of that host.
+    identityKeys:
+      - name: "hostname"
+        description: "The `HOSTNAME` environment variable of the agent's process. It is empty when the variable isn't exported, which a shell doesn't do by default for a service."
+      - name: "_plugin"
+        description: "The name the plugin has in the agent configuration, set by the agent (`local_ssh` in the sample configuration)."
+    example:
+      name: OpenSSH Daemon
+      type: component
+      title: "OpenSSH Daemon for host: web-01"
+      description: OpenSSH Daemon running on host web-01
+      purpose: Represents an OpenSSH daemon being monitored for compliance
+      identityLabels:
+        hostname: web-01
+        _plugin: local_ssh

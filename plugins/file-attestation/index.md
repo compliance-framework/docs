@@ -130,6 +130,119 @@ plugins:
 ```
 ---
 
+## Policy input
+
+One run tracks one file, the `file_path` setting, and its attestation, and evaluates every policy package against one document that a policy receives as `input`. The document is the same whether the file is local or remote. When the file doesn't exist, the document still reaches the policies, with `exists` false and `attestation` left out as `null`, so a policy can record the missing file as evidence. When the file exists but its attestation can't be fetched, `attestation` is set with `exists` false and the reason in `error`. Fields are listed by their name in the document; the ones under `attestation` have the prefix `attestation.`. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
+
+| Field | Type | Description |
+|---|---|---|
+| `path` | string | The `file_path` setting after normalisation: an absolute filesystem path becomes a `file://` URI, a relative path and any URI stay as written. |
+| `content` | string | The file's content as text. Empty when the file doesn't exist. |
+| `exists` | boolean | True when the file was found. A file that returns HTTP 404, or is missing on disk, counts as not existing, and so does one that could not be read. |
+| `sha` | string | SHA-256 of the file's content, in lower-case hexadecimal. Left out when the file doesn't exist. |
+| `sha512` | string | SHA-512 of the file's content, in lower-case hexadecimal. Left out when the file doesn't exist. |
+| `attestation` | object or null | The attestation found for the file. `null` when the file doesn't exist, so test for it before reading the fields below. The object is present even when no `attestation_path` is set, with `exists` false. |
+| `attestation.path` | string | The `attestation_path` setting after the same normalisation as `path`. |
+| `attestation.exists` | boolean | True when the attestation was found and could be read. |
+| `attestation.verified` | boolean | True when the attestation is a Sigstore bundle the plugin could parse (it has a `mediaType` or transparency log entries), or a DSSE envelope with at least one signature. The plugin doesn't check the signature itself: use `signer_identity` and `signer_issuer` to decide who you trust. |
+| `attestation.signer_identity` | string | Who signed: the first email address, URI or DNS name in the signing certificate's subject alternative names for a Sigstore bundle, the first signature's `keyid` for a DSSE envelope. Empty when none could be read. |
+| `attestation.signer_issuer` | string | Who issued the signing identity: the Fulcio issuer extension of the certificate, or the certificate issuer's common name when there is none. Empty for a DSSE envelope. |
+| `attestation.subject_digest_alg` | string | Algorithm of the first subject digest in the attestation's in-toto statement: `sha256` or `sha512` when present, otherwise the first one listed. Left out when there is no digest. |
+| `attestation.subject_digest` | string | The digest value for `subject_digest_alg`. Compare it with `sha` or `sha512`. Left out when there is no digest. |
+| `attestation.timestamp` | string | The `integratedTime` of the first transparency log entry, as the bundle writes it (seconds since the epoch, as text). Empty when there is none. |
+| `attestation.error` | string | Why the attestation couldn't be fetched or understood, such as `unrecognized attestation format`. Left out when there was no problem. |
+| `authorized_signers` | array of strings | The `authorized_signers` setting split on commas, with spaces trimmed. `null` when the setting is empty. Match it against `attestation.signer_identity`. |
+
+An example input:
+
+```json
+{
+  "path": "file:///etc/myapp/config.yaml",
+  "content": "listen: 0.0.0.0:8080\n",
+  "exists": true,
+  "sha": "3b1c8f0f6c1b6f0e0b7d3a1f9e6c2d4a5b8e7f90a1c2d3e4f5a6b7c8d9e0f1a2",
+  "sha512": "9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d",
+  "attestation": {
+    "path": "https://attest.example.com/config.yaml.att.json",
+    "exists": true,
+    "verified": true,
+    "signer_identity": "alice@example.com",
+    "signer_issuer": "https://accounts.google.com",
+    "subject_digest_alg": "sha256",
+    "subject_digest": "3b1c8f0f6c1b6f0e0b7d3a1f9e6c2d4a5b8e7f90a1c2d3e4f5a6b7c8d9e0f1a2",
+    "timestamp": "1767225600"
+  },
+  "authorized_signers": [
+    "alice@example.com",
+    "bob@example.com"
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### Tracked Local Host File Attestation
+
+One subject per local file and host, registered when the agent calls `Init`. It applies to evidence whose `source` label is `local`: a relative path, an absolute path or a `file://` URI. Title: `Tracked local file attestation target: '{{.file}}' on host '{{.host}}'`. The evidence also carries the `provider` (`file`) and `type` (`attestation`) labels, and any labels from the `policy_labels` setting.
+
+| Identity key | Description |
+|---|---|
+| `host` | The hostname of the machine the plugin runs on. |
+| `file` | The absolute path of the tracked file. A relative `file_path` is resolved against the agent's working directory. |
+| `_plugin` | The name the plugin has in the agent configuration, set by the agent (`file_attestation` in the sample configuration). |
+
+Example:
+
+```json
+{
+  "name": "Tracked Local Host File Attestation",
+  "type": "component",
+  "title": "Tracked local file attestation target: '/etc/myapp/config.yaml' on host 'web-01'",
+  "description": "Tracked local file '/etc/myapp/config.yaml' on host 'web-01' and its associated attestation evidence",
+  "purpose": "Represents a host-backed local file artifact being monitored for existence, attestation availability, signer authorization, and digest integrity",
+  "selectorLabels": {
+    "source": "local"
+  },
+  "identityLabels": {
+    "host": "web-01",
+    "file": "/etc/myapp/config.yaml",
+    "_plugin": "file_attestation"
+  }
+}
+```
+
+### Tracked Remote File Attestation
+
+One subject per remote file and host, registered when the agent calls `Init`. It applies to evidence whose `source` label is `remote`: an `http://`, `https://` or `oci://` URI. Title: `Tracked remote file attestation target: '{{.file}}' from host '{{.host}}'`. The evidence also carries the `provider` (`file`) and `type` (`attestation`) labels, and any labels from the `policy_labels` setting.
+
+| Identity key | Description |
+|---|---|
+| `host` | The domain of the URI, without a port. |
+| `file` | The path of the URI without the domain and the leading `/`, as written (percent-encoding kept). |
+| `_plugin` | The name the plugin has in the agent configuration, set by the agent (`file_attestation` in the sample configuration). |
+
+Example:
+
+```json
+{
+  "name": "Tracked Remote File Attestation",
+  "type": "component",
+  "title": "Tracked remote file attestation target: 'releases/app/config.yaml' from host 'artifacts.example.com'",
+  "description": "Tracked remote file or artifact 'releases/app/config.yaml' from host 'artifacts.example.com' and its associated attestation evidence",
+  "purpose": "Represents a remote file artifact being monitored for existence, attestation availability, signer authorization, and digest integrity",
+  "selectorLabels": {
+    "source": "remote"
+  },
+  "identityLabels": {
+    "host": "artifacts.example.com",
+    "file": "releases/app/config.yaml",
+    "_plugin": "file_attestation"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
