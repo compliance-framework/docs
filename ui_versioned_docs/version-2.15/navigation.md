@@ -15,6 +15,8 @@ The sidebar has two groups, so you can tell what a page is about:
 
 The sidebar hides an entry you don't have the permission for, and a group whose entries are all hidden. The **Evidence Filters** page and the **Admin** pages also check the permission when you open their address directly, and send you back to the start page, **Evidence** under **Global**. Permissions are written `resource:action`, the way the API's `/api/me/permissions` endpoint names them. For the roles that grant them, see [Authentication and permissions](/api/authentication-and-permissions).
 
+This documentation's sidebar follows the same grouping: the pages under **This System** and **Global** below match the UI's groups. A page that covers entries in both groups, such as **Evidence**, appears under one group with a link to its section under the other.
+
 To collapse the sidebar to abbreviations, select **Toggle Sidebar** on its edge. Hover over an abbreviation to see the entry's name.
 
 ## This System

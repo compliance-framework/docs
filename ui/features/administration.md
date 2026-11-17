@@ -10,6 +10,8 @@ The **Admin** group of the sidebar, and a few entries under **Integrations** and
 
 ## Before you start
 
+The recordings use UI `v2.15.2` and API `v0.22.5` in a temporary environment with fictional data.
+
 You need `admin:manage` for every entry described here except **Agents**, which needs `agent:read`. Registering agents and managing their keys also needs `admin:manage`.
 
 ## Users
@@ -20,6 +22,8 @@ Select **Admin** > **Users**.
 - **View** opens a user: their sign-in method and provider, their last sign-in and failed attempts, whether they're active or locked out, and their groups. **Update User** and **Delete User** change or remove them.
 - Under **Roles**, **Assign Role** gives the user a role directly. The list also shows the roles they inherit through a group. A role marked **Config-locked** is defined in the API's configuration and can't be removed here; an inherited role is removed on its group.
 
+![Select Create User, fill in the email, first name, last name and password, and save the new user.](/img/ui/2.15/create-user.gif)
+
 For a user who signs in with single sign-on, the groups that come from the identity provider are marked as inherited from SSO, and are read-only.
 
 ## Groups
@@ -28,6 +32,8 @@ Select **Admin** > **Groups**, then **Create Group** with a **Name** and **Descr
 
 - **Add Member** adds users. Members who come from the identity provider show as **Inherited (SSO)**, the others as **Native**.
 - **Assign Role** under **Roles** gives the role to every member.
+
+![Select Create Group, name the group and save it, open it, select Add Member, search for a user and add them.](/img/ui/2.15/create-group-add-member.gif)
 
 For what each role can do, see [Authentication and permissions](/api/authentication-and-permissions).
 
@@ -67,6 +73,8 @@ In **Create System Template**, or **Edit System Template** for an existing one, 
 
 The dialog has a preview of the title and description templates. Submit the form to save.
 
+![Select Create Template, fill in the name, key label, evidence filter, scope label group and title template, and create the template.](/img/ui/2.15/create-system-template.gif)
+
 ### Preview, run and review created SSPs
 
 Select **View** on a template to open its page. **Edit Template** reopens the dialog, **Back to List** returns to the list, and the page shows the template's fields, such as its keys, filter, scope label groups and when it was last updated.
@@ -75,11 +83,15 @@ Select **View** on a template to open its page. **Edit Template** reopens the di
 - **Run now** queues a discovery run. It needs an enabled template; the page says **Enable the template to run it** otherwise. Discovery runs in the background, so select **Refresh** on **Created SSPs** after a moment.
 - **Created SSPs** lists the SSPs the template created: their **Key values**, the **SSP** (linked to its overview), **Created**, **Last seen** and **Last error**. A **Stale** badge marks an SSP whose evidence is no longer seen. When someone deleted the SSP, its row says **(deleted)** and the template doesn't create it again until you select **Forget**. After **Forget**, the next discovery run creates it again if its evidence is still there.
 
+![Open a template, select Preview to see the SSPs it would create, select Run now, then Refresh to list the created SSPs.](/img/ui/2.15/preview-run-system-template.gif)
+
 A template adds the entries it learns to each SSP's scope, with the origin **Template**. See [Define the scope of a system](./systems.md#define-the-scope-of-a-system).
 
 ## Risks
 
 **Global** > **Analysis** > **Risks** opens the risk register with the risks of every system security plan. It works like a system's register; see [Risks](./risks.md).
+
+![Open Analysis in the Global sidebar, select Risks, and scroll through the risk register with the risks of every system.](/img/ui/2.15/view-global-risks.gif)
 
 ## Diagnostics
 
@@ -88,12 +100,16 @@ A template adds the entries it learns to each SSP's scope, with the origin **Tem
 - **Notifications**: the notification providers and their readiness, the destinations each notification goes to (**Add Destination** adds one), the health of the job queue, the upcoming scheduled runs, and the delivery jobs. **Run Diagnostics** checks one type of notification and recommends what to fix. Nothing here retries or cancels jobs.
 - **AI Suggestions**: the runs that generated evidence filter suggestions, their token use and cache hit ratio, and the suggestions accepted and rejected. Without AI set up in the API, it says so.
 
+![Open Diagnostics, go through the Health tab, then the Diagnostics tab, and select Run Diagnostics to see the checks.](/img/ui/2.15/run-diagnostics.gif)
+
 ## Import
 
 **Global** > **Integrations** > **Import** loads JSON files, dragged in or browsed:
 
 - **Import OSCAL Content**: catalogs, profiles, system security plans, assessment plans, assessment results, component definitions and POA&Ms. **Import Results** lists what each file created.
 - **Import Evidence Filters**: evidence filters with their control links.
+
+![Scroll to the OSCAL import, browse for a catalog JSON file, select Import and read the Import Results.](/img/ui/2.15/import-oscal-content.gif)
 
 ## Related
 
