@@ -14,6 +14,7 @@ import {
   policiesTable,
   policyFiles,
   regoControls,
+  removeReplacedSections,
   renderPluginPage,
   sortControls,
   splitReadme,
@@ -450,4 +451,12 @@ test('the reference schema fails on a missing example or an unnamed field', () =
   assert.throws(check((d) => (d.policyInput.fields[0].name = ' ')), PluginRefError);
   assert.throws(check((d) => (d.subjectTemplates[0].identityKeys = [])), PluginRefError);
   assert.throws(check((d) => { delete d.policyInput; delete d.subjectTemplates; }), PluginRefError);
+});
+
+test('removeReplacedSections drops whole sections, or only the text of one and lifts its subsections', () => {
+  const lines = ['## A', 'a', '### A1', 'a1', '## Input', 'input', '```', '## not a heading', '```', '### Fields', 'fields', '### Data', 'data', '#### Deep', 'deep', '## B', 'b'];
+  const out = removeReplacedSections(lines, [{heading: 'fields'}, {heading: 'Input', keepSubsections: true}]);
+  assert.deepEqual(out, ['## A', 'a', '### A1', 'a1', '## Data', 'data', '### Deep', 'deep', '## B', 'b']);
+  assert.deepEqual(removeReplacedSections(lines, [{heading: 'A'}]).slice(0, 2), ['## Input', 'input']);
+  assert.equal(removeReplacedSections(lines, undefined), lines);
 });

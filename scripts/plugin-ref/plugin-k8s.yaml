@@ -1,0 +1,192 @@
+version: 1
+replaces:
+  - heading: Field reference
+  - heading: Policy Input Schema (v2)
+    keepSubsections: true
+policyInput:
+  description: >-
+    The plugin implements input schema `v2` only: a policy runs once per resource instance and policy path, and
+    receives one document as `input` with the resource under evaluation in `input.main` and the whole cluster
+    snapshot in `input.context`. There is no `input.clusters`, the shape of schema `v1`. Only resource types listed
+    in `main_resources` (all of `resources` when it is not set) are evaluated; the others are collected and appear
+    in `input.context.resources` and `input.fleet` as context only. Fields are listed by their path inside the
+    document. Resources are the unstructured objects the Kubernetes API returns, so only their top level is
+    described here; the keys of `input.context.resources` are the resource names from the `resources` setting in
+    lower case. A field marked as left out is missing from the document, not null. A policy sees the data of the
+    cluster being evaluated in `input.context`, and the data of every cluster in `input.fleet`. Every evidence
+    carries a JSON copy of this input, which includes every collected resource, so the document can be large. Your
+    own policy data from the agent configuration is in `data.<key>`, not in `input`.
+    Custom fields from the `policy_input` setting are merged into the top level of the document. That setting is a JSON
+    object, and the plugin refuses to start when it holds one of the reserved keys `schema_version`, `source`, `main`,
+    `subject`, `context` or `fleet`, so a custom field can never replace what the plugin sets.
+  fields:
+    - name: "schema_version"
+      type: "string"
+      description: "Always `v2`."
+    - name: "source"
+      type: "string"
+      description: "Always `plugin-kubernetes`."
+    - name: "main"
+      type: "object"
+      description: "The Kubernetes resource under evaluation, as the API returns it (`apiVersion`, `kind`, `metadata`, `spec`, `status` and the rest)."
+    - name: "subject"
+      type: "object"
+      description: "Identity of the resource under evaluation. The fields below are inside it."
+    - name: "subject.cluster_name"
+      type: "string"
+      description: "Name of the cluster, the `name` set for it in `clusters`."
+    - name: "subject.resource_type"
+      type: "string"
+      description: "Resource type, as listed in `main_resources`, such as `pods`."
+    - name: "subject.name"
+      type: "string"
+      description: "The resource's `metadata.name`."
+    - name: "subject.namespace"
+      type: "string"
+      description: "The resource's `metadata.namespace`. Left out for cluster-scoped resources."
+    - name: "subject.identifier"
+      type: "string"
+      description: "Stable identifier of the resource's subject, `k8s-<resource type>/<cluster>/[<namespace>/]<app name>/<name>`, each part lower case with characters other than letters, digits and `-` replaced."
+    - name: "subject.identity_labels"
+      type: "object (string to string)"
+      description: "One entry per key of `identity_labels` (`app_name` by default). The value is the first of the key's `metadata.labels` that the resource has, looked up in the resource's labels, its pod template labels and its selector `matchLabels`; the resource's `metadata.name` when none match."
+    - name: "context"
+      type: "object"
+      description: "The cluster the resource belongs to, with its snapshot."
+    - name: "context.cluster"
+      type: "object"
+      description: "Cluster the resource belongs to, with `name`, `region` and `provider` (`eks` or `kubeconfig`). `region` is empty for a `kubeconfig` cluster that has none."
+    - name: "context.resources"
+      type: "object (string to array of objects)"
+      description: "Every collected resource of this cluster, keyed by resource type. Includes the resource in `main` and the types that are in `resources` only."
+    - name: "fleet"
+      type: "object"
+      description: "Snapshot of all clusters collected in this run."
+    - name: "fleet.clusters"
+      type: "object"
+      description: "Keyed by cluster name. Each entry has `cluster` (the same `name`, `region` and `provider` object as `context.cluster`) and `resources` (the same map as `context.resources`)."
+    - name: "<custom key>"
+      type: "any"
+      description: "A field you set in the `policy_input` setting, merged at the top level. Not a reserved key."
+  example:
+    schema_version: v2
+    source: plugin-kubernetes
+    main:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: web-7d9f8c6b5-abcde
+        namespace: shop
+        uid: 11111111-2222-3333-4444-555555555555
+        labels:
+          app.kubernetes.io/name: web
+      spec:
+        nodeName: ip-10-0-1-23.example.internal
+        containers:
+          - name: web
+            image: registry.example.com/shop/web:1.4.2
+      status:
+        phase: Running
+    subject:
+      cluster_name: prod
+      resource_type: pods
+      name: web-7d9f8c6b5-abcde
+      namespace: shop
+      identifier: k8s-pods/prod/shop/web/web-7d9f8c6b5-abcde
+      identity_labels:
+        app_name: web
+    context:
+      cluster:
+        name: prod
+        region: us-east-1
+        provider: eks
+      resources:
+        nodes:
+          - apiVersion: v1
+            kind: Node
+            metadata:
+              name: ip-10-0-1-23.example.internal
+        pods:
+          - apiVersion: v1
+            kind: Pod
+            metadata:
+              name: web-7d9f8c6b5-abcde
+              namespace: shop
+    fleet:
+      clusters:
+        prod:
+          cluster:
+            name: prod
+            region: us-east-1
+            provider: eks
+          resources:
+            nodes:
+              - apiVersion: v1
+                kind: Node
+                metadata:
+                  name: ip-10-0-1-23.example.internal
+            pods:
+              - apiVersion: v1
+                kind: Pod
+                metadata:
+                  name: web-7d9f8c6b5-abcde
+                  namespace: shop
+    expected_azs:
+      - us-east-1a
+      - us-east-1b
+subjectTemplates:
+  - name: k8s-pods
+    description: >-
+      One template for each type in `main_resources` (all of `resources` when it is not set), registered when the agent
+      calls `Init`; the name is `k8s-` and the resource type in lower case, so `main_resources` of `["pods", "nodes"]`
+      registers `k8s-pods` and `k8s-nodes`. The first example is for a namespaced type, `pods`. Every template is a component with the same identity keys, a title of
+      `Kubernetes <type> [<namespace>/]<name> in <cluster_name>`, a description of
+      `Kubernetes <type> <name> in cluster <cluster_name>[ under namespace <namespace>]` and the purpose
+      `Individual Kubernetes <type> instance evaluated by the Kubernetes plugin.` The namespace part is left out of the
+      title and description when the namespace is empty. Evidence also carries `resource_type` and the labels from
+      `policy_labels`, which are not part of the identity. Each evidence is also linked to a cluster component,
+      `k8s-cluster/<cluster name>`.
+    identityKeys:
+      - name: "cluster_name"
+        description: "Name of the cluster the resource belongs to."
+      - name: "namespace"
+        description: "Namespace of the resource. An empty string for cluster-scoped resources such as nodes."
+      - name: "app_name"
+        description: "Application name, resolved through `identity_labels`. When you add keys to `identity_labels`, their values go in evidence labels but the template's identity keys stay these four."
+      - name: "name"
+        description: "The resource's `metadata.name`."
+    example:
+      name: k8s-pods
+      type: component
+      title: "Kubernetes pods shop/web-7d9f8c6b5-abcde in prod"
+      description: Kubernetes pods web-7d9f8c6b5-abcde in cluster prod under namespace shop
+      purpose: Individual Kubernetes pods instance evaluated by the Kubernetes plugin.
+      identityLabels:
+        cluster_name: prod
+        namespace: shop
+        app_name: web
+        name: web-7d9f8c6b5-abcde
+  - name: k8s-nodes
+    description: >-
+      The same template for a cluster-scoped type, here `nodes`. The namespace is empty, so the evidence label
+      `namespace` is an empty string and the title and description leave the namespace out.
+    identityKeys:
+      - name: "cluster_name"
+        description: "Name of the cluster the node belongs to."
+      - name: "namespace"
+        description: "Always an empty string for nodes."
+      - name: "app_name"
+        description: "Falls back to the node's name, since nodes rarely carry an application label."
+      - name: "name"
+        description: "The node's `metadata.name`."
+    example:
+      name: k8s-nodes
+      type: component
+      title: "Kubernetes nodes ip-10-0-1-23.example.internal in prod"
+      description: Kubernetes nodes ip-10-0-1-23.example.internal in cluster prod
+      purpose: Individual Kubernetes nodes instance evaluated by the Kubernetes plugin.
+      identityLabels:
+        cluster_name: prod
+        namespace: ""
+        app_name: ip-10-0-1-23.example.internal
+        name: ip-10-0-1-23.example.internal

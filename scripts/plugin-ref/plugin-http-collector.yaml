@@ -1,0 +1,74 @@
+version: 1
+replaces:
+  - heading: Policy input
+  - heading: Subject
+policyInput:
+  description: >-
+    One run makes one request to the configured `url` and evaluates every policy package against the response, so a
+    policy receives one document per run as `input`: the response, as JSON. When no response was received (the request
+    could not be built or sent, or its body could not be read) the plugin still evaluates the policies, with `success`
+    false and `error` set, so a policy can record the failure as evidence. Fields are listed by their name in the
+    document. A field marked as left out is missing from the document, not null, so test for it with `object.get` or a
+    default. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
+  fields:
+    - name: "status_code"
+      type: "integer"
+      description: "HTTP status code of the response. 0 when no response was received."
+    - name: "status"
+      type: "string"
+      description: "Status line as Go reports it, such as `200 OK`. Empty when no response was received."
+    - name: "headers"
+      type: "object (string to array of strings)"
+      description: "Response headers, with Go's canonical names (`Content-Type`) and the list of values for each. Can be `null` when no response was received."
+    - name: "body"
+      type: "string"
+      description: "Response body as text. Empty when no response was received."
+    - name: "response_time_ms"
+      type: "integer"
+      description: "Time the request took, in milliseconds."
+    - name: "success"
+      type: "boolean"
+      description: "True for a 2xx status, false for any other status and when no response was received."
+    - name: "error"
+      type: "string"
+      description: "Why no response was received. Left out when a response was received, whatever its status."
+    - name: "matched_regex"
+      type: "boolean"
+      description: "True when the body matches `body_regex_pattern`. Left out when the pattern is not configured, does not compile, or does not match."
+    - name: "body_regex_pattern"
+      type: "string"
+      description: "The configured `body_regex_pattern`. Left out when it is not configured or does not compile."
+  example:
+    status_code: 200
+    status: 200 OK
+    headers:
+      Content-Type:
+        - application/json
+      Content-Length:
+        - "27"
+    body: '{"status":"ok","version":"1"}'
+    response_time_ms: 150
+    success: true
+    matched_regex: true
+    body_regex_pattern: '"status":"ok"'
+subjectTemplates:
+  - name: http-endpoint
+    description: >-
+      One endpoint per URL and HTTP method, registered when the agent calls `Init` with protocol v2. Title:
+      `HTTP Endpoint: {{ .method }} {{ .url }}`. Every evidence carries both identity keys as labels, next to the
+      `provider` label (`http`), so the API links it to one subject per endpoint and method. Agents that don't call
+      `Init` (protocol v1) get the same evidence.
+    identityKeys:
+      - name: "url"
+        description: "The URL requested, the `url` setting as written."
+      - name: "method"
+        description: "The HTTP method used, in upper case (`GET` unless `method` is set)."
+    example:
+      name: http-endpoint
+      type: component
+      title: "HTTP Endpoint: GET https://status.example.com/health"
+      description: HTTP endpoint https://status.example.com/health checked with GET
+      purpose: Represents an HTTP endpoint whose availability and response are checked
+      identityLabels:
+        url: https://status.example.com/health
+        method: GET

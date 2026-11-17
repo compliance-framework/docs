@@ -46,6 +46,57 @@ This plugin always enforces read-only Cloud Custodian execution:
 - With more than one region (including `all`), Cloud Custodian writes one `resources.json` per region (`<output>/<region>/<policy>/resources.json`). The plugin reads every one of them, for the inventory baseline and for each check.
 - On execution failures or timeouts, the plugin includes the tail of any generated `custodian-run.log` artifacts in the execution error.
 
+### Resource Identity
+
+`resource.id` (and the `resource_id` label) is the first non-empty field from, in order:
+
+1. the type's `resource_identity_fields`, when configured;
+2. the built-in field list for the AWS type below: the ARN first, then the natural id, following
+   the resource metadata of Cloud Custodian 0.9.49;
+3. the generic fields `Arn`, `ARN`, `arn`, `Id`, `ID`, `id`, `InstanceId`, `instance_id`, `InstanceID`,
+   `ResourceId`, `resource_id`, `Name`, `name`;
+4. a SHA-256 of the whole resource, as a last resort.
+
+| Type | Fields |
+| --- | --- |
+| `aws.app-elb` | `LoadBalancerArn` |
+| `aws.backup-plan` | `BackupPlanArn`, `BackupPlanName` |
+| `aws.backup-vault` | `BackupVaultArn`, `BackupVaultName` |
+| `aws.cache-cluster` | `ARN`, `CacheClusterId` |
+| `aws.distribution` | `ARN`, `Id` |
+| `aws.dynamodb-table` | `TableArn`, `TableName` |
+| `aws.ebs` | `VolumeId` |
+| `aws.ec2` | `InstanceId` |
+| `aws.ecs-service` | `serviceArn` |
+| `aws.efs` | `FileSystemArn`, `FileSystemId` |
+| `aws.eks` | `arn`, `name` |
+| `aws.firewall` | `FirewallArn`, `FirewallName` |
+| `aws.hostedzone` | `Id` (normalized to an ARN) |
+| `aws.iam-group` | `Arn`, `GroupName` |
+| `aws.iam-policy` | `Arn`, `PolicyId` |
+| `aws.iam-role` | `Arn`, `RoleName` |
+| `aws.iam-user` | `Arn`, `UserName` |
+| `aws.kms-key` | `Arn`, `KeyId` |
+| `aws.lambda` | `FunctionArn`, `FunctionName` |
+| `aws.log-group` | `arn`, `logGroupName` |
+| `aws.rds` | `DBInstanceArn`, `DBInstanceIdentifier` |
+| `aws.rds-cluster` | `DBClusterArn`, `DBClusterIdentifier` |
+| `aws.s3` | `Name` |
+| `aws.secrets-manager` | `ARN`, `Name` |
+| `aws.sns` | `TopicArn` |
+| `aws.sqs` | `QueueArn`, `QueueUrl` |
+| `aws.transfer-server` | `Arn`, `ServerId` |
+| `aws.wafv2` | `ARN`, `Id` |
+
+The id never depends on the annotations Cloud Custodian adds to matched resources
+(`c7n:MatchedFilters` and the like), so a check's matched resource is the same
+resource as its inventory baseline record.
+
+`provider` extraction rule:
+
+- `aws.s3` -> `aws`
+- non `<provider>.<resource>` formats -> `unknown`
+
 ## Requirements
 
 ### Operational Prerequisites
@@ -223,17 +274,53 @@ Never list `aws_accounts`, `aws_assume_role_name`, `aws_external_id`, `aws_parti
 the agent's `remote_config.overridable_config_flags` (and don't use `*` there for this plugin): a remote
 overlay could then point the plugin at other accounts or roles without an operator's review.
 
-## Policies
+## Policy input
 
-The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
+The plugin evaluates one resource for one Cloud Custodian check, and a policy receives one document per resource and check as `input`. A resource that the check matched has `assessment.status` of `non_compliant`; a resource of the same type that the check did not match, taken from the unfiltered inventory run, is `compliant`. So a policy sees every resource of the type, and a rule on `assessment.status` picks the ones it cares about. A resource that a check returns but that is missing from the inventory is still evaluated, as `non_compliant`, with `assessment.inventory_status` set to `missing_from_baseline`. Fields are listed by their path inside the document. A field marked as left out is missing from the document, not null, so test for it with `object.get` or a default. The shape of `resource.data` and `raw_policy` depends on the resource type and the check, so only their top level is described here. How `resource.id` is derived, and the built-in identity fields per AWS type, are under Resource Identity in How it works. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
 
-| Bundle | Latest version | Controls covered | Compatible plugin lines |
-|---|---|---|---|
-| [`plugin-cloud-custodian-policies`](https://github.com/compliance-framework/plugin-cloud-custodian-policies) | `v0.2.3` | *none listed* | latest |
+| Field | Type | Description |
+|---|---|---|
+| `schema_version` | string | Always `v2`. |
+| `source` | string | Always `cloud-custodian`. |
+| `check` | object | The Cloud Custodian policy (check) being evaluated. |
+| `check.name` | string | The check's `name`. |
+| `check.resource` | string | The check's resource type, such as `aws.ec2`. |
+| `check.provider` | string | Provider part of the resource type (`aws` for `aws.ec2`); `unknown` when the type has no `<provider>.<resource>` form. |
+| `check.index` | integer | Position of the check among the configured policies, starting at 0. |
+| `check.metadata` | object | Every key of the Cloud Custodian policy except `name` and `resource` (`description`, `tags`, `filters` and so on). Left out when there are none. |
+| `resource` | object | The resource under evaluation. |
+| `resource.id` | string | Stable identifier of the resource. See Resource Identity in How it works for how it is derived. |
+| `resource.type` | string | Cloud Custodian resource type, such as `aws.ec2`. |
+| `resource.provider` | string | Provider part of the resource type. |
+| `resource.account_id` | string | Cloud account ID when the resource data has one, or the scanned account with `aws_accounts`. Left out when unknown. |
+| `resource.region` | string | A region in the resource data, or the region directory Cloud Custodian wrote the resource under. Left out for global types (IAM, CloudFront, Route 53) and for resources returned identically by every region (S3 buckets). |
+| `resource.identity_fields` | object (string to string) | The identifying fields of the resource and their values (`InstanceId` for `aws.ec2`). Left out when none. |
+| `resource.data` | object | The resource as Cloud Custodian returned it. Its fields depend on the resource type. |
+| `account` | object | The AWS account the resource was scanned in. Only present with `aws_accounts`. |
+| `account.id` | string | AWS account ID. |
+| `account.name` | string | The account's name in `aws_accounts`. Empty when none is set. |
+| `assessment` | object | What the check found for the resource. |
+| `assessment.status` | string | `non_compliant` when the check matched the resource, `compliant` otherwise. |
+| `assessment.matched` | boolean | True when the check matched the resource. |
+| `assessment.inventory_status` | string | `baseline` for a resource found in the unfiltered inventory run, `missing_from_baseline` for a matched resource that is not. |
+| `assessment.matched_resource_count` | integer | Number of resources the check matched. |
+| `assessment.artifact_path` | string | Directory of the check's Cloud Custodian output on the agent's machine. Left out when empty. |
+| `assessment.resources_path` | string | Path of the check's `resources.json`. Left out when empty. |
+| `execution` | object | How the `custodian run --dryrun` for the check went. |
+| `execution.status` | string | `success`, or `error` when the run reported an error. |
+| `execution.dry_run` | boolean | Always true: the plugin never applies actions. |
+| `execution.exit_code` | integer | Exit code of the `custodian` process. |
+| `execution.started_at` | string | When the run started, as an RFC 3339 UTC time. |
+| `execution.ended_at` | string | When the run ended, as an RFC 3339 UTC time. |
+| `execution.duration_ms` | integer | How long the run took, in milliseconds. |
+| `execution.stdout` | string | Standard output of the run. Left out when empty. |
+| `execution.stderr` | string | Standard error of the run. Left out when empty. |
+| `execution.error` | string | The run's error. Left out when there is none. |
+| `execution.errors` | array of strings | Further errors of the run. Left out when there are none. |
+| `execution.warnings` | array of strings | Diagnostic warnings of the run. Left out when there are none. |
+| `raw_policy` | object | The Cloud Custodian policy as configured, with `name`, `resource` and everything else you wrote for it. |
 
-### Standardized Per-Resource OPA Input
-
-Each resource/check iteration produces one payload with this shape:
+An example input:
 
 ```json
 {
@@ -244,24 +331,33 @@ Each resource/check iteration produces one payload with this shape:
     "resource": "aws.ec2",
     "provider": "aws",
     "index": 0,
-    "metadata": {}
+    "metadata": {
+      "description": "EC2 instances must not have a public IP address."
+    }
   },
   "resource": {
-    "id": "i-1234567890abcdef0",
+    "id": "i-0123456789abcdef0",
     "type": "aws.ec2",
     "provider": "aws",
     "account_id": "123456789012",
     "region": "us-east-1",
     "identity_fields": {
-      "InstanceId": "i-1234567890abcdef0"
+      "InstanceId": "i-0123456789abcdef0"
     },
-    "data": {"...": "..."}
+    "data": {
+      "InstanceId": "i-0123456789abcdef0",
+      "InstanceType": "t3.micro",
+      "PublicIpAddress": "203.0.113.10",
+      "State": {
+        "Name": "running"
+      }
+    }
   },
   "assessment": {
     "status": "non_compliant",
     "matched": true,
     "inventory_status": "baseline",
-    "matched_resource_count": 3,
+    "matched_resource_count": 1,
     "artifact_path": "/tmp/ccf-cloud-custodian-123/001-ec2-public-ip-check",
     "resources_path": "/tmp/ccf-cloud-custodian-123/001-ec2-public-ip-check/ec2-public-ip-check/resources.json"
   },
@@ -269,93 +365,118 @@ Each resource/check iteration produces one payload with this shape:
     "status": "success",
     "dry_run": true,
     "exit_code": 0,
-    "started_at": "2026-03-06T12:00:00Z",
-    "ended_at": "2026-03-06T12:00:01Z",
-    "duration_ms": 1000,
-    "stdout": "...",
-    "stderr": "",
-    "error": "",
-    "errors": []
+    "started_at": "2098-03-06T12:00:00Z",
+    "ended_at": "2098-03-06T12:00:01Z",
+    "duration_ms": 1000
   },
   "raw_policy": {
     "name": "ec2-public-ip-check",
     "resource": "aws.ec2",
-    "filters": []
+    "filters": [
+      {
+        "type": "value",
+        "key": "PublicIpAddress",
+        "value": "present"
+      }
+    ]
   }
 }
 ```
 
-Generated evidence labels include `resource_id`, `resource_type`, `provider`,
-and any available `account_id`/`region` (with `aws_accounts`: the scanned
-account's `account_id`, its `account_name`, and an `account` object in the
-payload, see [Cross-Account Scanning](#cross-account-scanning)). A region in the resource data is used
-as is; otherwise, when Cloud Custodian wrote per-region output, `region` is the
-region directory the resource came from. Global resource types (IAM, CloudFront,
-Route 53) and resources returned identically by every region (S3 buckets, which
-`ListBuckets` returns everywhere) are kept once and get no region from the
-directory. The resource subject includes the
-resource identifier as a link and a `resource_id` property. When the AWS
-resource identifier is an ARN, generated evidence includes an AWS Resource
-Explorer link using an exact `id:<arn>` search. AWS S3 bucket names are parsed
-as `arn:aws:s3:::<bucket-name>` for Resource Explorer links. AWS Route53 hosted
-zone identifiers such as `/hostedzone/Z123` are normalized to full ARNs such as
-`arn:aws:route53:::hostedzone/Z123`.
+## Subject templates
 
-`assessment.inventory_status` is `baseline` for resources found in the unfiltered
-inventory run. If a policy returns a resource that is not present in the baseline,
-the plugin still evaluates it as `non_compliant` and sets
-`inventory_status` to `missing_from_baseline`.
+The subject templates this plugin registers. Each example is built from sample data.
 
-#### Resource Identity
+### cloud-custodian-aws-ec2
 
-`resource.id` (and the `resource_id` label) is the first non-empty field from, in order:
+The plugin registers one template for each distinct resource type among the configured checks, when the agent calls `Init`; a check whose policy does not parse, or has no resource type, adds none. The template name is `cloud-custodian-` and the resource type in lower case, with every run of characters other than letters and digits replaced by one `-`, so the type `aws.ec2` gives `cloud-custodian-aws-ec2` and `aws.iam-role` gives `cloud-custodian-aws-iam-role`. Everything else is the same for every type: the title is `Cloud Resource: {{ .resource_type }} {{ .resource_id }}`, and the identity keys are filled in from the check as below. The template also selects evidence by its `source` (`cloud-custodian`) and `resource_type` labels, and has the props `provider` and `resource_type` set from the type. Evidence carries the labels `resource_id`, `resource_type`, `provider`, and `account_id` and `region` when known. For an AWS resource whose identifier is an ARN, the evidence links to AWS Resource Explorer with an exact `id:<arn>` search; S3 bucket names are turned into `arn:aws:s3:::<bucket-name>`, and Route 53 hosted zone identifiers such as `/hostedzone/Z123` into `arn:aws:route53:::hostedzone/Z123`. This example is for a check on `aws.ec2`.
 
-1. the type's `resource_identity_fields`, when configured;
-2. the built-in field list for the AWS type below: the ARN first, then the natural id, following
-   the resource metadata of Cloud Custodian 0.9.49;
-3. the generic fields `Arn`, `ARN`, `arn`, `Id`, `ID`, `id`, `InstanceId`, `instance_id`, `InstanceID`,
-   `ResourceId`, `resource_id`, `Name`, `name`;
-4. a SHA-256 of the whole resource, as a last resort.
+| Identity key | Description |
+|---|---|
+| `provider` | The part of the configured resource type before the first dot: `aws` for `aws.ec2`. `unknown` when the type has no dot. |
+| `resource_type` | The configured resource type of the check, as written: `aws.ec2`. |
+| `resource_id` | The resource's `resource.id`: for `aws.ec2` the `InstanceId`, unless `resource_identity_fields` says otherwise. |
 
-| Type | Fields |
-| --- | --- |
-| `aws.app-elb` | `LoadBalancerArn` |
-| `aws.backup-plan` | `BackupPlanArn`, `BackupPlanName` |
-| `aws.backup-vault` | `BackupVaultArn`, `BackupVaultName` |
-| `aws.cache-cluster` | `ARN`, `CacheClusterId` |
-| `aws.distribution` | `ARN`, `Id` |
-| `aws.dynamodb-table` | `TableArn`, `TableName` |
-| `aws.ebs` | `VolumeId` |
-| `aws.ec2` | `InstanceId` |
-| `aws.ecs-service` | `serviceArn` |
-| `aws.efs` | `FileSystemArn`, `FileSystemId` |
-| `aws.eks` | `arn`, `name` |
-| `aws.firewall` | `FirewallArn`, `FirewallName` |
-| `aws.hostedzone` | `Id` (normalized to an ARN) |
-| `aws.iam-group` | `Arn`, `GroupName` |
-| `aws.iam-policy` | `Arn`, `PolicyId` |
-| `aws.iam-role` | `Arn`, `RoleName` |
-| `aws.iam-user` | `Arn`, `UserName` |
-| `aws.kms-key` | `Arn`, `KeyId` |
-| `aws.lambda` | `FunctionArn`, `FunctionName` |
-| `aws.log-group` | `arn`, `logGroupName` |
-| `aws.rds` | `DBInstanceArn`, `DBInstanceIdentifier` |
-| `aws.rds-cluster` | `DBClusterArn`, `DBClusterIdentifier` |
-| `aws.s3` | `Name` |
-| `aws.secrets-manager` | `ARN`, `Name` |
-| `aws.sns` | `TopicArn` |
-| `aws.sqs` | `QueueArn`, `QueueUrl` |
-| `aws.transfer-server` | `Arn`, `ServerId` |
-| `aws.wafv2` | `ARN`, `Id` |
+Example:
 
-The id never depends on the annotations Cloud Custodian adds to matched resources
-(`c7n:MatchedFilters` and the like), so a check's matched resource is the same
-resource as its inventory baseline record.
+```json
+{
+  "name": "cloud-custodian-aws-ec2",
+  "type": "component",
+  "title": "Cloud Resource: aws.ec2 i-0123456789abcdef0",
+  "description": "Cloud Custodian resource i-0123456789abcdef0 of type aws.ec2 from provider aws",
+  "purpose": "Represents a cloud resource collected by Cloud Custodian for compliance evaluation.",
+  "identityLabels": {
+    "provider": "aws",
+    "resource_type": "aws.ec2",
+    "resource_id": "i-0123456789abcdef0"
+  }
+}
+```
 
-`provider` extraction rule:
+### cloud-custodian-aws-s3
 
-- `aws.s3` -> `aws`
-- non `<provider>.<resource>` formats -> `unknown`
+The template of a second configured type, `aws.s3`. The identity keys derive the same way, but `resource_id` comes from the type's own field, the bucket `Name`. S3 buckets are global, so the evidence has no `region` label.
+
+| Identity key | Description |
+|---|---|
+| `provider` | `aws`, from `aws.s3`. |
+| `resource_type` | `aws.s3`. |
+| `resource_id` | The bucket's `Name`. |
+
+Example:
+
+```json
+{
+  "name": "cloud-custodian-aws-s3",
+  "type": "component",
+  "title": "Cloud Resource: aws.s3 example-reports-bucket",
+  "description": "Cloud Custodian resource example-reports-bucket of type aws.s3 from provider aws",
+  "purpose": "Represents a cloud resource collected by Cloud Custodian for compliance evaluation.",
+  "identityLabels": {
+    "provider": "aws",
+    "resource_type": "aws.s3",
+    "resource_id": "example-reports-bucket"
+  }
+}
+```
+
+### cloud-custodian-aws-ec2 (with aws_accounts)
+
+With `aws_accounts` set, the same template name is registered with `account_id` added to the identity keys, because one resource ID can exist in several accounts. The evidence also carries an `account_name` label when the account has a name; it is not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `provider` | `aws`, from `aws.ec2`. |
+| `account_id` | The AWS account the resource was scanned in, from `aws_accounts`. |
+| `resource_type` | `aws.ec2`. |
+| `resource_id` | The instance's `InstanceId`. |
+
+Example:
+
+```json
+{
+  "name": "cloud-custodian-aws-ec2",
+  "type": "component",
+  "title": "Cloud Resource: aws.ec2 i-0123456789abcdef0",
+  "description": "Cloud Custodian resource i-0123456789abcdef0 of type aws.ec2 from provider aws",
+  "purpose": "Represents a cloud resource collected by Cloud Custodian for compliance evaluation.",
+  "identityLabels": {
+    "provider": "aws",
+    "account_id": "123456789012",
+    "resource_type": "aws.ec2",
+    "resource_id": "i-0123456789abcdef0"
+  }
+}
+```
+
+## Policies
+
+The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
+
+| Bundle | Latest version | Controls covered | Compatible plugin lines |
+|---|---|---|---|
+| [`plugin-cloud-custodian-policies`](https://github.com/compliance-framework/plugin-cloud-custodian-policies) | `v0.2.3` | *none listed* | latest |
 
 ### Policy Data
 

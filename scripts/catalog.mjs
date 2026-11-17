@@ -339,6 +339,47 @@ function demoteHeadings(lines) {
   return mapOutsideFences(lines, (line) => (/^#{1,5}\s/.test(line) ? `#${line}` : line));
 }
 
+/**
+ * Removes the README sections a reference file replaces (`replaces` in scripts/plugin-ref.schema.json), so
+ * the page has one source for the policy input. A section runs from its heading to the next heading of the same
+ * or a higher level. With `keepSubsections` only its own text goes, and its subsections stay, one level higher,
+ * so they become sections of their own.
+ * @param {string[]} lines the README's lines
+ * @param {{heading: string, keepSubsections?: boolean}[]} [replaces]
+ */
+export function removeReplacedSections(lines, replaces) {
+  // Whole sections first: a section with kept subsections may hold another replaced one.
+  const ordered = [...(replaces ?? [])].sort((x, y) => Number(Boolean(x.keepSubsections)) - Number(Boolean(y.keepSubsections)));
+  return ordered.reduce((acc, r) => removeSection(acc, r), lines);
+}
+
+function removeSection(lines, {heading, keepSubsections = false}) {
+  const found = mapOutsideFences(lines, (line) => /^(#{2,6})\s+(.*?)\s*#*\s*$/.exec(line));
+  const out = [];
+  let level = 0; // level of the heading being removed, 0 outside it
+  let ownText = false;
+  lines.forEach((line, i) => {
+    const h = Array.isArray(found[i]) ? found[i] : null;
+    if (h && level > 0 && h[1].length <= level) level = 0;
+    if (h && level === 0 && h[2].trim().toLowerCase() === heading.trim().toLowerCase()) {
+      level = h[1].length;
+      ownText = true;
+      return;
+    }
+    if (level === 0) {
+      out.push(line);
+    } else if (!keepSubsections) {
+      // dropped with its subsections
+    } else if (h) {
+      ownText = false;
+      out.push(line.slice(1));
+    } else if (!ownText) {
+      out.push(line);
+    }
+  });
+  return out;
+}
+
 function trimBlank(lines) {
   let start = 0;
   let end = lines.length;
@@ -386,7 +427,7 @@ export function summarize({readme, description}) {
 export function renderPluginPage({instance, tag, readme, description, bundles, ref = null}) {
   const {repo, label} = instance;
   const name = repo.split('/')[1];
-  const parts = readme ? splitReadme(readme) : {title: null, intro: [], sections: []};
+  const parts = readme ? splitReadme(removeReplacedSections(readme.split('\n'), ref?.replaces).join('\n')) : {title: null, intro: [], sections: []};
   const buckets = Object.fromEntries(PAGE_SECTIONS.map(([key]) => [key, []]));
   const headings = Object.fromEntries(PAGE_SECTIONS);
   for (const section of parts.sections) {

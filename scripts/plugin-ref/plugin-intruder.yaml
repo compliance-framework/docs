@@ -1,0 +1,140 @@
+version: 1
+replaces:
+  - heading: Subjects
+policyInput:
+  description: >-
+    The plugin evaluates one Intruder issue title on one target, and a policy receives one document per issue title and
+    target as `input`. Issues are grouped by title: the open issue with that title, its open occurrences, and the
+    occurrences of it that Intruder lists as fixed. A title that only has fixed occurrences is evaluated too; its
+    `issue` is then empty (`id` 0, empty strings) and `OutstandingOccurrences` is `null`, so a policy that wants open
+    issues should check `OutstandingOccurrences` or `issue.id`. Only live targets are read, and snoozed issues are
+    skipped. Fields are listed by their path inside the document. The top-level keys `Target`, `FixedOccurrences`,
+    `OutstandingOccurrences`, `Title`, `Description` and `Issue` start with a capital letter, because that is how the plugin passes them;
+    everything below them uses the names the Intruder API returns. The `Issue` object has no `Occurrences` list: use
+    `OutstandingOccurrences`. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
+  fields:
+    - name: "Target"
+      type: "object"
+      description: "The Intruder target the issue is on."
+    - name: "Target.id"
+      type: "integer"
+      description: "Intruder's ID of the target."
+    - name: "Target.address"
+      type: "string"
+      description: "The target's address: a hostname, IP address or URL."
+    - name: "Target.display_address"
+      type: "string"
+      description: "The address as Intruder displays it."
+    - name: "Target.target_status"
+      type: "string"
+      description: "Status of the target. Only `live` targets are read."
+    - name: "Target.target_type"
+      type: "string"
+      description: "Type of the target as Intruder reports it."
+    - name: "Title"
+      type: "string"
+      description: "Issue title. The open issue's title, or the title of the first fixed occurrence when the issue is not open."
+    - name: "Description"
+      type: "string"
+      description: "Issue description, taken the same way as `Title`."
+    - name: "Issue"
+      type: "object"
+      description: "The open issue with this title, as Intruder returns it. Zero values when the title only has fixed occurrences."
+    - name: "Issue.TargetAddress"
+      type: "string"
+      description: "Address of the target. Empty when the plugin could not read the issue's occurrences."
+    - name: "Issue.id"
+      type: "integer"
+      description: "Intruder's ID of the issue. 0 when the issue is not open."
+    - name: "Issue.severity"
+      type: "string"
+      description: "Severity, as Intruder reports it."
+    - name: "Issue.title"
+      type: "string"
+      description: "Issue title."
+    - name: "Issue.description"
+      type: "string"
+      description: "Issue description."
+    - name: "Issue.remediation"
+      type: "string"
+      description: "Remediation advice."
+    - name: "Issue.exploit_likelihood"
+      type: "string"
+      description: "Intruder's exploit likelihood for the issue."
+    - name: "Issue.cvss_score"
+      type: "number"
+      description: "CVSS score."
+    - name: "OutstandingOccurrences"
+      type: "array of objects"
+      description: "Open occurrences of the issue on this target. `null` when the issue is not open or its occurrences could not be read."
+    - name: "OutstandingOccurrences[].occurrence_id"
+      type: "integer"
+      description: "Intruder's ID of the occurrence."
+    - name: "OutstandingOccurrences[].first_seen_at"
+      type: "string"
+      description: "When Intruder first saw the occurrence, as Intruder reports it."
+    - name: "FixedOccurrences"
+      type: "array of objects"
+      description: "Fixed occurrences with this title on this target. `null` when there are none."
+    - name: "FixedOccurrences[].occurrence_id"
+      type: "integer"
+      description: "Intruder's ID of the occurrence."
+    - name: "FixedOccurrences[].first_seen_at"
+      type: "string"
+      description: "When Intruder first saw the occurrence."
+    - name: "FixedOccurrences[].remediated_at"
+      type: "string"
+      description: "When the occurrence was fixed."
+    - name: "FixedOccurrences[].title"
+      type: "string"
+      description: "Issue title."
+    - name: "FixedOccurrences[].description"
+      type: "string"
+      description: "Issue description."
+  example:
+    Target:
+      id: 4021
+      address: app.example.com
+      display_address: app.example.com
+      target_status: live
+      target_type: dns
+    Title: TLS certificate expires soon
+    Description: The TLS certificate presented by the target expires within 30 days.
+    Issue:
+      TargetAddress: app.example.com
+      id: 88001
+      severity: medium
+      title: TLS certificate expires soon
+      description: The TLS certificate presented by the target expires within 30 days.
+      remediation: Renew the certificate before it expires.
+      exploit_likelihood: unlikely
+      cvss_score: 4.3
+    OutstandingOccurrences:
+      - occurrence_id: 990001
+        first_seen_at: "2098-03-01T09:30:00Z"
+    FixedOccurrences:
+      - occurrence_id: 980002
+        first_seen_at: "2098-01-10T09:30:00Z"
+        remediated_at: "2098-02-01T12:00:00Z"
+        title: TLS certificate expires soon
+        description: The TLS certificate presented by the target expires within 30 days.
+subjectTemplates:
+  - name: intruder-target
+    description: >-
+      One template, registered when the agent calls `Init`, together with any risk templates the configured policies
+      declare. The agent calls `Init` when the plugin runs with `protocol_version: 2`, set in the plugin's block of the
+      agent configuration or read from the plugin image's `org.ccf.plugin.protocol.version` annotation; with protocol 1
+      (the default) the plugin collects and evaluates the same way, without registering it. Title: `Intruder Target: {{ .target }}`.
+      The evidence also carries `provider` (always `intruder`) and `intruder_type` (`issue`) labels, and `_issue_hash`
+      (a hash of the issue title, which tells the issues of one target apart); none of them is part of the identity.
+    identityKeys:
+      - name: "target"
+        description: "The Intruder target address: a hostname, IP address or URL."
+    example:
+      name: intruder-target
+      type: component
+      title: "Intruder Target: app.example.com"
+      description: Host or URL scanned by Intruder (app.example.com)
+      purpose: Represents an Intruder scan target whose outstanding issues are assessed
+      identityLabels:
+        target: app.example.com

@@ -131,6 +131,198 @@ Each evidence carries a JSON copy of the Rego input it was evaluated against, an
 
 The agent passes its environment through to plugin processes, so set this on the agent.
 
+## Policy input
+
+The plugin implements input schema `v2` only: a policy runs once per resource instance and policy path, and receives one document as `input` with the resource under evaluation in `input.main` and the whole cluster snapshot in `input.context`. There is no `input.clusters`, the shape of schema `v1`. Only resource types listed in `main_resources` (all of `resources` when it is not set) are evaluated; the others are collected and appear in `input.context.resources` and `input.fleet` as context only. Fields are listed by their path inside the document. Resources are the unstructured objects the Kubernetes API returns, so only their top level is described here; the keys of `input.context.resources` are the resource names from the `resources` setting in lower case. A field marked as left out is missing from the document, not null. A policy sees the data of the cluster being evaluated in `input.context`, and the data of every cluster in `input.fleet`. Every evidence carries a JSON copy of this input, which includes every collected resource, so the document can be large. Your own policy data from the agent configuration is in `data.<key>`, not in `input`. Custom fields from the `policy_input` setting are merged into the top level of the document. That setting is a JSON object, and the plugin refuses to start when it holds one of the reserved keys `schema_version`, `source`, `main`, `subject`, `context` or `fleet`, so a custom field can never replace what the plugin sets.
+
+| Field | Type | Description |
+|---|---|---|
+| `schema_version` | string | Always `v2`. |
+| `source` | string | Always `plugin-kubernetes`. |
+| `main` | object | The Kubernetes resource under evaluation, as the API returns it (`apiVersion`, `kind`, `metadata`, `spec`, `status` and the rest). |
+| `subject` | object | Identity of the resource under evaluation. The fields below are inside it. |
+| `subject.cluster_name` | string | Name of the cluster, the `name` set for it in `clusters`. |
+| `subject.resource_type` | string | Resource type, as listed in `main_resources`, such as `pods`. |
+| `subject.name` | string | The resource's `metadata.name`. |
+| `subject.namespace` | string | The resource's `metadata.namespace`. Left out for cluster-scoped resources. |
+| `subject.identifier` | string | Stable identifier of the resource's subject, `k8s-<resource type>/<cluster>/[<namespace>/]<app name>/<name>`, each part lower case with characters other than letters, digits and `-` replaced. |
+| `subject.identity_labels` | object (string to string) | One entry per key of `identity_labels` (`app_name` by default). The value is the first of the key's `metadata.labels` that the resource has, looked up in the resource's labels, its pod template labels and its selector `matchLabels`; the resource's `metadata.name` when none match. |
+| `context` | object | The cluster the resource belongs to, with its snapshot. |
+| `context.cluster` | object | Cluster the resource belongs to, with `name`, `region` and `provider` (`eks` or `kubeconfig`). `region` is empty for a `kubeconfig` cluster that has none. |
+| `context.resources` | object (string to array of objects) | Every collected resource of this cluster, keyed by resource type. Includes the resource in `main` and the types that are in `resources` only. |
+| `fleet` | object | Snapshot of all clusters collected in this run. |
+| `fleet.clusters` | object | Keyed by cluster name. Each entry has `cluster` (the same `name`, `region` and `provider` object as `context.cluster`) and `resources` (the same map as `context.resources`). |
+| `<custom key>` | any | A field you set in the `policy_input` setting, merged at the top level. Not a reserved key. |
+
+An example input:
+
+```json
+{
+  "schema_version": "v2",
+  "source": "plugin-kubernetes",
+  "main": {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+      "name": "web-7d9f8c6b5-abcde",
+      "namespace": "shop",
+      "uid": "11111111-2222-3333-4444-555555555555",
+      "labels": {
+        "app.kubernetes.io/name": "web"
+      }
+    },
+    "spec": {
+      "nodeName": "ip-10-0-1-23.example.internal",
+      "containers": [
+        {
+          "name": "web",
+          "image": "registry.example.com/shop/web:1.4.2"
+        }
+      ]
+    },
+    "status": {
+      "phase": "Running"
+    }
+  },
+  "subject": {
+    "cluster_name": "prod",
+    "resource_type": "pods",
+    "name": "web-7d9f8c6b5-abcde",
+    "namespace": "shop",
+    "identifier": "k8s-pods/prod/shop/web/web-7d9f8c6b5-abcde",
+    "identity_labels": {
+      "app_name": "web"
+    }
+  },
+  "context": {
+    "cluster": {
+      "name": "prod",
+      "region": "us-east-1",
+      "provider": "eks"
+    },
+    "resources": {
+      "nodes": [
+        {
+          "apiVersion": "v1",
+          "kind": "Node",
+          "metadata": {
+            "name": "ip-10-0-1-23.example.internal"
+          }
+        }
+      ],
+      "pods": [
+        {
+          "apiVersion": "v1",
+          "kind": "Pod",
+          "metadata": {
+            "name": "web-7d9f8c6b5-abcde",
+            "namespace": "shop"
+          }
+        }
+      ]
+    }
+  },
+  "fleet": {
+    "clusters": {
+      "prod": {
+        "cluster": {
+          "name": "prod",
+          "region": "us-east-1",
+          "provider": "eks"
+        },
+        "resources": {
+          "nodes": [
+            {
+              "apiVersion": "v1",
+              "kind": "Node",
+              "metadata": {
+                "name": "ip-10-0-1-23.example.internal"
+              }
+            }
+          ],
+          "pods": [
+            {
+              "apiVersion": "v1",
+              "kind": "Pod",
+              "metadata": {
+                "name": "web-7d9f8c6b5-abcde",
+                "namespace": "shop"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "expected_azs": [
+    "us-east-1a",
+    "us-east-1b"
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### k8s-pods
+
+One template for each type in `main_resources` (all of `resources` when it is not set), registered when the agent calls `Init`; the name is `k8s-` and the resource type in lower case, so `main_resources` of `["pods", "nodes"]` registers `k8s-pods` and `k8s-nodes`. The first example is for a namespaced type, `pods`. Every template is a component with the same identity keys, a title of `Kubernetes <type> [<namespace>/]<name> in <cluster_name>`, a description of `Kubernetes <type> <name> in cluster <cluster_name>[ under namespace <namespace>]` and the purpose `Individual Kubernetes <type> instance evaluated by the Kubernetes plugin.` The namespace part is left out of the title and description when the namespace is empty. Evidence also carries `resource_type` and the labels from `policy_labels`, which are not part of the identity. Each evidence is also linked to a cluster component, `k8s-cluster/<cluster name>`.
+
+| Identity key | Description |
+|---|---|
+| `cluster_name` | Name of the cluster the resource belongs to. |
+| `namespace` | Namespace of the resource. An empty string for cluster-scoped resources such as nodes. |
+| `app_name` | Application name, resolved through `identity_labels`. When you add keys to `identity_labels`, their values go in evidence labels but the template's identity keys stay these four. |
+| `name` | The resource's `metadata.name`. |
+
+Example:
+
+```json
+{
+  "name": "k8s-pods",
+  "type": "component",
+  "title": "Kubernetes pods shop/web-7d9f8c6b5-abcde in prod",
+  "description": "Kubernetes pods web-7d9f8c6b5-abcde in cluster prod under namespace shop",
+  "purpose": "Individual Kubernetes pods instance evaluated by the Kubernetes plugin.",
+  "identityLabels": {
+    "cluster_name": "prod",
+    "namespace": "shop",
+    "app_name": "web",
+    "name": "web-7d9f8c6b5-abcde"
+  }
+}
+```
+
+### k8s-nodes
+
+The same template for a cluster-scoped type, here `nodes`. The namespace is empty, so the evidence label `namespace` is an empty string and the title and description leave the namespace out.
+
+| Identity key | Description |
+|---|---|
+| `cluster_name` | Name of the cluster the node belongs to. |
+| `namespace` | Always an empty string for nodes. |
+| `app_name` | Falls back to the node's name, since nodes rarely carry an application label. |
+| `name` | The node's `metadata.name`. |
+
+Example:
+
+```json
+{
+  "name": "k8s-nodes",
+  "type": "component",
+  "title": "Kubernetes nodes ip-10-0-1-23.example.internal in prod",
+  "description": "Kubernetes nodes ip-10-0-1-23.example.internal in cluster prod",
+  "purpose": "Individual Kubernetes nodes instance evaluated by the Kubernetes plugin.",
+  "identityLabels": {
+    "cluster_name": "prod",
+    "namespace": "",
+    "app_name": "ip-10-0-1-23.example.internal",
+    "name": "ip-10-0-1-23.example.internal"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
@@ -139,47 +331,7 @@ The policy bundles that work with this plugin, at their newest releases. The con
 |---|---|---|---|
 | [`plugin-k8s-opres-policies`](https://github.com/compliance-framework/plugin-k8s-opres-policies) | `v0.2.1` | *none listed* | latest |
 
-### Policy Input Schema (v2)
-
-Every policy evaluation receives one `main` resource and the full cluster snapshot as `context`.
-
-```json
-{
-  "schema_version": "v2",
-  "source": "plugin-kubernetes",
-  "main": { /* the single Kubernetes resource being evaluated (unstructured) */ },
-  "subject": {
-    /* stable per-resource identity metadata derived for evidence and policy use */
-  },
-  "context": {
-    "cluster": { "name": "prod", "region": "us-east-1", "provider": "eks" },
-    "resources": {
-      "nodes": [ /* every collected node in this cluster */ ],
-      "pods":  [ /* every collected pod in this cluster — includes the one in input.main */ ]
-    }
-  },
-  "fleet": {
-    /* multi-cluster collection metadata always included in the evaluation input */
-  }
-}
-```
-
-Any fields from `policy_input` config are merged at the top level. Reserved keys (`schema_version`, `source`, `main`, `context`, `subject`, `fleet`) cannot be overridden.
-
-#### Field reference
-
-| Path | Type | Source | Description |
-|---|---|---|---|
-| `input.schema_version` | string | Plugin | Always `"v2"` |
-| `input.source` | string | Plugin | Always `"plugin-kubernetes"` |
-| `input.main` | object | Plugin | The full unstructured Kubernetes resource currently being evaluated |
-| `input.subject` | object | Plugin | Normalized subject identity for the resource under evaluation (`cluster_name`, `resource_type`, `name`, `identifier`, `identity_labels`, and `namespace` for namespaced resources) |
-| `input.context.cluster` | object | Plugin | `{name, region, provider}` for the cluster this resource belongs to |
-| `input.context.resources` | object | Plugin | Map of resource type → array of Kubernetes objects (full cluster snapshot, including the main resource) |
-| `input.fleet` | object | Plugin | Multi-cluster snapshot keyed by cluster name, each with `{cluster, resources}` |
-| `input.<custom_key>` | any | `policy_input` | User-defined fields |
-
-#### Policy data
+### Policy data
 
 Any `policy_data` set on this plugin's block in the agent configuration is passed
 to every policy evaluation and is available to Rego as `data.<key>` (unlike
@@ -194,7 +346,7 @@ plugins:
         - ghcr.io/compliance-framework
 ```
 
-#### Example: writing a policy
+### Example: writing a policy
 
 ```rego
 package compliance_framework.pod_has_node_binding
