@@ -1,4 +1,6 @@
 version: 1
+replaces:
+  - heading: Rego Input Schema
 policyInput:
   description: >-
     The plugin evaluates four kinds of resource, and a policy receives one document of the matching kind as
