@@ -34,6 +34,22 @@ function includedVersions(inst: Instance): string[] {
   return withCurrent ? ['current', ...lines] : lines;
 }
 
+// The plugins' sidebars list every plugin of the catalog, so a reader moves between plugins from
+// the left menu. This runs for every built version, so the lists never freeze at a version cut.
+function pluginSidebarItems(inst: Instance): DocsOptions['sidebarItemsGenerator'] {
+  const plugins = built.filter((other) => other.kind === 'plugin').sort((a, b) => a.label.localeCompare(b.label));
+  return async ({defaultSidebarItemsGenerator, ...args}) => {
+    const own = await defaultSidebarItemsGenerator({...args});
+    return plugins.map((plugin) =>
+      plugin.id === inst.id
+        ? own.length === 1 && own[0].type === 'doc'
+          ? {...own[0], label: plugin.label}
+          : {type: 'category' as const, label: plugin.label, collapsed: false, items: own}
+        : {type: 'link' as const, label: plugin.label, href: `/${plugin.route}`},
+    );
+  };
+}
+
 function docsPlugin(inst: Instance): [string, DocsOptions] {
   return [
     '@docusaurus/plugin-content-docs',
@@ -47,6 +63,7 @@ function docsPlugin(inst: Instance): [string, DocsOptions] {
       onlyIncludeVersions: includedVersions(inst),
       lastVersion: inst.lines[0] ?? 'current',
       editUrl: `https://github.com/${organizationName}/${projectName}/edit/main/`,
+      ...(inst.kind === 'plugin' ? {sidebarItemsGenerator: pluginSidebarItems(inst)} : {}),
     },
   ];
 }
