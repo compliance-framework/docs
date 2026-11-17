@@ -1,0 +1,511 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates four kinds of resource, and a policy receives one document of the matching kind as `input`.
+    Every document has the same top-level fields, and `resource.type` says which kind it is: `db-instance` (one per
+    RDS instance), `db-cluster` (one per Aurora or RDS cluster), `db-snapshot` (one per instance snapshot) and
+    `db-cluster-snapshot` (one per cluster snapshot). What differs by kind is the content of `config`, `dynamic` and
+    `snapshots`. For an instance or cluster, `snapshots` lists the snapshots taken of it. For a snapshot, `config` is
+    the snapshot itself and `snapshots` holds that one entry. The tables list the fields of every kind, and the example
+    shows one instance, one cluster and one snapshot document under a key naming the kind; a real input is only the
+    document itself, without that key. Nested lists that come straight from the AWS SDK (`db_parameter_groups`,
+    `db_subnet_group`, `vpc_security_groups`, `db_cluster_members`, `read_replica_db_instance_identifiers`) keep the
+    SDK's capitalised field names, such as `DBParameterGroupName`.
+  fields:
+    - name: "schema_version"
+      type: "string"
+      description: "All kinds. Always `v1`."
+    - name: "source"
+      type: "string"
+      description: "All kinds. Always `aws-rds-aurora-psql`."
+    - name: "account.account_id"
+      type: "string"
+      description: "All kinds. AWS account ID."
+    - name: "account.role_arn"
+      type: "string"
+      description: "All kinds. Role the plugin assumed for the account. Absent when none is configured."
+    - name: "account.tags"
+      type: "object (string to string)"
+      description: "All kinds. Tags set on the account in the plugin configuration. Absent when there are none."
+    - name: "region.name"
+      type: "string"
+      description: "All kinds. AWS region."
+    - name: "resource.id"
+      type: "string"
+      description: "All kinds. Identifier of the instance, cluster or snapshot."
+    - name: "resource.arn"
+      type: "string"
+      description: "All kinds. ARN of the resource."
+    - name: "resource.type"
+      type: "string"
+      description: "All kinds. `db-instance`, `db-cluster`, `db-snapshot` or `db-cluster-snapshot`."
+    - name: "resource.engine"
+      type: "string"
+      description: "All kinds. Database engine, such as `postgres` or `aurora-postgresql`. Absent when empty."
+    - name: "resource.engine_version"
+      type: "string"
+      description: "Instance and cluster. Engine version. Absent when empty."
+    - name: "config.db_instance_identifier"
+      type: "string"
+      description: "Instance. DB instance identifier."
+    - name: "config.db_instance_arn"
+      type: "string"
+      description: "Instance. DB instance ARN."
+    - name: "config.db_instance_class"
+      type: "string"
+      description: "Instance. Instance class, such as `db.r6g.large`."
+    - name: "config.availability_zone"
+      type: "string"
+      description: "Instance. Availability zone of the instance."
+    - name: "config.secondary_availability_zone"
+      type: "string"
+      description: "Instance. Availability zone of the standby when `multi_az` is true, otherwise empty."
+    - name: "config.publicly_accessible"
+      type: "boolean"
+      description: "Instance. Whether the instance has a public endpoint."
+    - name: "config.ca_certificate_identifier"
+      type: "string"
+      description: "Instance. Certificate authority certificate the instance uses."
+    - name: "config.monitoring_interval"
+      type: "integer"
+      description: "Instance. Enhanced Monitoring interval in seconds. 0 means Enhanced Monitoring is off."
+    - name: "config.monitoring_role_arn"
+      type: "string"
+      description: "Instance. IAM role used for Enhanced Monitoring. Empty when there is none."
+    - name: "config.enhanced_monitoring_resource_arn"
+      type: "string"
+      description: "Instance. ARN of the CloudWatch Logs stream that receives Enhanced Monitoring data."
+    - name: "config.db_parameter_groups"
+      type: "array of objects"
+      description: "Instance. Parameter groups of the instance, with `DBParameterGroupName` and `ParameterApplyStatus`."
+    - name: "config.db_subnet_group"
+      type: "object"
+      description: "Instance. The DB subnet group as the AWS SDK returns it (`DBSubnetGroupName`, `VpcId`, `Subnets` and more)."
+    - name: "config.read_replica_source_db_instance_identifier"
+      type: "string"
+      description: "Instance. Source instance when this one is a read replica, otherwise empty."
+    - name: "config.read_replica_db_instance_identifiers"
+      type: "array of strings"
+      description: "Instance. Read replicas of this instance."
+    - name: "config.db_cluster_identifier"
+      type: "string"
+      description: "Cluster. DB cluster identifier."
+    - name: "config.db_cluster_arn"
+      type: "string"
+      description: "Cluster. DB cluster ARN."
+    - name: "config.availability_zones"
+      type: "array of strings"
+      description: "Cluster. Availability zones the cluster spans."
+    - name: "config.db_cluster_parameter_group"
+      type: "string"
+      description: "Cluster. Name of the cluster parameter group."
+    - name: "config.db_cluster_members"
+      type: "array of objects"
+      description: "Cluster. Member instances, with `DBInstanceIdentifier`, `IsClusterWriter`, `PromotionTier` and `DBClusterParameterGroupStatus`."
+    - name: "config.engine"
+      type: "string"
+      description: "All kinds. Database engine."
+    - name: "config.engine_version"
+      type: "string"
+      description: "Instance and cluster. Engine version."
+    - name: "config.storage_encrypted"
+      type: "boolean"
+      description: "Instance and cluster. Whether storage is encrypted."
+    - name: "config.kms_key_id"
+      type: "string"
+      description: "All kinds. KMS key that encrypts the storage. Empty when not encrypted."
+    - name: "config.multi_az"
+      type: "boolean"
+      description: "Instance and cluster. Whether the resource is deployed across several availability zones."
+    - name: "config.backup_retention_period"
+      type: "integer"
+      description: "Instance and cluster. Days automated backups are kept. 0 means backups are off."
+    - name: "config.preferred_backup_window"
+      type: "string"
+      description: "Instance and cluster. Daily backup window in UTC, such as `03:00-04:00`."
+    - name: "config.latest_restorable_time"
+      type: "string (RFC 3339 time)"
+      description: "Instance and cluster. Latest point in time the resource can be restored to. Empty when unknown."
+    - name: "config.deletion_protection"
+      type: "boolean"
+      description: "Instance and cluster. Whether deletion protection is on."
+    - name: "config.iam_database_authentication_enabled"
+      type: "boolean"
+      description: "Instance and cluster. Whether IAM database authentication is on."
+    - name: "config.enabled_cloudwatch_logs_exports"
+      type: "array of strings"
+      description: "Instance and cluster. Log types exported to CloudWatch Logs. An empty array when none."
+    - name: "config.ssl_enforcement"
+      type: "object (string to string)"
+      description: "Instance and cluster. Value of the `rds.force_ssl` or `require_ssl` parameter for each parameter group, keyed by group name. A group that does not set the parameter has an empty string. A group whose lookup failed is missing, and the failure is in `collection.errors`."
+    - name: "config.vpc_security_groups"
+      type: "array of objects"
+      description: "Instance and cluster. Security groups, with `VpcSecurityGroupId` and `Status`."
+    - name: "config.snapshot_identifier"
+      type: "string"
+      description: "Snapshot. Snapshot identifier."
+    - name: "config.snapshot_arn"
+      type: "string"
+      description: "Snapshot. Snapshot ARN."
+    - name: "config.source_identifier"
+      type: "string"
+      description: "Snapshot. Identifier of the instance or cluster the snapshot was taken from."
+    - name: "config.snapshot_type"
+      type: "string"
+      description: "Snapshot. `automated`, `manual` or another type AWS reports."
+    - name: "config.status"
+      type: "string"
+      description: "Snapshot. Snapshot status, such as `available`."
+    - name: "config.encrypted"
+      type: "boolean"
+      description: "Snapshot. Whether the snapshot is encrypted."
+    - name: "config.snapshot_create_time"
+      type: "string (RFC 3339 time)"
+      description: "Snapshot. When the snapshot was created."
+    - name: "config.shared_accounts"
+      type: "array of strings, or null"
+      description: "Snapshot. Accounts the snapshot is shared with. Only manual snapshots are checked, so an automated snapshot has an empty array. Null when the sharing attributes could not be read."
+    - name: "config.public"
+      type: "boolean, or null"
+      description: "Snapshot. True when the snapshot is shared with all accounts. Only manual snapshots are checked, so an automated snapshot is false. Null when the sharing attributes could not be read."
+    - name: "config.collection_errors"
+      type: "array of objects"
+      description: "Snapshot. Present only when the sharing attributes could not be read: objects with `scope` and `message`."
+    - name: "dynamic.cloudtrail_events"
+      type: "array of objects"
+      description: "All kinds. CloudTrail events in the lookback window that name this resource. Each has `event_id`, `event_name`, `event_source`, `event_time`, `username`, `cloudtrail_event` (the raw event as a JSON string) and `resources`."
+    - name: "dynamic.account_cloudtrail_events"
+      type: "array of objects"
+      description: "All kinds. CloudTrail events in the window that name no RDS resource at all. Same shape as `dynamic.cloudtrail_events`."
+    - name: "dynamic.rds_events"
+      type: "array of objects"
+      description: "Instance and cluster. Backup, restoration and deletion events from RDS, at most the last 14 days. Each has `source_identifier`, `source_type`, `event_categories`, `message`, `date` and `source_arn`. Always empty for a snapshot."
+    - name: "dynamic.cloudwatch_metrics"
+      type: "object"
+      description: "Instance and cluster. Hourly CloudWatch series keyed `cpuutilavg`, `cpuutilmax`, `cpuutilp99`, `databaseconnectionsavg`, `databaseconnectionsmax`, `databaseconnectionsp99`, `freestoragespaceavg`, `freestoragespacemax` and `freestoragespacep99`. Each has `label`, `status`, `timestamps` and `values`. Empty for a snapshot."
+    - name: "snapshots"
+      type: "array of objects"
+      description: "All kinds. Instance and cluster: the snapshots taken of it. Snapshot: the snapshot itself. Each entry has the snapshot fields listed under `config.` for a snapshot, from `snapshot_identifier` to `public`."
+    - name: "tags"
+      type: "object (string to string)"
+      description: "All kinds. Tags of the resource. An empty object when there are none."
+    - name: "collection.collected_at"
+      type: "string (RFC 3339 time)"
+      description: "All kinds. When the data was collected."
+    - name: "collection.collector_version"
+      type: "string"
+      description: "All kinds. Always `aws-rds-aurora-psql`."
+    - name: "collection.collection_type"
+      type: "string"
+      description: "All kinds. `config_dynamic` when a lookback window applies, otherwise `config`."
+    - name: "collection.lookback_window"
+      type: "object"
+      description: "All kinds. `start` and `end` of the dynamic evidence window, both RFC 3339 times. Absent when no window applies."
+    - name: "collection.raw_payload_hashes"
+      type: "object (string to string)"
+      description: "All kinds. SHA-256 hash of the raw AWS response under `primary`, for traceability."
+    - name: "collection.errors"
+      type: "array of objects"
+      description: "All kinds. Collection problems for this resource, each with `scope` and `message`. An empty array when everything was collected."
+    - name: "policy_inputs"
+      type: "object"
+      description: "All kinds. The `policy_inputs` object from the plugin configuration, copied unchanged. An empty object when none is set."
+  example:
+    db-instance:
+      schema_version: v1
+      source: aws-rds-aurora-psql
+      account:
+        account_id: "111122223333"
+        role_arn: arn:aws:iam::111122223333:role/rds-readonly
+        tags:
+          environment: production
+      region:
+        name: eu-west-1
+      resource:
+        id: orders-db-1
+        arn: arn:aws:rds:eu-west-1:111122223333:db:orders-db-1
+        type: db-instance
+        engine: postgres
+        engine_version: "15.4"
+      config:
+        db_instance_identifier: orders-db-1
+        db_instance_arn: arn:aws:rds:eu-west-1:111122223333:db:orders-db-1
+        db_instance_class: db.r6g.large
+        engine: postgres
+        engine_version: "15.4"
+        storage_encrypted: true
+        kms_key_id: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        multi_az: true
+        availability_zone: eu-west-1a
+        secondary_availability_zone: eu-west-1b
+        backup_retention_period: 14
+        preferred_backup_window: 03:00-04:00
+        latest_restorable_time: "2026-11-16T11:30:00Z"
+        deletion_protection: true
+        publicly_accessible: false
+        iam_database_authentication_enabled: true
+        ca_certificate_identifier: rds-ca-rsa2048-g1
+        enabled_cloudwatch_logs_exports:
+          - postgresql
+        monitoring_interval: 60
+        monitoring_role_arn: arn:aws:iam::111122223333:role/rds-monitoring
+        enhanced_monitoring_resource_arn: arn:aws:logs:eu-west-1:111122223333:log-group:RDSOSMetrics:log-stream:db-EXAMPLE
+        db_parameter_groups:
+          - DBParameterGroupName: orders-postgres15
+            ParameterApplyStatus: in-sync
+        ssl_enforcement:
+          orders-postgres15: "1"
+        db_subnet_group:
+          DBSubnetGroupName: orders-private
+          VpcId: vpc-0a1b2c3d4e5f60718
+        vpc_security_groups:
+          - VpcSecurityGroupId: sg-0a1b2c3d4e5f60718
+            Status: active
+        read_replica_source_db_instance_identifier: ""
+        read_replica_db_instance_identifiers: []
+      dynamic:
+        cloudtrail_events:
+          - event_id: 5d3c1f0e-2b4a-4c6d-8e9f-0a1b2c3d4e5f
+            event_name: ModifyDBInstance
+            event_source: rds.amazonaws.com
+            event_time: "2026-11-10T08:12:44Z"
+            username: alice
+            cloudtrail_event: '{"eventName":"ModifyDBInstance"}'
+            resources: []
+        account_cloudtrail_events: []
+        rds_events:
+          - source_identifier: orders-db-1
+            source_type: db-instance
+            event_categories:
+              - backup
+            message: Backing up DB instance
+            date: "2026-11-16T03:00:12Z"
+            source_arn: arn:aws:rds:eu-west-1:111122223333:db:orders-db-1
+        cloudwatch_metrics:
+          cpuutilavg:
+            label: cpuutilavg
+            status: Complete
+            timestamps:
+              - "2026-11-16T10:00:00Z"
+            values:
+              - 12.4
+      snapshots:
+        - snapshot_identifier: rds:orders-db-1-2026-11-16-03-00
+          snapshot_arn: arn:aws:rds:eu-west-1:111122223333:snapshot:rds:orders-db-1-2026-11-16-03-00
+          source_identifier: orders-db-1
+          snapshot_type: automated
+          status: available
+          encrypted: true
+          kms_key_id: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+          snapshot_create_time: "2026-11-16T03:05:00Z"
+          engine: postgres
+          shared_accounts: []
+          public: false
+      tags:
+        owner: data-platform
+      collection:
+        collected_at: "2026-11-17T12:00:00Z"
+        collector_version: aws-rds-aurora-psql
+        collection_type: config_dynamic
+        lookback_window:
+          start: "2026-08-19T12:00:00Z"
+          end: "2026-11-17T12:00:00Z"
+        raw_payload_hashes:
+          primary: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+        errors: []
+      policy_inputs:
+        minimum_backup_retention_days: 7
+    db-cluster:
+      schema_version: v1
+      source: aws-rds-aurora-psql
+      account:
+        account_id: "111122223333"
+      region:
+        name: eu-west-1
+      resource:
+        id: orders-aurora
+        arn: arn:aws:rds:eu-west-1:111122223333:cluster:orders-aurora
+        type: db-cluster
+        engine: aurora-postgresql
+        engine_version: "15.4"
+      config:
+        db_cluster_identifier: orders-aurora
+        db_cluster_arn: arn:aws:rds:eu-west-1:111122223333:cluster:orders-aurora
+        engine: aurora-postgresql
+        engine_version: "15.4"
+        storage_encrypted: true
+        kms_key_id: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        multi_az: true
+        availability_zones:
+          - eu-west-1a
+          - eu-west-1b
+        backup_retention_period: 14
+        preferred_backup_window: 03:00-04:00
+        latest_restorable_time: "2026-11-17T11:55:00Z"
+        deletion_protection: true
+        iam_database_authentication_enabled: true
+        enabled_cloudwatch_logs_exports:
+          - postgresql
+        db_cluster_parameter_group: orders-aurora-pg15
+        ssl_enforcement:
+          orders-aurora-pg15: "1"
+        db_cluster_members:
+          - DBInstanceIdentifier: orders-aurora-1
+            IsClusterWriter: true
+            PromotionTier: 1
+            DBClusterParameterGroupStatus: in-sync
+        vpc_security_groups:
+          - VpcSecurityGroupId: sg-0a1b2c3d4e5f60718
+            Status: active
+      dynamic:
+        cloudtrail_events: []
+        account_cloudtrail_events: []
+        rds_events: []
+        cloudwatch_metrics: {}
+      snapshots: []
+      tags:
+        owner: data-platform
+      collection:
+        collected_at: "2026-11-17T12:00:00Z"
+        collector_version: aws-rds-aurora-psql
+        collection_type: config_dynamic
+        lookback_window:
+          start: "2026-08-19T12:00:00Z"
+          end: "2026-11-17T12:00:00Z"
+        raw_payload_hashes:
+          primary: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+        errors: []
+      policy_inputs:
+        minimum_backup_retention_days: 7
+    db-snapshot:
+      schema_version: v1
+      source: aws-rds-aurora-psql
+      account:
+        account_id: "111122223333"
+      region:
+        name: eu-west-1
+      resource:
+        id: orders-db-1-before-upgrade
+        arn: arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade
+        type: db-snapshot
+        engine: postgres
+      config:
+        snapshot_identifier: orders-db-1-before-upgrade
+        snapshot_arn: arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade
+        source_identifier: orders-db-1
+        snapshot_type: manual
+        status: available
+        encrypted: true
+        kms_key_id: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+        snapshot_create_time: "2026-11-01T09:00:00Z"
+        engine: postgres
+        shared_accounts:
+          - "444455556666"
+        public: false
+      dynamic:
+        cloudtrail_events:
+          - event_id: 7a1b2c3d-4e5f-4061-8293-a4b5c6d7e8f9
+            event_name: ModifyDBSnapshotAttribute
+            event_source: rds.amazonaws.com
+            event_time: "2026-11-02T10:15:00Z"
+            username: alice
+            cloudtrail_event: '{"eventName":"ModifyDBSnapshotAttribute"}'
+            resources: []
+        account_cloudtrail_events: []
+        rds_events: []
+        cloudwatch_metrics: {}
+      snapshots:
+        - snapshot_identifier: orders-db-1-before-upgrade
+          snapshot_arn: arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade
+          source_identifier: orders-db-1
+          snapshot_type: manual
+          status: available
+          encrypted: true
+          kms_key_id: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+          snapshot_create_time: "2026-11-01T09:00:00Z"
+          engine: postgres
+          shared_accounts:
+            - "444455556666"
+          public: false
+      tags:
+        owner: data-platform
+      collection:
+        collected_at: "2026-11-17T12:00:00Z"
+        collector_version: aws-rds-aurora-psql
+        collection_type: config_dynamic
+        lookback_window:
+          start: "2026-08-19T12:00:00Z"
+          end: "2026-11-17T12:00:00Z"
+        raw_payload_hashes:
+          primary: fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9
+        errors: []
+      policy_inputs:
+        approved_snapshot_accounts:
+          - "444455556666"
+subjectTemplates:
+  - name: aws-rds-instance
+    description: >-
+      One RDS DB instance, evaluated for compliance posture. Title: `AWS RDS instance {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries a `resource_arn` label that is not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID containing the instance."
+      - name: "region"
+        description: "AWS region containing the instance."
+      - name: "resource_id"
+        description: "DB instance identifier."
+    example:
+      name: aws-rds-instance
+      type: component
+      title: AWS RDS instance orders-db-1 in 111122223333/eu-west-1
+      description: Amazon RDS DB instance orders-db-1 in AWS account 111122223333 and region eu-west-1.
+      purpose: Represents a managed RDS DB instance evaluated for compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: orders-db-1
+  - name: aws-rds-cluster
+    description: >-
+      One Aurora or RDS DB cluster, evaluated for compliance posture. Title: `AWS RDS cluster {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries a `resource_arn` label that is not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID containing the cluster."
+      - name: "region"
+        description: "AWS region containing the cluster."
+      - name: "resource_id"
+        description: "DB cluster identifier."
+    example:
+      name: aws-rds-cluster
+      type: component
+      title: AWS RDS cluster orders-aurora in 111122223333/eu-west-1
+      description: Amazon Aurora/RDS DB cluster orders-aurora in AWS account 111122223333 and region eu-west-1.
+      purpose: Represents a managed RDS/Aurora DB cluster evaluated for compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: orders-aurora
+  - name: aws-rds-snapshot
+    description: >-
+      One instance or cluster snapshot, evaluated for backup, encryption and sharing posture. Title: `AWS RDS snapshot {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries a `resource_arn` label that is not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID containing the snapshot."
+      - name: "region"
+        description: "AWS region containing the snapshot."
+      - name: "resource_type"
+        description: "`db-snapshot` or `db-cluster-snapshot`."
+      - name: "resource_id"
+        description: "Snapshot identifier."
+    example:
+      name: aws-rds-snapshot
+      type: component
+      title: AWS RDS snapshot orders-db-1-before-upgrade in 111122223333/eu-west-1
+      description: Amazon RDS/Aurora snapshot orders-db-1-before-upgrade in AWS account 111122223333 and region eu-west-1.
+      purpose: Represents an RDS snapshot evaluated for backup, encryption, and sharing posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_type: db-snapshot
+        resource_id: orders-db-1-before-upgrade

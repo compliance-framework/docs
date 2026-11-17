@@ -119,6 +119,479 @@ Account-scoped events that do not identify any RDS resource are exposed under
 VPC/subnet/security-group deep posture and KMS key internals are intentionally
 out of scope for this plugin.
 
+## Policy input
+
+The plugin evaluates four kinds of resource, and a policy receives one document of the matching kind as `input`. Every document has the same top-level fields, and `resource.type` says which kind it is: `db-instance` (one per RDS instance), `db-cluster` (one per Aurora or RDS cluster), `db-snapshot` (one per instance snapshot) and `db-cluster-snapshot` (one per cluster snapshot). What differs by kind is the content of `config`, `dynamic` and `snapshots`. For an instance or cluster, `snapshots` lists the snapshots taken of it. For a snapshot, `config` is the snapshot itself and `snapshots` holds that one entry. The tables list the fields of every kind, and the example shows one instance, one cluster and one snapshot document under a key naming the kind; a real input is only the document itself, without that key. Nested lists that come straight from the AWS SDK (`db_parameter_groups`, `db_subnet_group`, `vpc_security_groups`, `db_cluster_members`, `read_replica_db_instance_identifiers`) keep the SDK's capitalised field names, such as `DBParameterGroupName`.
+
+| Field | Type | Description |
+|---|---|---|
+| `schema_version` | string | All kinds. Always `v1`. |
+| `source` | string | All kinds. Always `aws-rds-aurora-psql`. |
+| `account.account_id` | string | All kinds. AWS account ID. |
+| `account.role_arn` | string | All kinds. Role the plugin assumed for the account. Absent when none is configured. |
+| `account.tags` | object (string to string) | All kinds. Tags set on the account in the plugin configuration. Absent when there are none. |
+| `region.name` | string | All kinds. AWS region. |
+| `resource.id` | string | All kinds. Identifier of the instance, cluster or snapshot. |
+| `resource.arn` | string | All kinds. ARN of the resource. |
+| `resource.type` | string | All kinds. `db-instance`, `db-cluster`, `db-snapshot` or `db-cluster-snapshot`. |
+| `resource.engine` | string | All kinds. Database engine, such as `postgres` or `aurora-postgresql`. Absent when empty. |
+| `resource.engine_version` | string | Instance and cluster. Engine version. Absent when empty. |
+| `config.db_instance_identifier` | string | Instance. DB instance identifier. |
+| `config.db_instance_arn` | string | Instance. DB instance ARN. |
+| `config.db_instance_class` | string | Instance. Instance class, such as `db.r6g.large`. |
+| `config.availability_zone` | string | Instance. Availability zone of the instance. |
+| `config.secondary_availability_zone` | string | Instance. Availability zone of the standby when `multi_az` is true, otherwise empty. |
+| `config.publicly_accessible` | boolean | Instance. Whether the instance has a public endpoint. |
+| `config.ca_certificate_identifier` | string | Instance. Certificate authority certificate the instance uses. |
+| `config.monitoring_interval` | integer | Instance. Enhanced Monitoring interval in seconds. 0 means Enhanced Monitoring is off. |
+| `config.monitoring_role_arn` | string | Instance. IAM role used for Enhanced Monitoring. Empty when there is none. |
+| `config.enhanced_monitoring_resource_arn` | string | Instance. ARN of the CloudWatch Logs stream that receives Enhanced Monitoring data. |
+| `config.db_parameter_groups` | array of objects | Instance. Parameter groups of the instance, with `DBParameterGroupName` and `ParameterApplyStatus`. |
+| `config.db_subnet_group` | object | Instance. The DB subnet group as the AWS SDK returns it (`DBSubnetGroupName`, `VpcId`, `Subnets` and more). |
+| `config.read_replica_source_db_instance_identifier` | string | Instance. Source instance when this one is a read replica, otherwise empty. |
+| `config.read_replica_db_instance_identifiers` | array of strings | Instance. Read replicas of this instance. |
+| `config.db_cluster_identifier` | string | Cluster. DB cluster identifier. |
+| `config.db_cluster_arn` | string | Cluster. DB cluster ARN. |
+| `config.availability_zones` | array of strings | Cluster. Availability zones the cluster spans. |
+| `config.db_cluster_parameter_group` | string | Cluster. Name of the cluster parameter group. |
+| `config.db_cluster_members` | array of objects | Cluster. Member instances, with `DBInstanceIdentifier`, `IsClusterWriter`, `PromotionTier` and `DBClusterParameterGroupStatus`. |
+| `config.engine` | string | All kinds. Database engine. |
+| `config.engine_version` | string | Instance and cluster. Engine version. |
+| `config.storage_encrypted` | boolean | Instance and cluster. Whether storage is encrypted. |
+| `config.kms_key_id` | string | All kinds. KMS key that encrypts the storage. Empty when not encrypted. |
+| `config.multi_az` | boolean | Instance and cluster. Whether the resource is deployed across several availability zones. |
+| `config.backup_retention_period` | integer | Instance and cluster. Days automated backups are kept. 0 means backups are off. |
+| `config.preferred_backup_window` | string | Instance and cluster. Daily backup window in UTC, such as `03:00-04:00`. |
+| `config.latest_restorable_time` | string (RFC 3339 time) | Instance and cluster. Latest point in time the resource can be restored to. Empty when unknown. |
+| `config.deletion_protection` | boolean | Instance and cluster. Whether deletion protection is on. |
+| `config.iam_database_authentication_enabled` | boolean | Instance and cluster. Whether IAM database authentication is on. |
+| `config.enabled_cloudwatch_logs_exports` | array of strings | Instance and cluster. Log types exported to CloudWatch Logs. An empty array when none. |
+| `config.ssl_enforcement` | object (string to string) | Instance and cluster. Value of the `rds.force_ssl` or `require_ssl` parameter for each parameter group, keyed by group name. A group that does not set the parameter has an empty string. A group whose lookup failed is missing, and the failure is in `collection.errors`. |
+| `config.vpc_security_groups` | array of objects | Instance and cluster. Security groups, with `VpcSecurityGroupId` and `Status`. |
+| `config.snapshot_identifier` | string | Snapshot. Snapshot identifier. |
+| `config.snapshot_arn` | string | Snapshot. Snapshot ARN. |
+| `config.source_identifier` | string | Snapshot. Identifier of the instance or cluster the snapshot was taken from. |
+| `config.snapshot_type` | string | Snapshot. `automated`, `manual` or another type AWS reports. |
+| `config.status` | string | Snapshot. Snapshot status, such as `available`. |
+| `config.encrypted` | boolean | Snapshot. Whether the snapshot is encrypted. |
+| `config.snapshot_create_time` | string (RFC 3339 time) | Snapshot. When the snapshot was created. |
+| `config.shared_accounts` | array of strings, or null | Snapshot. Accounts the snapshot is shared with. Only manual snapshots are checked, so an automated snapshot has an empty array. Null when the sharing attributes could not be read. |
+| `config.public` | boolean, or null | Snapshot. True when the snapshot is shared with all accounts. Only manual snapshots are checked, so an automated snapshot is false. Null when the sharing attributes could not be read. |
+| `config.collection_errors` | array of objects | Snapshot. Present only when the sharing attributes could not be read: objects with `scope` and `message`. |
+| `dynamic.cloudtrail_events` | array of objects | All kinds. CloudTrail events in the lookback window that name this resource. Each has `event_id`, `event_name`, `event_source`, `event_time`, `username`, `cloudtrail_event` (the raw event as a JSON string) and `resources`. |
+| `dynamic.account_cloudtrail_events` | array of objects | All kinds. CloudTrail events in the window that name no RDS resource at all. Same shape as `dynamic.cloudtrail_events`. |
+| `dynamic.rds_events` | array of objects | Instance and cluster. Backup, restoration and deletion events from RDS, at most the last 14 days. Each has `source_identifier`, `source_type`, `event_categories`, `message`, `date` and `source_arn`. Always empty for a snapshot. |
+| `dynamic.cloudwatch_metrics` | object | Instance and cluster. Hourly CloudWatch series keyed `cpuutilavg`, `cpuutilmax`, `cpuutilp99`, `databaseconnectionsavg`, `databaseconnectionsmax`, `databaseconnectionsp99`, `freestoragespaceavg`, `freestoragespacemax` and `freestoragespacep99`. Each has `label`, `status`, `timestamps` and `values`. Empty for a snapshot. |
+| `snapshots` | array of objects | All kinds. Instance and cluster: the snapshots taken of it. Snapshot: the snapshot itself. Each entry has the snapshot fields listed under `config.` for a snapshot, from `snapshot_identifier` to `public`. |
+| `tags` | object (string to string) | All kinds. Tags of the resource. An empty object when there are none. |
+| `collection.collected_at` | string (RFC 3339 time) | All kinds. When the data was collected. |
+| `collection.collector_version` | string | All kinds. Always `aws-rds-aurora-psql`. |
+| `collection.collection_type` | string | All kinds. `config_dynamic` when a lookback window applies, otherwise `config`. |
+| `collection.lookback_window` | object | All kinds. `start` and `end` of the dynamic evidence window, both RFC 3339 times. Absent when no window applies. |
+| `collection.raw_payload_hashes` | object (string to string) | All kinds. SHA-256 hash of the raw AWS response under `primary`, for traceability. |
+| `collection.errors` | array of objects | All kinds. Collection problems for this resource, each with `scope` and `message`. An empty array when everything was collected. |
+| `policy_inputs` | object | All kinds. The `policy_inputs` object from the plugin configuration, copied unchanged. An empty object when none is set. |
+
+An example input:
+
+```json
+{
+  "db-instance": {
+    "schema_version": "v1",
+    "source": "aws-rds-aurora-psql",
+    "account": {
+      "account_id": "111122223333",
+      "role_arn": "arn:aws:iam::111122223333:role/rds-readonly",
+      "tags": {
+        "environment": "production"
+      }
+    },
+    "region": {
+      "name": "eu-west-1"
+    },
+    "resource": {
+      "id": "orders-db-1",
+      "arn": "arn:aws:rds:eu-west-1:111122223333:db:orders-db-1",
+      "type": "db-instance",
+      "engine": "postgres",
+      "engine_version": "15.4"
+    },
+    "config": {
+      "db_instance_identifier": "orders-db-1",
+      "db_instance_arn": "arn:aws:rds:eu-west-1:111122223333:db:orders-db-1",
+      "db_instance_class": "db.r6g.large",
+      "engine": "postgres",
+      "engine_version": "15.4",
+      "storage_encrypted": true,
+      "kms_key_id": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "multi_az": true,
+      "availability_zone": "eu-west-1a",
+      "secondary_availability_zone": "eu-west-1b",
+      "backup_retention_period": 14,
+      "preferred_backup_window": "03:00-04:00",
+      "latest_restorable_time": "2026-11-16T11:30:00Z",
+      "deletion_protection": true,
+      "publicly_accessible": false,
+      "iam_database_authentication_enabled": true,
+      "ca_certificate_identifier": "rds-ca-rsa2048-g1",
+      "enabled_cloudwatch_logs_exports": [
+        "postgresql"
+      ],
+      "monitoring_interval": 60,
+      "monitoring_role_arn": "arn:aws:iam::111122223333:role/rds-monitoring",
+      "enhanced_monitoring_resource_arn": "arn:aws:logs:eu-west-1:111122223333:log-group:RDSOSMetrics:log-stream:db-EXAMPLE",
+      "db_parameter_groups": [
+        {
+          "DBParameterGroupName": "orders-postgres15",
+          "ParameterApplyStatus": "in-sync"
+        }
+      ],
+      "ssl_enforcement": {
+        "orders-postgres15": "1"
+      },
+      "db_subnet_group": {
+        "DBSubnetGroupName": "orders-private",
+        "VpcId": "vpc-0a1b2c3d4e5f60718"
+      },
+      "vpc_security_groups": [
+        {
+          "VpcSecurityGroupId": "sg-0a1b2c3d4e5f60718",
+          "Status": "active"
+        }
+      ],
+      "read_replica_source_db_instance_identifier": "",
+      "read_replica_db_instance_identifiers": []
+    },
+    "dynamic": {
+      "cloudtrail_events": [
+        {
+          "event_id": "5d3c1f0e-2b4a-4c6d-8e9f-0a1b2c3d4e5f",
+          "event_name": "ModifyDBInstance",
+          "event_source": "rds.amazonaws.com",
+          "event_time": "2026-11-10T08:12:44Z",
+          "username": "alice",
+          "cloudtrail_event": "{\"eventName\":\"ModifyDBInstance\"}",
+          "resources": []
+        }
+      ],
+      "account_cloudtrail_events": [],
+      "rds_events": [
+        {
+          "source_identifier": "orders-db-1",
+          "source_type": "db-instance",
+          "event_categories": [
+            "backup"
+          ],
+          "message": "Backing up DB instance",
+          "date": "2026-11-16T03:00:12Z",
+          "source_arn": "arn:aws:rds:eu-west-1:111122223333:db:orders-db-1"
+        }
+      ],
+      "cloudwatch_metrics": {
+        "cpuutilavg": {
+          "label": "cpuutilavg",
+          "status": "Complete",
+          "timestamps": [
+            "2026-11-16T10:00:00Z"
+          ],
+          "values": [
+            12.4
+          ]
+        }
+      }
+    },
+    "snapshots": [
+      {
+        "snapshot_identifier": "rds:orders-db-1-2026-11-16-03-00",
+        "snapshot_arn": "arn:aws:rds:eu-west-1:111122223333:snapshot:rds:orders-db-1-2026-11-16-03-00",
+        "source_identifier": "orders-db-1",
+        "snapshot_type": "automated",
+        "status": "available",
+        "encrypted": true,
+        "kms_key_id": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "snapshot_create_time": "2026-11-16T03:05:00Z",
+        "engine": "postgres",
+        "shared_accounts": [],
+        "public": false
+      }
+    ],
+    "tags": {
+      "owner": "data-platform"
+    },
+    "collection": {
+      "collected_at": "2026-11-17T12:00:00Z",
+      "collector_version": "aws-rds-aurora-psql",
+      "collection_type": "config_dynamic",
+      "lookback_window": {
+        "start": "2026-08-19T12:00:00Z",
+        "end": "2026-11-17T12:00:00Z"
+      },
+      "raw_payload_hashes": {
+        "primary": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+      },
+      "errors": []
+    },
+    "policy_inputs": {
+      "minimum_backup_retention_days": 7
+    }
+  },
+  "db-cluster": {
+    "schema_version": "v1",
+    "source": "aws-rds-aurora-psql",
+    "account": {
+      "account_id": "111122223333"
+    },
+    "region": {
+      "name": "eu-west-1"
+    },
+    "resource": {
+      "id": "orders-aurora",
+      "arn": "arn:aws:rds:eu-west-1:111122223333:cluster:orders-aurora",
+      "type": "db-cluster",
+      "engine": "aurora-postgresql",
+      "engine_version": "15.4"
+    },
+    "config": {
+      "db_cluster_identifier": "orders-aurora",
+      "db_cluster_arn": "arn:aws:rds:eu-west-1:111122223333:cluster:orders-aurora",
+      "engine": "aurora-postgresql",
+      "engine_version": "15.4",
+      "storage_encrypted": true,
+      "kms_key_id": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "multi_az": true,
+      "availability_zones": [
+        "eu-west-1a",
+        "eu-west-1b"
+      ],
+      "backup_retention_period": 14,
+      "preferred_backup_window": "03:00-04:00",
+      "latest_restorable_time": "2026-11-17T11:55:00Z",
+      "deletion_protection": true,
+      "iam_database_authentication_enabled": true,
+      "enabled_cloudwatch_logs_exports": [
+        "postgresql"
+      ],
+      "db_cluster_parameter_group": "orders-aurora-pg15",
+      "ssl_enforcement": {
+        "orders-aurora-pg15": "1"
+      },
+      "db_cluster_members": [
+        {
+          "DBInstanceIdentifier": "orders-aurora-1",
+          "IsClusterWriter": true,
+          "PromotionTier": 1,
+          "DBClusterParameterGroupStatus": "in-sync"
+        }
+      ],
+      "vpc_security_groups": [
+        {
+          "VpcSecurityGroupId": "sg-0a1b2c3d4e5f60718",
+          "Status": "active"
+        }
+      ]
+    },
+    "dynamic": {
+      "cloudtrail_events": [],
+      "account_cloudtrail_events": [],
+      "rds_events": [],
+      "cloudwatch_metrics": {}
+    },
+    "snapshots": [],
+    "tags": {
+      "owner": "data-platform"
+    },
+    "collection": {
+      "collected_at": "2026-11-17T12:00:00Z",
+      "collector_version": "aws-rds-aurora-psql",
+      "collection_type": "config_dynamic",
+      "lookback_window": {
+        "start": "2026-08-19T12:00:00Z",
+        "end": "2026-11-17T12:00:00Z"
+      },
+      "raw_payload_hashes": {
+        "primary": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"
+      },
+      "errors": []
+    },
+    "policy_inputs": {
+      "minimum_backup_retention_days": 7
+    }
+  },
+  "db-snapshot": {
+    "schema_version": "v1",
+    "source": "aws-rds-aurora-psql",
+    "account": {
+      "account_id": "111122223333"
+    },
+    "region": {
+      "name": "eu-west-1"
+    },
+    "resource": {
+      "id": "orders-db-1-before-upgrade",
+      "arn": "arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade",
+      "type": "db-snapshot",
+      "engine": "postgres"
+    },
+    "config": {
+      "snapshot_identifier": "orders-db-1-before-upgrade",
+      "snapshot_arn": "arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade",
+      "source_identifier": "orders-db-1",
+      "snapshot_type": "manual",
+      "status": "available",
+      "encrypted": true,
+      "kms_key_id": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "snapshot_create_time": "2026-11-01T09:00:00Z",
+      "engine": "postgres",
+      "shared_accounts": [
+        "444455556666"
+      ],
+      "public": false
+    },
+    "dynamic": {
+      "cloudtrail_events": [
+        {
+          "event_id": "7a1b2c3d-4e5f-4061-8293-a4b5c6d7e8f9",
+          "event_name": "ModifyDBSnapshotAttribute",
+          "event_source": "rds.amazonaws.com",
+          "event_time": "2026-11-02T10:15:00Z",
+          "username": "alice",
+          "cloudtrail_event": "{\"eventName\":\"ModifyDBSnapshotAttribute\"}",
+          "resources": []
+        }
+      ],
+      "account_cloudtrail_events": [],
+      "rds_events": [],
+      "cloudwatch_metrics": {}
+    },
+    "snapshots": [
+      {
+        "snapshot_identifier": "orders-db-1-before-upgrade",
+        "snapshot_arn": "arn:aws:rds:eu-west-1:111122223333:snapshot:orders-db-1-before-upgrade",
+        "source_identifier": "orders-db-1",
+        "snapshot_type": "manual",
+        "status": "available",
+        "encrypted": true,
+        "kms_key_id": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+        "snapshot_create_time": "2026-11-01T09:00:00Z",
+        "engine": "postgres",
+        "shared_accounts": [
+          "444455556666"
+        ],
+        "public": false
+      }
+    ],
+    "tags": {
+      "owner": "data-platform"
+    },
+    "collection": {
+      "collected_at": "2026-11-17T12:00:00Z",
+      "collector_version": "aws-rds-aurora-psql",
+      "collection_type": "config_dynamic",
+      "lookback_window": {
+        "start": "2026-08-19T12:00:00Z",
+        "end": "2026-11-17T12:00:00Z"
+      },
+      "raw_payload_hashes": {
+        "primary": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"
+      },
+      "errors": []
+    },
+    "policy_inputs": {
+      "approved_snapshot_accounts": [
+        "444455556666"
+      ]
+    }
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### aws-rds-instance
+
+One RDS DB instance, evaluated for compliance posture. Title: `AWS RDS instance {{ .resource_id }} in {{ .account_id }}/{{ .region }}`. The evidence also carries a `resource_arn` label that is not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID containing the instance. |
+| `region` | AWS region containing the instance. |
+| `resource_id` | DB instance identifier. |
+
+Example:
+
+```json
+{
+  "name": "aws-rds-instance",
+  "type": "component",
+  "title": "AWS RDS instance orders-db-1 in 111122223333/eu-west-1",
+  "description": "Amazon RDS DB instance orders-db-1 in AWS account 111122223333 and region eu-west-1.",
+  "purpose": "Represents a managed RDS DB instance evaluated for compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "resource_id": "orders-db-1"
+  }
+}
+```
+
+### aws-rds-cluster
+
+One Aurora or RDS DB cluster, evaluated for compliance posture. Title: `AWS RDS cluster {{ .resource_id }} in {{ .account_id }}/{{ .region }}`. The evidence also carries a `resource_arn` label that is not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID containing the cluster. |
+| `region` | AWS region containing the cluster. |
+| `resource_id` | DB cluster identifier. |
+
+Example:
+
+```json
+{
+  "name": "aws-rds-cluster",
+  "type": "component",
+  "title": "AWS RDS cluster orders-aurora in 111122223333/eu-west-1",
+  "description": "Amazon Aurora/RDS DB cluster orders-aurora in AWS account 111122223333 and region eu-west-1.",
+  "purpose": "Represents a managed RDS/Aurora DB cluster evaluated for compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "resource_id": "orders-aurora"
+  }
+}
+```
+
+### aws-rds-snapshot
+
+One instance or cluster snapshot, evaluated for backup, encryption and sharing posture. Title: `AWS RDS snapshot {{ .resource_id }} in {{ .account_id }}/{{ .region }}`. The evidence also carries a `resource_arn` label that is not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID containing the snapshot. |
+| `region` | AWS region containing the snapshot. |
+| `resource_type` | `db-snapshot` or `db-cluster-snapshot`. |
+| `resource_id` | Snapshot identifier. |
+
+Example:
+
+```json
+{
+  "name": "aws-rds-snapshot",
+  "type": "component",
+  "title": "AWS RDS snapshot orders-db-1-before-upgrade in 111122223333/eu-west-1",
+  "description": "Amazon RDS/Aurora snapshot orders-db-1-before-upgrade in AWS account 111122223333 and region eu-west-1.",
+  "purpose": "Represents an RDS snapshot evaluated for backup, encryption, and sharing posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "resource_type": "db-snapshot",
+    "resource_id": "orders-db-1-before-upgrade"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

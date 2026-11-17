@@ -1,0 +1,346 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates four kinds of resource, and a policy receives one document of the matching kind as
+    `input`. Every document has the same envelope, and `resource.type` says which kind it is: `loadbalancer`,
+    `listener`, `target-group` or `target-health`. Only `config` differs by kind, and a load balancer also
+    carries CloudTrail events under `dynamic`. A bundle is matched to a kind by its name:
+    `plugin-aws-elb-loadbalancer-policies`, `plugin-aws-elb-listener-policies`,
+    `plugin-aws-elb-targetgroup-policies` or `plugin-aws-elb-targethealth-policies`. A bundle with any other
+    name is evaluated against load balancers. The tables list the fields of every kind with nested fields in dot
+    notation, and the example shows one document of each kind under the key named after its `resource.type`; a
+    real input is only the document itself, without that key.
+  fields:
+    - name: "schema_version"
+      type: "string"
+      description: "All kinds. Always `v1`."
+    - name: "source"
+      type: "string"
+      description: "All kinds. Always `aws-elbv2`."
+    - name: "account.account_id"
+      type: "string"
+      description: "All kinds. AWS account ID."
+    - name: "account.role_arn"
+      type: "string"
+      description: "All kinds. ARN of the role the plugin assumed for the account. Omitted when none is configured."
+    - name: "account.tags"
+      type: "object (string to string)"
+      description: "All kinds. Tags configured on the account in the plugin configuration. Omitted when there are none."
+    - name: "region.name"
+      type: "string"
+      description: "All kinds. AWS region."
+    - name: "resource.id"
+      type: "string"
+      description: "All kinds. Resource ID, the part of the ARN after `loadbalancer/` or `targetgroup/`. A listener keeps its full `listener/...` part. A target health record is `<target group ID>/<target ID>`."
+    - name: "resource.arn"
+      type: "string"
+      description: "All kinds. ARN of the resource. A target health record carries the ARN of its target group."
+    - name: "resource.type"
+      type: "string"
+      description: "All kinds. `loadbalancer`, `listener`, `target-group` or `target-health`."
+    - name: "config.load_balancer_arn"
+      type: "string"
+      description: "Load balancer, listener and target group. ARN of the load balancer. For a target group it is the first load balancer attached, or empty."
+    - name: "config.dns_name"
+      type: "string"
+      description: "Load balancer. DNS name of the load balancer."
+    - name: "config.scheme"
+      type: "string"
+      description: "Load balancer. `internet-facing` or `internal`."
+    - name: "config.type"
+      type: "string"
+      description: "Load balancer. `application`, `network` or `gateway`."
+    - name: "config.state"
+      type: "string"
+      description: "Load balancer. State code, such as `active`."
+    - name: "config.availability_zones"
+      type: "array of strings"
+      description: "Load balancer. Names of the availability zones."
+    - name: "config.listener_arn"
+      type: "string"
+      description: "Listener. ARN of the listener."
+    - name: "config.protocol"
+      type: "string"
+      description: "Listener and target group. Protocol, such as `HTTPS` or `HTTP`."
+    - name: "config.port"
+      type: "integer"
+      description: "Listener and target group. Port."
+    - name: "config.ssl_policy"
+      type: "string"
+      description: "Listener. Name of the TLS security policy. Empty when the listener has none."
+    - name: "config.certificate_arn"
+      type: "string"
+      description: "Listener. ARN of the first certificate. Empty when there is none."
+    - name: "config.target_group_arn"
+      type: "string"
+      description: "Target group and target health. ARN of the target group."
+    - name: "config.health_check_protocol"
+      type: "string"
+      description: "Target group. Protocol of the health check."
+    - name: "config.health_check_path"
+      type: "string"
+      description: "Target group. Path of the health check. Empty when it does not apply."
+    - name: "config.healthy_threshold_count"
+      type: "integer"
+      description: "Target group. Consecutive successes before a target is healthy."
+    - name: "config.unhealthy_threshold_count"
+      type: "integer"
+      description: "Target group. Consecutive failures before a target is unhealthy."
+    - name: "config.target_id"
+      type: "string"
+      description: "Target health. ID of the target, such as an instance ID."
+    - name: "config.target_health_state"
+      type: "string"
+      description: "Target health. Health state, such as `healthy` or `unhealthy`."
+    - name: "dynamic.cloudtrail_events"
+      type: "array of objects"
+      description: "Load balancer. CloudTrail events for the load balancer within the lookback window, each with `event_name`, `event_time` and `user_identity_arn` (strings). `dynamic` is an empty object on the other kinds."
+    - name: "tags"
+      type: "object (string to string)"
+      description: "All kinds. ELBv2 tags of the resource. Empty for target health."
+    - name: "collection.collected_at"
+      type: "string (RFC 3339 time)"
+      description: "All kinds. When the data was collected."
+    - name: "collection.collector_version"
+      type: "string"
+      description: "All kinds. Always `aws-elbv2`."
+    - name: "collection.collection_type"
+      type: "string"
+      description: "All kinds. `config_dynamic` for a load balancer, `config` for the others."
+    - name: "collection.lookback_window"
+      type: "object"
+      description: "Load balancer. `start` and `end` (RFC 3339 times) of the CloudTrail lookback. Omitted on the other kinds."
+    - name: "collection.raw_payload_hashes"
+      type: "object (string to string)"
+      description: "All kinds. `primary` is a SHA-256 hash of the raw AWS payload, as `sha256:...`."
+    - name: "collection.errors"
+      type: "array of objects"
+      description: "All kinds. Collection problems for the resource, each with `scope` and `message` (strings). Empty when collection was clean."
+    - name: "policy_inputs"
+      type: "object"
+      description: "All kinds. The `policy_inputs` object from the plugin configuration, passed through as is. Empty when none is set."
+  example:
+    loadbalancer:
+      schema_version: v1
+      source: aws-elbv2
+      account:
+        account_id: "111122223333"
+        role_arn: arn:aws:iam::111122223333:role/ccf-readonly
+        tags:
+          environment: production
+      region:
+        name: eu-west-1
+      resource:
+        id: app/payments-alb/50dc6c495c0c9188
+        arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:loadbalancer/app/payments-alb/50dc6c495c0c9188
+        type: loadbalancer
+      config:
+        load_balancer_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:loadbalancer/app/payments-alb/50dc6c495c0c9188
+        dns_name: payments-alb-1234567890.eu-west-1.elb.amazonaws.com
+        scheme: internet-facing
+        type: application
+        state: active
+        availability_zones: 
+          - eu-west-1a
+          - eu-west-1b
+      dynamic:
+        cloudtrail_events:
+          - event_name: ModifyListener
+            event_time: "2026-11-02T10:00:00Z"
+            user_identity_arn: arn:aws:iam::111122223333:role/platform-admin
+      tags:
+        owner: platform-team
+      collection:
+        collected_at: "2026-11-10T12:00:00Z"
+        collector_version: aws-elbv2
+        collection_type: config_dynamic
+        lookback_window:
+          start: "2026-08-12T12:00:00Z"
+          end: "2026-11-10T12:00:00Z"
+        raw_payload_hashes:
+          primary: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+        errors: []
+      policy_inputs:
+        minimum_availability_zones: 2
+    listener:
+      schema_version: v1
+      source: aws-elbv2
+      account:
+        account_id: "111122223333"
+        role_arn: arn:aws:iam::111122223333:role/ccf-readonly
+        tags:
+          environment: production
+      region:
+        name: eu-west-1
+      resource:
+        id: listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2
+        arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2
+        type: listener
+      config:
+        listener_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2
+        load_balancer_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:loadbalancer/app/payments-alb/50dc6c495c0c9188
+        protocol: HTTPS
+        port: 443
+        ssl_policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+        certificate_arn: arn:aws:acm:eu-west-1:111122223333:certificate/7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f
+      dynamic: {}
+      tags:
+        tls: public
+      collection:
+        collected_at: "2026-11-10T12:00:00Z"
+        collector_version: aws-elbv2
+        collection_type: config
+        raw_payload_hashes:
+          primary: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+        errors: []
+      policy_inputs:
+        minimum_availability_zones: 2
+    target-group:
+      schema_version: v1
+      source: aws-elbv2
+      account:
+        account_id: "111122223333"
+        role_arn: arn:aws:iam::111122223333:role/ccf-readonly
+        tags:
+          environment: production
+      region:
+        name: eu-west-1
+      resource:
+        id: payments-tg/73e2d6bc24d8a067
+        arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:targetgroup/payments-tg/73e2d6bc24d8a067
+        type: target-group
+      config:
+        target_group_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:targetgroup/payments-tg/73e2d6bc24d8a067
+        load_balancer_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:loadbalancer/app/payments-alb/50dc6c495c0c9188
+        protocol: HTTP
+        port: 8080
+        health_check_protocol: HTTP
+        health_check_path: /healthz
+        healthy_threshold_count: 3
+        unhealthy_threshold_count: 2
+      dynamic: {}
+      tags:
+        service: payments
+      collection:
+        collected_at: "2026-11-10T12:00:00Z"
+        collector_version: aws-elbv2
+        collection_type: config
+        raw_payload_hashes:
+          primary: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+        errors: []
+      policy_inputs:
+        minimum_availability_zones: 2
+    target-health:
+      schema_version: v1
+      source: aws-elbv2
+      account:
+        account_id: "111122223333"
+        role_arn: arn:aws:iam::111122223333:role/ccf-readonly
+        tags:
+          environment: production
+      region:
+        name: eu-west-1
+      resource:
+        id: payments-tg/73e2d6bc24d8a067/i-0abc123def4567890
+        arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:targetgroup/payments-tg/73e2d6bc24d8a067
+        type: target-health
+      config:
+        target_group_arn: arn:aws:elasticloadbalancing:eu-west-1:111122223333:targetgroup/payments-tg/73e2d6bc24d8a067
+        target_id: i-0abc123def4567890
+        target_health_state: healthy
+      dynamic: {}
+      tags: {}
+      collection:
+        collected_at: "2026-11-10T12:00:00Z"
+        collector_version: aws-elbv2
+        collection_type: config
+        raw_payload_hashes:
+          primary: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+        errors: []
+      policy_inputs:
+        minimum_availability_zones: 2
+subjectTemplates:
+  - name: aws-elbv2-loadbalancer
+    description: >-
+      A load balancer. Title: `ELBv2 load balancer {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries `resource_arn` and `resource_type` labels that are not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "resource_id"
+        description: "Load balancer ID."
+    example:
+      name: aws-elbv2-loadbalancer
+      type: component
+      title: ELBv2 load balancer app/payments-alb/50dc6c495c0c9188 in 111122223333/eu-west-1
+      description: Elastic Load Balancing v2 load balancer app/payments-alb/50dc6c495c0c9188.
+      purpose: Represents an ELBv2 load balancer evaluated for compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: app/payments-alb/50dc6c495c0c9188
+  - name: aws-elbv2-listener
+    description: >-
+      A listener on a load balancer. Title: `ELBv2 listener {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries `resource_arn` and `resource_type` labels that are not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "resource_id"
+        description: "Listener resource ID."
+    example:
+      name: aws-elbv2-listener
+      type: component
+      title: ELBv2 listener listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2 in 111122223333/eu-west-1
+      description: Elastic Load Balancing v2 listener listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2.
+      purpose: Represents an ELBv2 listener evaluated for TLS endpoint posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: listener/app/payments-alb/50dc6c495c0c9188/f2f7dc8efc522ab2
+  - name: aws-elbv2-target-group
+    description: >-
+      A target group. Title: `ELBv2 target group {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries `resource_arn` and `resource_type` labels that are not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "resource_id"
+        description: "Target group ID."
+    example:
+      name: aws-elbv2-target-group
+      type: component
+      title: ELBv2 target group payments-tg/73e2d6bc24d8a067 in 111122223333/eu-west-1
+      description: Elastic Load Balancing v2 target group payments-tg/73e2d6bc24d8a067.
+      purpose: Represents an ELBv2 target group evaluated for health-check posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: payments-tg/73e2d6bc24d8a067
+  - name: aws-elbv2-target-health
+    description: >-
+      The health of one target in a target group. Title: `ELBv2 target health {{ .resource_id }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries `resource_arn` and `resource_type` labels that are not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "resource_id"
+        description: "Target health ID."
+    example:
+      name: aws-elbv2-target-health
+      type: component
+      title: ELBv2 target health payments-tg/73e2d6bc24d8a067/i-0abc123def4567890 in 111122223333/eu-west-1
+      description: Elastic Load Balancing v2 target health payments-tg/73e2d6bc24d8a067/i-0abc123def4567890.
+      purpose: Represents an ELBv2 target health description evaluated for availability posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        resource_id: payments-tg/73e2d6bc24d8a067/i-0abc123def4567890
