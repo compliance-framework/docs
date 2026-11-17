@@ -15,6 +15,7 @@
 const sidebars = {
   docsSidebar: [
     'introduction/index',
+    'concepts',
     // {
     //   // type: 'category',
     //   label: 'Introduction',
