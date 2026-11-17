@@ -9,9 +9,13 @@ permissions:
   pages: write
   id-token: write
 
+# One concurrency group per branch: builds on different branches (other PRs,
+# merges to main) run in parallel instead of cancelling each other. A newer
+# push to the same branch still supersedes the older run, except on main,
+# where a build that has started is always left to finish.
 concurrency:
-  group: "test-build"
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   NODE_OPTIONS: --max-old-space-size=6144
