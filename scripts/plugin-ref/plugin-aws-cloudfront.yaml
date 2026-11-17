@@ -1,0 +1,67 @@
+version: 1
+policyInput:
+  description: >-
+    One document per CloudFront distribution. CloudFront is global, so there is no region. The plugin builds the
+    document from `ListDistributions` and `ListTagsForResource`, and a policy reads it as `input`.
+  fields:
+    - name: "account_id"
+      type: "string"
+      description: "AWS account ID the plugin is running against."
+    - name: "distribution_id"
+      type: "string"
+      description: "ID of the distribution."
+    - name: "arn"
+      type: "string"
+      description: "ARN of the distribution."
+    - name: "domain_name"
+      type: "string"
+      description: "The distribution's CloudFront domain name."
+    - name: "status"
+      type: "string"
+      description: "Distribution status, `Deployed` or `InProgress`."
+    - name: "enabled"
+      type: "boolean"
+      description: "Whether the distribution is enabled."
+    - name: "certificate_arn"
+      type: "string"
+      description: "ARN of the ACM certificate the viewer connection uses. Omitted when the distribution uses no ACM certificate."
+    - name: "cache_behaviours"
+      type: "array of objects"
+      description: "The default cache behaviour first, with path pattern `/*`, then every other cache behaviour. Each has `path_pattern` (string) and `viewer_protocol_policy` (string: `allow-all`, `https-only` or `redirect-to-https`)."
+    - name: "tags"
+      type: "object (string to string)"
+      description: "The distribution's tags. An empty object when it has none or when the tags could not be read."
+  example:
+    account_id: "111122223333"
+    distribution_id: E2EXAMPLE1ABCD
+    arn: arn:aws:cloudfront::111122223333:distribution/E2EXAMPLE1ABCD
+    domain_name: d1example2abcd.cloudfront.net
+    status: Deployed
+    enabled: true
+    certificate_arn: arn:aws:acm:us-east-1:111122223333:certificate/9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+    cache_behaviours:
+      - path_pattern: /*
+        viewer_protocol_policy: redirect-to-https
+      - path_pattern: /static/*
+        viewer_protocol_policy: https-only
+    tags:
+      Environment: production
+subjectTemplates:
+  - name: cloudfront-distribution
+    description: >-
+      A CloudFront distribution. The plugin registers it as a component subject and attaches it to the evidence
+      of every distribution it evaluates. Title: `CloudFront Distribution {{ .distribution_id }}`.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "distribution_id"
+        description: "CloudFront distribution ID."
+    example:
+      name: cloudfront-distribution
+      type: component
+      title: CloudFront Distribution E2EXAMPLE1ABCD
+      description: AWS CloudFront Distribution E2EXAMPLE1ABCD (d1example2abcd.cloudfront.net) in account 111122223333.
+      purpose: Represents an AWS CloudFront distribution evaluated for TLS compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        distribution_id: E2EXAMPLE1ABCD

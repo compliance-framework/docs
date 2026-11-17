@@ -62,6 +62,163 @@ For each running, stopped, stopping, or starting EC2 instance in each configured
 - account-owned AMIs that match the instance image or collected snapshots
 - Fast Snapshot Restore entries for collected snapshots
 
+## Policy input
+
+One document per EC2 instance, in each configured region, composed from the instance and the resources around it. The AWS objects (`instance`, `security_groups`, `volumes`, `snapshots`, `images`, `fast_snapshot_restore`) are the AWS SDK for Go v2 EC2 types serialised to JSON as they are, so their keys are the SDK's PascalCase names (`InstanceId`, `GroupId`, `VolumeId`), not snake_case. See the AWS [EC2 API reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Operations.html) for what each carries. The plugin's own fields, `region`, `snapshot_inventory` and `snapshot_permissions`, are snake_case. Empty lists are omitted.
+
+| Field | Type | Description |
+|---|---|---|
+| `region` | string | AWS region of the instance. |
+| `instance` | object (EC2 `Instance`) | The instance as `DescribeInstances` returns it, for example `InstanceId`, `InstanceType`, `State.Name`, `PublicIpAddress`, `VpcId`, `SubnetId`, `RootDeviceName`, `BlockDeviceMappings`, `SecurityGroups`, `MetadataOptions` and `Tags` (a list of `Key`/`Value` objects). |
+| `security_groups` | array of EC2 `SecurityGroup` | The security groups attached to the instance, with `GroupId`, `GroupName`, `IpPermissions` and `IpPermissionsEgress`. |
+| `volumes` | array of EC2 `Volume` | EBS volumes attached to the instance, with `VolumeId`, `Encrypted`, `KmsKeyId`, `VolumeType` and `Size`. |
+| `snapshots` | array of EC2 `Snapshot` | Snapshots of those volumes that the account owns. |
+| `snapshot_inventory` | array of objects | A flat summary of each snapshot with `snapshot_id`, `volume_id`, `state`, `start_time`, `encrypted` (boolean), `kms_key_id`, `owner_id`, `storage_tier`, `description`, `tags` (object), `create_volume_permissions` (list of `Group`/`UserId` objects) and `public_share_enabled` (boolean). Fields that are empty are omitted. |
+| `snapshot_permissions` | array of objects | One entry per snapshot with `snapshot_id`, `create_volume_permissions` (list of `Group`/`UserId` objects) and `public_share_enabled` (boolean, true when the snapshot is shared with the group `all`). |
+| `images` | array of EC2 `Image` | AMIs owned by the account that are related to the instance: its own image and those that use the snapshots above. |
+| `fast_snapshot_restore` | array of EC2 `DescribeFastSnapshotRestoreSuccessItem` | Fast Snapshot Restore state of those snapshots, with `SnapshotId`, `AvailabilityZone` and `State`. |
+
+An example input:
+
+```json
+{
+  "region": "eu-west-1",
+  "instance": {
+    "InstanceId": "i-0abc123def4567890",
+    "InstanceType": "t3.medium",
+    "ImageId": "ami-0123456789abcdef0",
+    "State": {
+      "Name": "running",
+      "Code": 16
+    },
+    "VpcId": "vpc-0a1b2c3d4e5f67890",
+    "SubnetId": "subnet-0123456789abcdef0",
+    "PublicIpAddress": "203.0.113.25",
+    "RootDeviceName": "/dev/xvda",
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/xvda",
+        "Ebs": {
+          "VolumeId": "vol-0123456789abcdef0",
+          "Status": "attached",
+          "DeleteOnTermination": true
+        }
+      }
+    ],
+    "SecurityGroups": [
+      {
+        "GroupId": "sg-0123456789abcdef0",
+        "GroupName": "web-sg"
+      }
+    ],
+    "Tags": [
+      {
+        "Key": "Name",
+        "Value": "web-1"
+      }
+    ]
+  },
+  "security_groups": [
+    {
+      "GroupId": "sg-0123456789abcdef0",
+      "GroupName": "web-sg",
+      "VpcId": "vpc-0a1b2c3d4e5f67890",
+      "IpPermissions": [
+        {
+          "IpProtocol": "tcp",
+          "FromPort": 443,
+          "ToPort": 443,
+          "IpRanges": [
+            {
+              "CidrIp": "0.0.0.0/0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "VolumeId": "vol-0123456789abcdef0",
+      "Size": 30,
+      "VolumeType": "gp3",
+      "Encrypted": true,
+      "KmsKeyId": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+    }
+  ],
+  "snapshots": [
+    {
+      "SnapshotId": "snap-0123456789abcdef0",
+      "VolumeId": "vol-0123456789abcdef0",
+      "State": "completed",
+      "Encrypted": true
+    }
+  ],
+  "snapshot_inventory": [
+    {
+      "snapshot_id": "snap-0123456789abcdef0",
+      "volume_id": "vol-0123456789abcdef0",
+      "state": "completed",
+      "start_time": "2026-11-01T02:00:00Z",
+      "encrypted": true,
+      "owner_id": "111122223333",
+      "public_share_enabled": false
+    }
+  ],
+  "snapshot_permissions": [
+    {
+      "snapshot_id": "snap-0123456789abcdef0",
+      "public_share_enabled": false
+    }
+  ],
+  "images": [
+    {
+      "ImageId": "ami-0fedcba9876543210",
+      "Name": "web-golden-2026-11",
+      "State": "available"
+    }
+  ],
+  "fast_snapshot_restore": [
+    {
+      "SnapshotId": "snap-0123456789abcdef0",
+      "AvailabilityZone": "eu-west-1a",
+      "State": "enabled"
+    }
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### aws-ec2-instance
+
+An EC2 instance. The evidence's labels also carry `type` (`ec2`) and the VPC and subnet of the instance, `_vpc-id` and `_subnet-id`, which are not part of the identity. Title: `AWS EC2 instance {{ index . "instance-id" }} in {{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `provider` | Cloud provider, always `aws`. |
+| `region` | AWS region containing the instance. |
+| `instance-id` | AWS EC2 instance ID. |
+
+Example:
+
+```json
+{
+  "name": "aws-ec2-instance",
+  "type": "component",
+  "title": "AWS EC2 instance i-0abc123def4567890 in eu-west-1",
+  "description": "Amazon EC2 instance i-0abc123def4567890 in subnet subnet-0123456789abcdef0 and VPC vpc-0a1b2c3d4e5f67890 within AWS region eu-west-1.",
+  "purpose": "Represents an AWS EC2 instance evaluated for compute, network exposure, and recovery posture.",
+  "identityLabels": {
+    "provider": "aws",
+    "region": "eu-west-1",
+    "instance-id": "i-0abc123def4567890"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

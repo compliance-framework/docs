@@ -86,6 +86,219 @@ Depending on the selected policy bundles, the plugin collects and reuses:
 
 The plugin collects shared regional datasets once and reuses them across resource-family evaluation to reduce AWS API calls.
 
+## Policy input
+
+The plugin evaluates three kinds of resource, and a policy receives one document of the matching kind as `input`: a cluster, a managed node group or a managed add-on. Which kind a bundle gets follows its name (`aws-eks-policies`: cluster, `aws-eks-nodegroup-policies`: node group, `aws-eks-addon-policies`: add-on)  the bundle's behaviour setting. Each document has two top-level keys: the AWS object as the AWS SDK for Go v2 serialises it, with PascalCase keys such as `Name` and `Arn` (see the AWS [EKS API reference](https://docs.aws.amazon.com/eks/latest/APIReference/Welcome.html)), and a snake_case `*_context` object the plugin computes. The tables list the keys of every kind, and the example shows the cluster document.
+
+| Field | Type | Description |
+|---|---|---|
+| `cluster` | object (EKS `Cluster`) | Cluster documents. The cluster as `DescribeCluster` returns it, for example `Name`, `Arn`, `Version`, `Status`, `Endpoint`, `ResourcesVpcConfig`, `Logging`, `EncryptionConfig`, `AccessConfig`, `Health` and `Tags`. |
+| `cluster_context` | object | Cluster documents. Computed by the plugin: `current`, `addons` and `nodegroups`. |
+| `cluster_context.current` | object | Cluster documents. Summary of the cluster with `cluster_name`, `cluster_arn`, `region`, `status`, `version`, `platform_version` (strings), `health_issue_count` (integer), `tags_present`, `endpoint_public_access`, `endpoint_private_access`, `bootstrap_creator_admin_permissions`, `secrets_encryption_configured` and `deletion_protection` (booleans), `public_access_cidrs`, `enabled_control_plane_log_types`, `secrets_encryption_customer_key_arns` (arrays of strings), `authentication_mode` (string), `related_managed_nodegroup_count` and `related_managed_addon_count` (integers), and `related_managed_addon_names`, `active_related_managed_addon_names`, `related_managed_nodegroup_names`, `active_related_managed_nodegroup_names` (arrays of strings). |
+| `cluster_context.addons` | array of EKS `Addon` | Cluster documents. The managed add-ons of this cluster. |
+| `cluster_context.nodegroups` | array of EKS `Nodegroup` | Cluster documents. The managed node groups of this cluster. |
+| `nodegroup` | object (EKS `Nodegroup`) | Node group documents. The node group as `DescribeNodegroup` returns it, for example `NodegroupName`, `ClusterName`, `Status`, `ScalingConfig`, `AmiType`, `CapacityType`, `Subnets`, `RemoteAccess`, `LaunchTemplate`, `Health` and `Tags`. |
+| `nodegroup_context` | object | Node group documents. Computed by the plugin: `current` and `cluster`. |
+| `nodegroup_context.current` | object | Node group documents. Summary with `cluster_name`, `nodegroup_name`, `nodegroup_arn`, `region`, `status`, `version`, `release_version`, `capacity_type`, `ami_type` (strings), `health_issue_count`, `subnet_count` (integers), `tags_present`, `has_remote_access`, `uses_launch_template` (booleans), and `desired_size`, `min_size`, `max_size`, `scale_out_headroom` (integers, `max_size` minus `desired_size`) and `desired_at_or_above_min` (boolean); the last five are null when the node group has no scaling configuration. |
+| `nodegroup_context.cluster` | object (EKS `Cluster`) | Node group documents. The cluster the node group belongs to, in the same shape as `cluster`. |
+| `addon` | object (EKS `Addon`) | Add-on documents. The add-on as `DescribeAddon` returns it, for example `AddonName`, `ClusterName`, `AddonVersion`, `Status`, `ServiceAccountRoleArn`, `Owner`, `Publisher`, `Health` and `Tags`. |
+| `addon_context` | object | Add-on documents. Computed by the plugin: `current` and `cluster`. |
+| `addon_context.current` | object | Add-on documents. Summary with `cluster_name`, `addon_name`, `addon_arn`, `region`, `status`, `addon_version`, `owner`, `publisher` (strings), `health_issue_count` (integer), `tags_present` and `has_service_account_role` (booleans). |
+| `addon_context.cluster` | object (EKS `Cluster`) | Add-on documents. The cluster the add-on belongs to, in the same shape as `cluster`. |
+
+An example input:
+
+```json
+{
+  "cluster": {
+    "Name": "prod-eks",
+    "Arn": "arn:aws:eks:eu-west-1:111122223333:cluster/prod-eks",
+    "Version": "1.31",
+    "PlatformVersion": "eks.12",
+    "Status": "ACTIVE",
+    "Endpoint": "https://0123456789ABCDEF0123456789ABCDEF.gr7.eu-west-1.eks.amazonaws.com",
+    "ResourcesVpcConfig": {
+      "EndpointPublicAccess": false,
+      "EndpointPrivateAccess": true,
+      "PublicAccessCidrs": []
+    },
+    "Logging": {
+      "ClusterLogging": [
+        {
+          "Enabled": true,
+          "Types": [
+            "api",
+            "audit",
+            "authenticator"
+          ]
+        }
+      ]
+    },
+    "EncryptionConfig": [
+      {
+        "Resources": [
+          "secrets"
+        ],
+        "Provider": {
+          "KeyArn": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+        }
+      }
+    ],
+    "AccessConfig": {
+      "AuthenticationMode": "API_AND_CONFIG_MAP",
+      "BootstrapClusterCreatorAdminPermissions": false
+    },
+    "Tags": {
+      "Environment": "production"
+    }
+  },
+  "cluster_context": {
+    "current": {
+      "cluster_name": "prod-eks",
+      "cluster_arn": "arn:aws:eks:eu-west-1:111122223333:cluster/prod-eks",
+      "region": "eu-west-1",
+      "status": "ACTIVE",
+      "version": "1.31",
+      "platform_version": "eks.12",
+      "health_issue_count": 0,
+      "tags_present": true,
+      "endpoint_public_access": false,
+      "endpoint_private_access": true,
+      "public_access_cidrs": [],
+      "enabled_control_plane_log_types": [
+        "api",
+        "audit",
+        "authenticator"
+      ],
+      "authentication_mode": "API_AND_CONFIG_MAP",
+      "bootstrap_creator_admin_permissions": false,
+      "secrets_encryption_configured": true,
+      "secrets_encryption_customer_key_arns": [
+        "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+      ],
+      "deletion_protection": true,
+      "related_managed_nodegroup_count": 1,
+      "related_managed_addon_count": 1,
+      "related_managed_addon_names": [
+        "vpc-cni"
+      ],
+      "active_related_managed_addon_names": [
+        "vpc-cni"
+      ],
+      "related_managed_nodegroup_names": [
+        "workers"
+      ],
+      "active_related_managed_nodegroup_names": [
+        "workers"
+      ]
+    },
+    "addons": [
+      {
+        "AddonName": "vpc-cni",
+        "ClusterName": "prod-eks",
+        "Status": "ACTIVE"
+      }
+    ],
+    "nodegroups": [
+      {
+        "NodegroupName": "workers",
+        "ClusterName": "prod-eks",
+        "Status": "ACTIVE"
+      }
+    ]
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### aws-eks-cluster
+
+An EKS cluster. The evidence's labels also carry `type` (`cluster`) and `cluster_arn`, which are not part of the identity. Title: `AWS EKS cluster {{ .cluster_name }} in {{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `provider` | Cloud provider, always `aws`. |
+| `region` | AWS region containing the cluster. |
+| `cluster_name` | EKS cluster name. |
+
+Example:
+
+```json
+{
+  "name": "aws-eks-cluster",
+  "type": "component",
+  "title": "AWS EKS cluster prod-eks in eu-west-1",
+  "description": "Amazon EKS cluster prod-eks in AWS region eu-west-1.",
+  "purpose": "Represents an AWS EKS cluster evaluated for control-plane compliance posture.",
+  "identityLabels": {
+    "provider": "aws",
+    "region": "eu-west-1",
+    "cluster_name": "prod-eks"
+  }
+}
+```
+
+### aws-eks-nodegroup
+
+An EKS managed node group. The evidence's labels also carry `type` (`nodegroup`) and `nodegroup_arn`, which are not part of the identity. Title: `AWS EKS node group {{ .nodegroup_name }} for {{ .cluster_name }} in {{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `provider` | Cloud provider, always `aws`. |
+| `region` | AWS region containing the node group. |
+| `cluster_name` | Name of the cluster the node group belongs to. |
+| `nodegroup_name` | EKS managed node group name. |
+
+Example:
+
+```json
+{
+  "name": "aws-eks-nodegroup",
+  "type": "component",
+  "title": "AWS EKS node group workers for prod-eks in eu-west-1",
+  "description": "Amazon EKS managed node group workers for cluster prod-eks.",
+  "purpose": "Represents an AWS EKS managed node group evaluated for managed compute compliance posture.",
+  "identityLabels": {
+    "provider": "aws",
+    "region": "eu-west-1",
+    "cluster_name": "prod-eks",
+    "nodegroup_name": "workers"
+  }
+}
+```
+
+### aws-eks-addon
+
+An EKS managed add-on. The evidence's labels also carry `type` (`addon`) and `addon_arn`, which are not part of the identity. Title: `AWS EKS add-on {{ .addon_name }} for {{ .cluster_name }} in {{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `provider` | Cloud provider, always `aws`. |
+| `region` | AWS region containing the add-on. |
+| `cluster_name` | Name of the cluster the add-on belongs to. |
+| `addon_name` | EKS managed add-on name. |
+
+Example:
+
+```json
+{
+  "name": "aws-eks-addon",
+  "type": "component",
+  "title": "AWS EKS add-on vpc-cni for prod-eks in eu-west-1",
+  "description": "Amazon EKS managed add-on vpc-cni for cluster prod-eks.",
+  "purpose": "Represents an AWS EKS managed add-on evaluated for add-on compliance posture.",
+  "identityLabels": {
+    "provider": "aws",
+    "region": "eu-west-1",
+    "cluster_name": "prod-eks",
+    "addon_name": "vpc-cni"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

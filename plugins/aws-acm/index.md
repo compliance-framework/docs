@@ -47,6 +47,88 @@ This page is for **operators** who run the `plugin-aws-acm` plugin with the CCF 
 
 AWS credentials are resolved from the environment using the standard AWS SDK credential chain (environment variables, shared credentials file, instance profile, etc.).
 
+## Policy input
+
+One document per ACM certificate, in each configured region. The plugin builds it from `ListCertificates`, `DescribeCertificate` and `ListTagsForCertificate`, and a policy reads it as `input`. Fields that AWS leaves unset are omitted, except where the table says otherwise.
+
+| Field | Type | Description |
+|---|---|---|
+| `region` | string | AWS region the certificate lives in. |
+| `account_id` | string | AWS account ID, taken from the certificate ARN. |
+| `certificate_arn` | string | ARN of the certificate. |
+| `domain_name` | string | Primary domain name on the certificate. |
+| `status` | string | ACM status, for example `ISSUED`, `PENDING_VALIDATION`, `EXPIRED` or `REVOKED`. |
+| `not_after` | string (RFC 3339 time) | Time the certificate expires. Omitted when ACM has no expiry yet. |
+| `issued_at` | string (RFC 3339 time) | Time the certificate was issued. Omitted until it is issued. |
+| `key_algorithm` | string | Key algorithm with dashes replaced by underscores, for example `RSA_2048` or `EC_prime256v1`. |
+| `type` | string | How the certificate was obtained: `AMAZON_ISSUED`, `IMPORTED` or `PRIVATE`. Omitted when empty. |
+| `renewal_eligibility` | string | `ELIGIBLE` or `INELIGIBLE`. Omitted when empty. |
+| `transparency_logging_preference` | string | Certificate transparency logging setting, `ENABLED` or `DISABLED`. Empty when ACM returns no options. |
+| `domain_validation_options` | array of objects | One entry per domain on the certificate, each with `domain_name` (string) and `validation_method` (string, `DNS` or `EMAIL`). |
+| `in_use_by` | array of strings | ARNs of the AWS resources that use the certificate. An empty array when none does. |
+| `tags` | object (string to string) | The certificate's tags. An empty object when it has none. |
+
+An example input:
+
+```json
+{
+  "region": "eu-west-1",
+  "account_id": "111122223333",
+  "certificate_arn": "arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  "domain_name": "shop.example.com",
+  "status": "ISSUED",
+  "not_after": "2027-03-14T23:59:59Z",
+  "issued_at": "2026-02-12T10:15:00Z",
+  "key_algorithm": "RSA_2048",
+  "type": "AMAZON_ISSUED",
+  "renewal_eligibility": "ELIGIBLE",
+  "transparency_logging_preference": "ENABLED",
+  "domain_validation_options": [
+    {
+      "domain_name": "shop.example.com",
+      "validation_method": "DNS"
+    }
+  ],
+  "in_use_by": [
+    "arn:aws:elasticloadbalancing:eu-west-1:111122223333:loadbalancer/app/shop/50dc6c495c0c9188"
+  ],
+  "tags": {
+    "Environment": "production"
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### acm-certificate
+
+An AWS ACM certificate. The plugin registers it as a component subject and attaches it to the evidence of every certificate it evaluates. Title: `ACM Certificate {{ .certificate_arn }}`.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `region` | AWS region. |
+| `certificate_arn` | ARN of the ACM certificate. |
+
+Example:
+
+```json
+{
+  "name": "acm-certificate",
+  "type": "component",
+  "title": "ACM Certificate arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  "description": "AWS ACM Certificate arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f in 111122223333/eu-west-1.",
+  "purpose": "Represents an AWS ACM certificate evaluated for compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "certificate_arn": "arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

@@ -52,6 +52,78 @@ For every distribution returned by the CloudFront `ListDistributions` API (all p
 
 Each evidence carries the labels `provider=aws`, `type=cloudfront-distribution`, `distribution_id`, `resource_arn`, `account_id` and `domain_name`, plus any `policy_labels`.
 
+## Policy input
+
+One document per CloudFront distribution. CloudFront is global, so there is no region. The plugin builds the document from `ListDistributions` and `ListTagsForResource`, and a policy reads it as `input`.
+
+| Field | Type | Description |
+|---|---|---|
+| `account_id` | string | AWS account ID the plugin is running against. |
+| `distribution_id` | string | ID of the distribution. |
+| `arn` | string | ARN of the distribution. |
+| `domain_name` | string | The distribution's CloudFront domain name. |
+| `status` | string | Distribution status, `Deployed` or `InProgress`. |
+| `enabled` | boolean | Whether the distribution is enabled. |
+| `certificate_arn` | string | ARN of the ACM certificate the viewer connection uses. Omitted when the distribution uses no ACM certificate. |
+| `cache_behaviours` | array of objects | The default cache behaviour first, with path pattern `/*`, then every other cache behaviour. Each has `path_pattern` (string) and `viewer_protocol_policy` (string: `allow-all`, `https-only` or `redirect-to-https`). |
+| `tags` | object (string to string) | The distribution's tags. An empty object when it has none or when the tags could not be read. |
+
+An example input:
+
+```json
+{
+  "account_id": "111122223333",
+  "distribution_id": "E2EXAMPLE1ABCD",
+  "arn": "arn:aws:cloudfront::111122223333:distribution/E2EXAMPLE1ABCD",
+  "domain_name": "d1example2abcd.cloudfront.net",
+  "status": "Deployed",
+  "enabled": true,
+  "certificate_arn": "arn:aws:acm:us-east-1:111122223333:certificate/9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+  "cache_behaviours": [
+    {
+      "path_pattern": "/*",
+      "viewer_protocol_policy": "redirect-to-https"
+    },
+    {
+      "path_pattern": "/static/*",
+      "viewer_protocol_policy": "https-only"
+    }
+  ],
+  "tags": {
+    "Environment": "production"
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### cloudfront-distribution
+
+A CloudFront distribution. The plugin registers it as a component subject and attaches it to the evidence of every distribution it evaluates. Title: `CloudFront Distribution {{ .distribution_id }}`.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `distribution_id` | CloudFront distribution ID. |
+
+Example:
+
+```json
+{
+  "name": "cloudfront-distribution",
+  "type": "component",
+  "title": "CloudFront Distribution E2EXAMPLE1ABCD",
+  "description": "AWS CloudFront Distribution E2EXAMPLE1ABCD (d1example2abcd.cloudfront.net) in account 111122223333.",
+  "purpose": "Represents an AWS CloudFront distribution evaluated for TLS compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "distribution_id": "E2EXAMPLE1ABCD"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

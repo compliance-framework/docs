@@ -72,6 +72,172 @@ This page is for **operators** who run the `plugin-aws-ecr` plugin with the CCF 
 | `ecr_require_no_high_image_findings` | `HIGH` finding count must be ≤ `max_high_finding_count` | CC6.8, CC7.1, CC8.1 |
 | `ecr_require_scan_findings_retrievable` | Scan findings with severity data must be accessible | CC6.8, CC7.1 |
 
+## Policy input
+
+The plugin evaluates three kinds of resource, and a policy receives one document of the matching kind as `input`. Every document has a `resource_type` field that says which: `ecr-repository` (one per private repository), `ecr-registry` (one per region) and `ecr-image` (one per image pushed within the lookback window, 90 days unless the `image_lookback_days` policy data says otherwise). A bundle is matched to a kind by its name: `ecr-repository-policies`, `ecr-registry-policies` or `ecr-image-policies`. The tables list the fields of every kind, and the example shows one document of each kind under the key named after its `resource_type`; a real input is only the document itself, without that key.
+
+| Field | Type | Description |
+|---|---|---|
+| `resource_type` | string | All kinds. `ecr-repository`, `ecr-registry` or `ecr-image`. |
+| `region` | string | All kinds. AWS region. |
+| `account_id` | string | All kinds. AWS account ID. For a registry it is the registry ID. |
+| `registry_id` | string | Repository and registry. ECR registry ID, which is the account ID. |
+| `repository_arn` | string | Repository and image. ARN of the repository. |
+| `repository_name` | string | Repository and image. Name of the repository. |
+| `image_tag_immutability` | string | Repository. `MUTABLE` or `IMMUTABLE`. |
+| `scan_on_push` | boolean | Repository. Whether images are scanned when pushed. |
+| `encryption_type` | string | Repository. `AES256` or `KMS`. |
+| `kms_key` | string | Repository. ARN of the KMS key when `encryption_type` is `KMS`, otherwise empty. |
+| `has_lifecycle_policy` | boolean | Repository. Whether the repository has a lifecycle policy. |
+| `lifecycle_policy_text` | string | Repository. The lifecycle policy as a JSON string. Empty when there is none. |
+| `has_repository_policy` | boolean | Repository. Whether the repository has a repository (permissions) policy. |
+| `repository_policy_text` | string | Repository. The repository policy as a JSON string. Empty when there is none. |
+| `tags` | object (string to string) | Repository. The repository's tags. |
+| `registry_scan_type` | string | Registry. `BASIC` or `ENHANCED`. |
+| `enhanced_scanning_enabled` | boolean | Registry. True when `registry_scan_type` is `ENHANCED`. |
+| `image_digest` | string | Image. Immutable digest of the image (`sha256:...`). |
+| `image_tags` | array of strings | Image. Tags that point at the digest. An empty array for an untagged image. |
+| `image_pushed_at` | string (RFC 3339 time) | Image. When the image was pushed. |
+| `scan_status` | string | Image. Scan status, such as `COMPLETE` or `FAILED`; `UNSUPPORTED` when the image has no scan. |
+| `findings_critical` | integer | Image. Number of critical findings. 0 unless the scan is `COMPLETE`. |
+| `findings_high` | integer | Image. Number of high findings. 0 unless the scan is `COMPLETE`. |
+| `has_severity_data` | boolean | Image. True when the scan completed and returned severity counts, so a zero in the counts is real. |
+
+An example input:
+
+```json
+{
+  "ecr-repository": {
+    "resource_type": "ecr-repository",
+    "repository_arn": "arn:aws:ecr:eu-west-1:111122223333:repository/payments/api",
+    "repository_name": "payments/api",
+    "registry_id": "111122223333",
+    "region": "eu-west-1",
+    "account_id": "111122223333",
+    "image_tag_immutability": "IMMUTABLE",
+    "scan_on_push": true,
+    "encryption_type": "KMS",
+    "kms_key": "arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    "has_lifecycle_policy": true,
+    "lifecycle_policy_text": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Keep 30 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":30},\"action\":{\"type\":\"expire\"}}]}",
+    "has_repository_policy": false,
+    "repository_policy_text": "",
+    "tags": {
+      "Environment": "production"
+    }
+  },
+  "ecr-registry": {
+    "resource_type": "ecr-registry",
+    "registry_id": "111122223333",
+    "region": "eu-west-1",
+    "account_id": "111122223333",
+    "registry_scan_type": "ENHANCED",
+    "enhanced_scanning_enabled": true
+  },
+  "ecr-image": {
+    "resource_type": "ecr-image",
+    "repository_arn": "arn:aws:ecr:eu-west-1:111122223333:repository/payments/api",
+    "repository_name": "payments/api",
+    "region": "eu-west-1",
+    "account_id": "111122223333",
+    "image_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "image_tags": [
+      "v1.8.2"
+    ],
+    "image_pushed_at": "2026-10-30T09:41:07Z",
+    "scan_status": "COMPLETE",
+    "findings_critical": 0,
+    "findings_high": 2,
+    "has_severity_data": true
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### ecr-repository
+
+A private ECR repository. Title: `ECR Repository {{ .repository_name }} in {{ .account_id }}/{{ .region }}`. The evidence also carries a `repository_name` label that is not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `region` | AWS region. |
+| `repository_arn` | ARN of the repository. |
+
+Example:
+
+```json
+{
+  "name": "ecr-repository",
+  "type": "component",
+  "title": "ECR Repository payments/api in 111122223333/eu-west-1",
+  "description": "AWS ECR private repository payments/api.",
+  "purpose": "Represents an AWS ECR private repository evaluated for compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "repository_arn": "arn:aws:ecr:eu-west-1:111122223333:repository/payments/api"
+  }
+}
+```
+
+### ecr-registry
+
+The account-level ECR registry in one region, evaluated for scanning configuration. Title: `ECR Registry {{ .account_id }}/{{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `region` | AWS region. |
+
+Example:
+
+```json
+{
+  "name": "ecr-registry",
+  "type": "component",
+  "title": "ECR Registry 111122223333/eu-west-1",
+  "description": "AWS ECR account-level registry in 111122223333/eu-west-1.",
+  "purpose": "Represents an AWS ECR registry evaluated for scanning configuration compliance.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1"
+  }
+}
+```
+
+### ecr-image
+
+One container image digest in a repository, evaluated for vulnerability scan results. Title: `ECR Image {{ .repository_name }}@{{ .image_digest }} in {{ .account_id }}/{{ .region }}`.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `region` | AWS region. |
+| `repository_arn` | ARN of the repository holding the image. |
+| `image_digest` | Immutable image digest (`sha256:...`). |
+
+Example:
+
+```json
+{
+  "name": "ecr-image",
+  "type": "component",
+  "title": "ECR Image payments/api@sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 in 111122223333/eu-west-1",
+  "description": "Container image sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 in ECR repository payments/api.",
+  "purpose": "Represents a container image digest evaluated for vulnerability scan compliance.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "repository_arn": "arn:aws:ecr:eu-west-1:111122223333:repository/payments/api",
+    "image_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

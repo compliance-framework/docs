@@ -52,6 +52,69 @@ For every custom domain name returned by the API Gateway `GetDomainNames` API (a
 
 Each evidence carries the labels `provider=aws`, `type=apigateway-domain`, `domain_name`, `region` and `account_id`, plus any `policy_labels`.
 
+## Policy input
+
+One document per API Gateway custom domain name, in each configured region. The plugin builds it from `GetDomainNames`, and a policy reads it as `input`.
+
+| Field | Type | Description |
+|---|---|---|
+| `region` | string | AWS region the domain is defined in. |
+| `account_id` | string | AWS account ID the plugin is running against. |
+| `domain_name` | string | The custom domain name. |
+| `security_policy` | string | The domain's TLS security policy, for example `TLS_1_2` or `TLS_1_0`. |
+| `certificate_arn` | string | ARN of the certificate on the domain: the regional certificate when there is one, otherwise the edge-optimized one. Omitted when the domain has none. |
+| `endpoint_type` | string | First endpoint type of the domain: `EDGE`, `REGIONAL` or `PRIVATE`. Empty when none is set. |
+| `status` | string | Domain name status, for example `AVAILABLE`, `UPDATING` or `PENDING`. |
+| `tags` | object (string to string) | The domain's tags. An empty object when it has none. |
+
+An example input:
+
+```json
+{
+  "region": "eu-west-1",
+  "account_id": "111122223333",
+  "domain_name": "api.example.com",
+  "security_policy": "TLS_1_2",
+  "certificate_arn": "arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  "endpoint_type": "REGIONAL",
+  "status": "AVAILABLE",
+  "tags": {
+    "Environment": "production"
+  }
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### apigateway-domain
+
+An API Gateway custom domain. The plugin registers it as a component subject and attaches it to the evidence of every domain it evaluates. Title: `API Gateway Domain {{ .domain_name }}`.
+
+| Identity key | Description |
+|---|---|
+| `account_id` | AWS account ID. |
+| `region` | AWS region. |
+| `domain_name` | API Gateway custom domain name. |
+
+Example:
+
+```json
+{
+  "name": "apigateway-domain",
+  "type": "component",
+  "title": "API Gateway Domain api.example.com",
+  "description": "AWS API Gateway custom domain api.example.com in 111122223333/eu-west-1.",
+  "purpose": "Represents an AWS API Gateway custom domain evaluated for TLS compliance posture.",
+  "identityLabels": {
+    "account_id": "111122223333",
+    "region": "eu-west-1",
+    "domain_name": "api.example.com"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

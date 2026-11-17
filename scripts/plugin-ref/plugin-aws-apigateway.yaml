@@ -1,0 +1,62 @@
+version: 1
+policyInput:
+  description: >-
+    One document per API Gateway custom domain name, in each configured region. The plugin builds it from
+    `GetDomainNames`, and a policy reads it as `input`.
+  fields:
+    - name: "region"
+      type: "string"
+      description: "AWS region the domain is defined in."
+    - name: "account_id"
+      type: "string"
+      description: "AWS account ID the plugin is running against."
+    - name: "domain_name"
+      type: "string"
+      description: "The custom domain name."
+    - name: "security_policy"
+      type: "string"
+      description: "The domain's TLS security policy, for example `TLS_1_2` or `TLS_1_0`."
+    - name: "certificate_arn"
+      type: "string"
+      description: "ARN of the certificate on the domain: the regional certificate when there is one, otherwise the edge-optimized one. Omitted when the domain has none."
+    - name: "endpoint_type"
+      type: "string"
+      description: "First endpoint type of the domain: `EDGE`, `REGIONAL` or `PRIVATE`. Empty when none is set."
+    - name: "status"
+      type: "string"
+      description: "Domain name status, for example `AVAILABLE`, `UPDATING` or `PENDING`."
+    - name: "tags"
+      type: "object (string to string)"
+      description: "The domain's tags. An empty object when it has none."
+  example:
+    region: eu-west-1
+    account_id: "111122223333"
+    domain_name: api.example.com
+    security_policy: TLS_1_2
+    certificate_arn: arn:aws:acm:eu-west-1:111122223333:certificate/3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+    endpoint_type: REGIONAL
+    status: AVAILABLE
+    tags:
+      Environment: production
+subjectTemplates:
+  - name: apigateway-domain
+    description: >-
+      An API Gateway custom domain. The plugin registers it as a component subject and attaches it to the
+      evidence of every domain it evaluates. Title: `API Gateway Domain {{ .domain_name }}`.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "domain_name"
+        description: "API Gateway custom domain name."
+    example:
+      name: apigateway-domain
+      type: component
+      title: API Gateway Domain api.example.com
+      description: AWS API Gateway custom domain api.example.com in 111122223333/eu-west-1.
+      purpose: Represents an AWS API Gateway custom domain evaluated for TLS compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        domain_name: api.example.com
