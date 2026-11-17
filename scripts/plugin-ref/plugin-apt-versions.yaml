@@ -1,0 +1,47 @@
+version: 1
+policyInput:
+  description: >-
+    One run lists the packages installed on the host with `dpkg-query` and evaluates every policy package against
+    them. A policy receives the result as `input`: one key per installed package, named as dpkg names it, with the
+    package's version as a string. The versions are normalised to `major.minor.patch` so that a policy can compare
+    them: the epoch (the part before a `:`) is dropped, everything from the first `-`, `+` or `~` is cut, the text
+    after the digits in each part is cut, leading zeros are removed, and the result is padded with `0` to three parts
+    or cut to three. So `1:9.6p1-3ubuntu13.5` becomes `9.6.0`, and `3.0.13-0ubuntu3.4` becomes `3.0.13`. The original
+    version string is not in the document. The keys depend on the host, so the table lists the shape of a key. A package that is not installed is missing from the document, so test for it, or give it a default. A
+    package name with a dot or a dash is read with brackets: `input["libssl3"]`. Your own policy data from the
+    agent configuration is in `data.<key>`, not in `input`.
+  fields:
+    - name: "<package name>"
+      type: "string"
+      description: "The normalised version of the installed package, such as `3.0.13`. One key for each package `dpkg-query` lists."
+  example:
+    bash: 5.2.21
+    libssl3: 3.0.13
+    openssh-server: 9.6.0
+    openssl: 3.0.13
+    sudo: 1.9.15
+subjectTemplates:
+  - name: APT Installed Package
+    description: >-
+      Registered when the agent calls `Init`, with one subject per package and host. Title:
+      `APT Package Component: '{{.package_name}}' on host: '{{.hostname}}'`. The `package_name` label is not set by
+      the plugin's evidence at this release: the plugin labels every evidence with `type` (`apt`) and `hostname` only,
+      so an evidence links to a subject of this template only when a policy sets a `package_name` label on it.
+      The evidence's own subject is the machine instance, `machine-instance/<hostname>`.
+    identityKeys:
+      - name: "hostname"
+        description: "The `HOSTNAME` environment variable of the agent's process. It is empty when the variable isn't exported."
+      - name: "package_name"
+        description: "The name of the installed APT package, as dpkg names it."
+      - name: "_plugin"
+        description: "The name the plugin has in the agent configuration, set by the agent (`apt_versions` in the sample configuration)."
+    example:
+      name: APT Installed Package
+      type: component
+      title: "APT Package Component: 'openssl' on host: 'web-01'"
+      description: "Installed APT package 'openssl' on host: 'web-01'"
+      purpose: Track installed APT package and its version
+      identityLabels:
+        hostname: web-01
+        package_name: openssl
+        _plugin: apt_versions

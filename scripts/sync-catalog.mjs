@@ -13,7 +13,9 @@
 //      from repository names;
 //   3. writes each plugin instance's page, <path>/index.md, from the plugin's README at its newest
 //      final release and the policies catalog of its mapped bundles (each at its newest final
-//      release, with the controls its policies' METADATA lists);
+//      release, with the controls its policies' METADATA lists). Where scripts/plugin-ref/<id>.yaml
+//      exists, the page also gets its `## Policy input` and `## Subject templates` sections, after
+//      Evidence collected;
 //   4. puts that page in the release's minor line: a line that's already released is edited in
 //      place (a patch release); a new one is cut with `docusaurus docs:version:<id> <line>`;
 //   5. writes src/data/catalog.json, which src/pages/catalog.tsx renders.
@@ -39,6 +41,7 @@ import {
   renderPluginPage,
   sortControls,
 } from './catalog.mjs';
+import {PluginRefError, loadPluginRef, pluginRefValidator} from './plugin-ref.mjs';
 import {InstancesError, MANIFEST, loadManifest, releasedLines} from './instances.mjs';
 
 const siteDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -106,9 +109,10 @@ async function pool(items, limit, fn) {
 /**
  * Reads what the catalog needs from GitHub. Pure apart from `gh`: it writes nothing.
  * @param {ReturnType<typeof githubSource>} gh
- * @param {{org: string, manifest: import('./instances.mjs').Manifest}} opts
+ * @param {{org: string, manifest: import('./instances.mjs').Manifest, loadRef?: (id: string) => object | null}} opts
+ * `loadRef` gives a plugin's reference file (policy input, subject templates), or null.
  */
-export async function collect(gh, {org, manifest}) {
+export async function collect(gh, {org, manifest, loadRef = () => null}) {
   const warnings = [];
   const repos = (await gh.repos(org)).filter((r) => !r.archived);
   const descriptions = new Map(repos.map((r) => [`${org}/${r.name}`, r.description || null]));
@@ -168,7 +172,7 @@ export async function collect(gh, {org, manifest}) {
       if (b) bundles.push(b);
       else warnings.push(`${inst.id}: policy bundle ${repo} has no final release; it's left out of the policies catalog`);
     }
-    plugins.push({instance: inst, tag: rel.tag, line: rel.line, readme, description, bundles});
+    plugins.push({instance: inst, tag: rel.tag, line: rel.line, readme, description, bundles, ref: loadRef(inst.id)});
   }
 
   const mapped = new Set(instances.flatMap((i) => i.policies ?? []));
@@ -245,13 +249,15 @@ async function main() {
     },
   });
   const manifest = loadManifest(siteDir);
-  const result = await collect(githubSource(ghApi), {org: values.org, manifest});
+  const validate = pluginRefValidator(siteDir);
+  const loadRef = (id) => loadPluginRef(siteDir, id, validate);
+  const result = await collect(githubSource(ghApi), {org: values.org, manifest, loadRef});
   report(result, values['dry-run'] ? null : write(result));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((err) => {
-    if (err instanceof SyncError || err instanceof InstancesError) {
+    if (err instanceof SyncError || err instanceof InstancesError || err instanceof PluginRefError) {
       console.error(`sync-catalog: ${err.message}`);
       process.exit(1);
     }

@@ -1,0 +1,186 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates three kinds of resource, and a policy receives one document of the matching kind as
+    `input`. Every document has a `resource_type` field that says which: `ecr-repository` (one per private
+    repository), `ecr-registry` (one per region) and `ecr-image` (one per image pushed within the lookback window,
+    90 days unless the `image_lookback_days` policy data says otherwise). A bundle is matched to a kind by its name:
+    `ecr-repository-policies`, `ecr-registry-policies` or `ecr-image-policies`. The tables list the fields of
+    every kind, and the example shows one document of each kind under the key named after its `resource_type`;
+    a real input is only the document itself, without that key.
+  fields:
+    - name: "resource_type"
+      type: "string"
+      description: "All kinds. `ecr-repository`, `ecr-registry` or `ecr-image`."
+    - name: "region"
+      type: "string"
+      description: "All kinds. AWS region."
+    - name: "account_id"
+      type: "string"
+      description: "All kinds. AWS account ID. For a registry it is the registry ID."
+    - name: "registry_id"
+      type: "string"
+      description: "Repository and registry. ECR registry ID, which is the account ID."
+    - name: "repository_arn"
+      type: "string"
+      description: "Repository and image. ARN of the repository."
+    - name: "repository_name"
+      type: "string"
+      description: "Repository and image. Name of the repository."
+    - name: "image_tag_immutability"
+      type: "string"
+      description: "Repository. `MUTABLE` or `IMMUTABLE`."
+    - name: "scan_on_push"
+      type: "boolean"
+      description: "Repository. Whether images are scanned when pushed."
+    - name: "encryption_type"
+      type: "string"
+      description: "Repository. `AES256` or `KMS`."
+    - name: "kms_key"
+      type: "string"
+      description: "Repository. ARN of the KMS key when `encryption_type` is `KMS`, otherwise empty."
+    - name: "has_lifecycle_policy"
+      type: "boolean"
+      description: "Repository. Whether the repository has a lifecycle policy."
+    - name: "lifecycle_policy_text"
+      type: "string"
+      description: "Repository. The lifecycle policy as a JSON string. Empty when there is none."
+    - name: "has_repository_policy"
+      type: "boolean"
+      description: "Repository. Whether the repository has a repository (permissions) policy."
+    - name: "repository_policy_text"
+      type: "string"
+      description: "Repository. The repository policy as a JSON string. Empty when there is none."
+    - name: "tags"
+      type: "object (string to string)"
+      description: "Repository. The repository's tags."
+    - name: "registry_scan_type"
+      type: "string"
+      description: "Registry. `BASIC` or `ENHANCED`."
+    - name: "enhanced_scanning_enabled"
+      type: "boolean"
+      description: "Registry. True when `registry_scan_type` is `ENHANCED`."
+    - name: "image_digest"
+      type: "string"
+      description: "Image. Immutable digest of the image (`sha256:...`)."
+    - name: "image_tags"
+      type: "array of strings"
+      description: "Image. Tags that point at the digest. An empty array for an untagged image."
+    - name: "image_pushed_at"
+      type: "string (RFC 3339 time)"
+      description: "Image. When the image was pushed."
+    - name: "scan_status"
+      type: "string"
+      description: "Image. Scan status, such as `COMPLETE` or `FAILED`; `UNSUPPORTED` when the image has no scan."
+    - name: "findings_critical"
+      type: "integer"
+      description: "Image. Number of critical findings. 0 unless the scan is `COMPLETE`."
+    - name: "findings_high"
+      type: "integer"
+      description: "Image. Number of high findings. 0 unless the scan is `COMPLETE`."
+    - name: "has_severity_data"
+      type: "boolean"
+      description: "Image. True when the scan completed and returned severity counts, so a zero in the counts is real."
+  example:
+    ecr-repository:
+      resource_type: ecr-repository
+      repository_arn: arn:aws:ecr:eu-west-1:111122223333:repository/payments/api
+      repository_name: payments/api
+      registry_id: "111122223333"
+      region: eu-west-1
+      account_id: "111122223333"
+      image_tag_immutability: IMMUTABLE
+      scan_on_push: true
+      encryption_type: KMS
+      kms_key: arn:aws:kms:eu-west-1:111122223333:key/1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+      has_lifecycle_policy: true
+      lifecycle_policy_text: '{"rules":[{"rulePriority":1,"description":"Keep 30 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":30},"action":{"type":"expire"}}]}'
+      has_repository_policy: false
+      repository_policy_text: ""
+      tags:
+        Environment: production
+    ecr-registry:
+      resource_type: ecr-registry
+      registry_id: "111122223333"
+      region: eu-west-1
+      account_id: "111122223333"
+      registry_scan_type: ENHANCED
+      enhanced_scanning_enabled: true
+    ecr-image:
+      resource_type: ecr-image
+      repository_arn: arn:aws:ecr:eu-west-1:111122223333:repository/payments/api
+      repository_name: payments/api
+      region: eu-west-1
+      account_id: "111122223333"
+      image_digest: sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+      image_tags:
+        - v1.8.2
+      image_pushed_at: "2026-10-30T09:41:07Z"
+      scan_status: COMPLETE
+      findings_critical: 0
+      findings_high: 2
+      has_severity_data: true
+subjectTemplates:
+  - name: ecr-repository
+    description: >-
+      A private ECR repository. Title: `ECR Repository {{ .repository_name }} in {{ .account_id }}/{{ .region }}`.
+      The evidence also carries a `repository_name` label that is not part of the identity.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "repository_arn"
+        description: "ARN of the repository."
+    example:
+      name: ecr-repository
+      type: component
+      title: ECR Repository payments/api in 111122223333/eu-west-1
+      description: AWS ECR private repository payments/api.
+      purpose: Represents an AWS ECR private repository evaluated for compliance posture.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        repository_arn: arn:aws:ecr:eu-west-1:111122223333:repository/payments/api
+  - name: ecr-registry
+    description: >-
+      The account-level ECR registry in one region, evaluated for scanning configuration.
+      Title: `ECR Registry {{ .account_id }}/{{ .region }}`.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+    example:
+      name: ecr-registry
+      type: component
+      title: ECR Registry 111122223333/eu-west-1
+      description: AWS ECR account-level registry in 111122223333/eu-west-1.
+      purpose: Represents an AWS ECR registry evaluated for scanning configuration compliance.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+  - name: ecr-image
+    description: >-
+      One container image digest in a repository, evaluated for vulnerability scan results.
+      Title: `ECR Image {{ .repository_name }}@{{ .image_digest }} in {{ .account_id }}/{{ .region }}`.
+    identityKeys:
+      - name: "account_id"
+        description: "AWS account ID."
+      - name: "region"
+        description: "AWS region."
+      - name: "repository_arn"
+        description: "ARN of the repository holding the image."
+      - name: "image_digest"
+        description: "Immutable image digest (`sha256:...`)."
+    example:
+      name: ecr-image
+      type: component
+      title: ECR Image payments/api@sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 in 111122223333/eu-west-1
+      description: Container image sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 in ECR repository payments/api.
+      purpose: Represents a container image digest evaluated for vulnerability scan compliance.
+      identityLabels:
+        account_id: "111122223333"
+        region: eu-west-1
+        repository_arn: arn:aws:ecr:eu-west-1:111122223333:repository/payments/api
+        image_digest: sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945

@@ -1,0 +1,257 @@
+version: 1
+replaces:
+  - heading: Standardized Per-Resource OPA Input
+    keepSubsections: true
+policyInput:
+  description: >-
+    The plugin evaluates one resource for one Cloud Custodian check, and a policy receives one document per resource and
+    check as `input`. A resource that the check matched has `assessment.status` of `non_compliant`; a resource of the
+    same type that the check did not match, taken from the unfiltered inventory run, is `compliant`. So a policy
+    sees every resource of the type, and a rule on `assessment.status` picks the ones it cares about. A resource that a check
+    returns but that is missing from the inventory is still evaluated, as `non_compliant`, with
+    `assessment.inventory_status` set to `missing_from_baseline`. Fields are listed by their path inside the document.
+    A field marked as left out is missing from the document, not null, so test for it with `object.get` or a default.
+    The shape of `resource.data` and `raw_policy` depends on the resource type and the check, so only their top level is
+    described here. How `resource.id` is derived, and the built-in identity fields per AWS type, are under Resource
+    Identity in How it works. Your own policy data from the agent configuration is in `data.<key>`, not in `input`.
+  fields:
+    - name: "schema_version"
+      type: "string"
+      description: "Always `v2`."
+    - name: "source"
+      type: "string"
+      description: "Always `cloud-custodian`."
+    - name: "check"
+      type: "object"
+      description: "The Cloud Custodian policy (check) being evaluated."
+    - name: "check.name"
+      type: "string"
+      description: "The check's `name`."
+    - name: "check.resource"
+      type: "string"
+      description: "The check's resource type, such as `aws.ec2`."
+    - name: "check.provider"
+      type: "string"
+      description: "Provider part of the resource type (`aws` for `aws.ec2`); `unknown` when the type has no `<provider>.<resource>` form."
+    - name: "check.index"
+      type: "integer"
+      description: "Position of the check among the configured policies, starting at 0."
+    - name: "check.metadata"
+      type: "object"
+      description: "Every key of the Cloud Custodian policy except `name` and `resource` (`description`, `tags`, `filters` and so on). Left out when there are none."
+    - name: "resource"
+      type: "object"
+      description: "The resource under evaluation."
+    - name: "resource.id"
+      type: "string"
+      description: "Stable identifier of the resource. See Resource Identity in How it works for how it is derived."
+    - name: "resource.type"
+      type: "string"
+      description: "Cloud Custodian resource type, such as `aws.ec2`."
+    - name: "resource.provider"
+      type: "string"
+      description: "Provider part of the resource type."
+    - name: "resource.account_id"
+      type: "string"
+      description: "Cloud account ID when the resource data has one, or the scanned account with `aws_accounts`. Left out when unknown."
+    - name: "resource.region"
+      type: "string"
+      description: "A region in the resource data, or the region directory Cloud Custodian wrote the resource under. Left out for global types (IAM, CloudFront, Route 53) and for resources returned identically by every region (S3 buckets)."
+    - name: "resource.identity_fields"
+      type: "object (string to string)"
+      description: "The identifying fields of the resource and their values (`InstanceId` for `aws.ec2`). Left out when none."
+    - name: "resource.data"
+      type: "object"
+      description: "The resource as Cloud Custodian returned it. Its fields depend on the resource type."
+    - name: "account"
+      type: "object"
+      description: "The AWS account the resource was scanned in. Only present with `aws_accounts`."
+    - name: "account.id"
+      type: "string"
+      description: "AWS account ID."
+    - name: "account.name"
+      type: "string"
+      description: "The account's name in `aws_accounts`. Empty when none is set."
+    - name: "assessment"
+      type: "object"
+      description: "What the check found for the resource."
+    - name: "assessment.status"
+      type: "string"
+      description: "`non_compliant` when the check matched the resource, `compliant` otherwise."
+    - name: "assessment.matched"
+      type: "boolean"
+      description: "True when the check matched the resource."
+    - name: "assessment.inventory_status"
+      type: "string"
+      description: "`baseline` for a resource found in the unfiltered inventory run, `missing_from_baseline` for a matched resource that is not."
+    - name: "assessment.matched_resource_count"
+      type: "integer"
+      description: "Number of resources the check matched."
+    - name: "assessment.artifact_path"
+      type: "string"
+      description: "Directory of the check's Cloud Custodian output on the agent's machine. Left out when empty."
+    - name: "assessment.resources_path"
+      type: "string"
+      description: "Path of the check's `resources.json`. Left out when empty."
+    - name: "execution"
+      type: "object"
+      description: "How the `custodian run --dryrun` for the check went."
+    - name: "execution.status"
+      type: "string"
+      description: "`success`, or `error` when the run reported an error."
+    - name: "execution.dry_run"
+      type: "boolean"
+      description: "Always true: the plugin never applies actions."
+    - name: "execution.exit_code"
+      type: "integer"
+      description: "Exit code of the `custodian` process."
+    - name: "execution.started_at"
+      type: "string"
+      description: "When the run started, as an RFC 3339 UTC time."
+    - name: "execution.ended_at"
+      type: "string"
+      description: "When the run ended, as an RFC 3339 UTC time."
+    - name: "execution.duration_ms"
+      type: "integer"
+      description: "How long the run took, in milliseconds."
+    - name: "execution.stdout"
+      type: "string"
+      description: "Standard output of the run. Left out when empty."
+    - name: "execution.stderr"
+      type: "string"
+      description: "Standard error of the run. Left out when empty."
+    - name: "execution.error"
+      type: "string"
+      description: "The run's error. Left out when there is none."
+    - name: "execution.errors"
+      type: "array of strings"
+      description: "Further errors of the run. Left out when there are none."
+    - name: "execution.warnings"
+      type: "array of strings"
+      description: "Diagnostic warnings of the run. Left out when there are none."
+    - name: "raw_policy"
+      type: "object"
+      description: "The Cloud Custodian policy as configured, with `name`, `resource` and everything else you wrote for it."
+  example:
+    schema_version: v2
+    source: cloud-custodian
+    check:
+      name: ec2-public-ip-check
+      resource: aws.ec2
+      provider: aws
+      index: 0
+      metadata:
+        description: EC2 instances must not have a public IP address.
+    resource:
+      id: i-0123456789abcdef0
+      type: aws.ec2
+      provider: aws
+      account_id: "123456789012"
+      region: us-east-1
+      identity_fields:
+        InstanceId: i-0123456789abcdef0
+      data:
+        InstanceId: i-0123456789abcdef0
+        InstanceType: t3.micro
+        PublicIpAddress: 203.0.113.10
+        State:
+          Name: running
+    assessment:
+      status: non_compliant
+      matched: true
+      inventory_status: baseline
+      matched_resource_count: 1
+      artifact_path: /tmp/ccf-cloud-custodian-123/001-ec2-public-ip-check
+      resources_path: /tmp/ccf-cloud-custodian-123/001-ec2-public-ip-check/ec2-public-ip-check/resources.json
+    execution:
+      status: success
+      dry_run: true
+      exit_code: 0
+      started_at: "2098-03-06T12:00:00Z"
+      ended_at: "2098-03-06T12:00:01Z"
+      duration_ms: 1000
+    raw_policy:
+      name: ec2-public-ip-check
+      resource: aws.ec2
+      filters:
+        - type: value
+          key: PublicIpAddress
+          value: present
+subjectTemplates:
+  - name: cloud-custodian-aws-ec2
+    description: >-
+      The plugin registers one template for each distinct resource type among the configured checks, when the agent
+      calls `Init`; a check whose policy does not parse, or has no resource type, adds none. The template name is
+      `cloud-custodian-` and the resource type in lower case, with every run of characters other than letters and digits
+      replaced by one `-`, so the type `aws.ec2` gives `cloud-custodian-aws-ec2` and `aws.iam-role` gives
+      `cloud-custodian-aws-iam-role`. Everything else is the same for every type: the title is
+      `Cloud Resource: {{ .resource_type }} {{ .resource_id }}`, and the identity keys are filled in from the check as
+      below. The template also selects evidence by its `source` (`cloud-custodian`) and `resource_type` labels, and has
+      the props `provider` and `resource_type` set from the type. Evidence carries the labels `resource_id`,
+      `resource_type`, `provider`, and `account_id` and `region` when known. For an AWS resource whose identifier is an ARN,
+      the evidence links to AWS Resource Explorer with an exact `id:<arn>` search; S3 bucket names are turned into
+      `arn:aws:s3:::<bucket-name>`, and Route 53 hosted zone identifiers such as `/hostedzone/Z123` into
+      `arn:aws:route53:::hostedzone/Z123`. This example is for a check on `aws.ec2`.
+    identityKeys:
+      - name: "provider"
+        description: "The part of the configured resource type before the first dot: `aws` for `aws.ec2`. `unknown` when the type has no dot."
+      - name: "resource_type"
+        description: "The configured resource type of the check, as written: `aws.ec2`."
+      - name: "resource_id"
+        description: "The resource's `resource.id`: for `aws.ec2` the `InstanceId`, unless `resource_identity_fields` says otherwise."
+    example:
+      name: cloud-custodian-aws-ec2
+      type: component
+      title: "Cloud Resource: aws.ec2 i-0123456789abcdef0"
+      description: Cloud Custodian resource i-0123456789abcdef0 of type aws.ec2 from provider aws
+      purpose: Represents a cloud resource collected by Cloud Custodian for compliance evaluation.
+      identityLabels:
+        provider: aws
+        resource_type: aws.ec2
+        resource_id: i-0123456789abcdef0
+  - name: cloud-custodian-aws-s3
+    description: >-
+      The template of a second configured type, `aws.s3`. The identity keys derive the same way, but `resource_id`
+      comes from the type's own field, the bucket `Name`. S3 buckets are global, so the evidence has no `region` label.
+    identityKeys:
+      - name: "provider"
+        description: "`aws`, from `aws.s3`."
+      - name: "resource_type"
+        description: "`aws.s3`."
+      - name: "resource_id"
+        description: "The bucket's `Name`."
+    example:
+      name: cloud-custodian-aws-s3
+      type: component
+      title: "Cloud Resource: aws.s3 example-reports-bucket"
+      description: Cloud Custodian resource example-reports-bucket of type aws.s3 from provider aws
+      purpose: Represents a cloud resource collected by Cloud Custodian for compliance evaluation.
+      identityLabels:
+        provider: aws
+        resource_type: aws.s3
+        resource_id: example-reports-bucket
+  - name: cloud-custodian-aws-ec2 (with aws_accounts)
+    description: >-
+      With `aws_accounts` set, the same template name is registered with `account_id` added to the identity keys,
+      because one resource ID can exist in several accounts. The evidence also carries an `account_name` label when the
+      account has a name; it is not part of the identity.
+    identityKeys:
+      - name: "provider"
+        description: "`aws`, from `aws.ec2`."
+      - name: "account_id"
+        description: "The AWS account the resource was scanned in, from `aws_accounts`."
+      - name: "resource_type"
+        description: "`aws.ec2`."
+      - name: "resource_id"
+        description: "The instance's `InstanceId`."
+    example:
+      name: cloud-custodian-aws-ec2
+      type: component
+      title: "Cloud Resource: aws.ec2 i-0123456789abcdef0"
+      description: Cloud Custodian resource i-0123456789abcdef0 of type aws.ec2 from provider aws
+      purpose: Represents a cloud resource collected by Cloud Custodian for compliance evaluation.
+      identityLabels:
+        provider: aws
+        account_id: "123456789012"
+        resource_type: aws.ec2
+        resource_id: i-0123456789abcdef0
