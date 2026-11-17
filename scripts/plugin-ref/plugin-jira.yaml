@@ -1,0 +1,417 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates one kind of resource, a Jira project, and a policy receives one document per project as `input`.
+    The document always has a `projects` array with exactly one entry, the project being evaluated, next to the
+    Jira-wide `global_permissions` and `audit_records`, which are the same for every project. Fields are listed by their
+    path inside the document; a field marked as left out is missing from the document, not null, so test for it with
+    `object.get` or a default. Only open issues are included (status category `To Do` or `In Progress`, or no status
+    category), and only for the issue types the plugin searches for, which are set by `change_request_issue_types`
+    (`Change Request` and `Change` by default). Projects can be limited with `project_keys`. Reads that fail are logged and
+    skipped, so any of the lists can also be missing because Jira did not return it.
+  fields:
+    - name: "projects"
+      type: "array of objects"
+      description: "One entry, the project being evaluated. The fields below are inside it."
+    - name: "projects[].project"
+      type: "object"
+      description: "The Jira project."
+    - name: "projects[].project.id"
+      type: "string"
+      description: "Numeric ID of the project, as a string."
+    - name: "projects[].project.key"
+      type: "string"
+      description: "Project key, for example `PAY`."
+    - name: "projects[].project.name"
+      type: "string"
+      description: "Project display name."
+    - name: "projects[].project.self"
+      type: "string"
+      description: "API URL of the project. Left out when empty."
+    - name: "projects[].project.description"
+      type: "string"
+      description: "Project description. Left out when empty."
+    - name: "projects[].project.style"
+      type: "string"
+      description: "`classic` or `next-gen`. Left out when empty."
+    - name: "projects[].project.simplified"
+      type: "boolean"
+      description: "True for a team-managed project. Left out when false."
+    - name: "projects[].project.projectCategory"
+      type: "object"
+      description: "Category of the project, with `id`, `name`, `description` and `self`. Left out when the project has no category."
+    - name: "projects[].project.insight"
+      type: "object"
+      description: "Activity summary, with `totalIssueCount` and `lastIssueUpdateTime`. Left out when Jira returns none."
+    - name: "projects[].project.lead"
+      type: "object"
+      description: "The project lead, a user object (see user below). Left out when Jira returns none."
+    - name: "projects[].project.components"
+      type: "array of objects"
+      description: "Project components, each with `id`, `name`, `description`, `self`, `assignee`, `assigneeType`, `project` and `projectId`. Left out when none."
+    - name: "projects[].project.issueTypes"
+      type: "array of objects"
+      description: "Issue types Jira lists on the project, each with `id` and `name`. Left out when none."
+    - name: "projects[].workflow_schemes"
+      type: "array of objects"
+      description: "Workflow schemes associated with the project. Left out when none."
+    - name: "projects[].workflow_schemes[].id"
+      type: "integer"
+      description: "Scheme ID."
+    - name: "projects[].workflow_schemes[].name"
+      type: "string"
+      description: "Scheme name."
+    - name: "projects[].workflow_schemes[].description"
+      type: "string"
+      description: "Scheme description. Left out when empty."
+    - name: "projects[].workflow_schemes[].defaultWorkflow"
+      type: "string"
+      description: "Name of the default workflow. Left out when empty."
+    - name: "projects[].workflow_schemes[].issueTypeMappings"
+      type: "object (string to string)"
+      description: "Issue type to workflow name. Left out when empty."
+    - name: "projects[].workflow_schemes[].draft"
+      type: "boolean"
+      description: "True for a draft scheme. Left out when false."
+    - name: "projects[].workflow_schemes[].self"
+      type: "string"
+      description: "API URL of the scheme. Left out when empty."
+    - name: "projects[].workflows"
+      type: "array of objects"
+      description: "Workflows the project's issues use, found through its workflow schemes, or by name or scope when it has no scheme. Left out when none."
+    - name: "projects[].workflows[].id"
+      type: "string"
+      description: "Workflow ID."
+    - name: "projects[].workflows[].name"
+      type: "string"
+      description: "Workflow name."
+    - name: "projects[].workflows[].description"
+      type: "string"
+      description: "Workflow description. Left out when empty."
+    - name: "projects[].workflows[].scope"
+      type: "object"
+      description: "Where the workflow applies: `type` (`GLOBAL` or `PROJECT`) and, for a project-scoped workflow, `project`."
+    - name: "projects[].workflows[].version"
+      type: "object"
+      description: "Workflow version, with `id` and `versionNumber`."
+    - name: "projects[].workflows[].isEditable"
+      type: "boolean"
+      description: "Whether the workflow can be edited. Left out when false."
+    - name: "projects[].workflows[].published"
+      type: "boolean"
+      description: "Whether the workflow is published. Left out when false."
+    - name: "projects[].workflows[].created"
+      type: "string"
+      description: "Creation time as Jira reports it. Left out when empty."
+    - name: "projects[].workflows[].modified"
+      type: "string"
+      description: "Last modification time as Jira reports it. Left out when empty."
+    - name: "projects[].workflows[].statuses"
+      type: "array of objects"
+      description: "Statuses in the workflow. Left out when none. Each has the fields below."
+    - name: "projects[].workflows[].statuses[].id"
+      type: "string"
+      description: "Status ID."
+    - name: "projects[].workflows[].statuses[].name"
+      type: "string"
+      description: "Status name."
+    - name: "projects[].workflows[].statuses[].statusReference"
+      type: "string"
+      description: "Reference that ties the status to the global status."
+    - name: "projects[].workflows[].statuses[].statusCategory"
+      type: "string"
+      description: "Status category, for example `TODO`, `IN_PROGRESS` or `DONE`. Left out when empty."
+    - name: "projects[].workflows[].statuses[].approvalConfiguration"
+      type: "object"
+      description: "Approval rule on the status: `active`, `conditionType` (`number`, `percent` or `numberPerPrincipal`), `conditionValue`, `fieldId`, `transitionApproved`, `transitionRejected`, and optionally `exclude` and `prePopulatedFieldId`. Left out when the status needs no approval."
+    - name: "projects[].workflows[].transitions"
+      type: "array of objects"
+      description: "Transitions in the workflow. Left out when none. Each has the fields below."
+    - name: "projects[].workflows[].transitions[].id"
+      type: "string"
+      description: "Transition ID."
+    - name: "projects[].workflows[].transitions[].name"
+      type: "string"
+      description: "Transition name."
+    - name: "projects[].workflows[].transitions[].toStatusReference"
+      type: "string"
+      description: "Status the transition leads to. Left out when empty."
+    - name: "projects[].workflows[].transitions[].fromStatus"
+      type: "array of strings"
+      description: "Status references the transition starts from. Left out when none."
+    - name: "projects[].workflows[].transitions[].type"
+      type: "string"
+      description: "Transition type, for example `DIRECTED`. Left out when empty."
+    - name: "projects[].workflows[].transitions[].isConditional"
+      type: "boolean"
+      description: "True when the transition has conditions. Left out when false."
+    - name: "projects[].issues"
+      type: "array of objects"
+      description: "Open change request issues of the project. Left out when there are none."
+    - name: "projects[].issues[].key"
+      type: "string"
+      description: "Issue key, for example `PAY-142`."
+    - name: "projects[].issues[].fields"
+      type: "object"
+      description: "The issue's fields as Jira returns them, keyed by field ID, such as `summary`, `status`, `issuetype`, `project`, `assignee` and any custom field."
+    - name: "projects[].issues[].fields_with_metadata"
+      type: "array of objects"
+      description: "The same fields with their definition: `id`, `name`, `type`, `custom` and `value`. Left out when empty."
+    - name: "projects[].issues[].changelog"
+      type: "object or null"
+      description: "Change history: `histories`, `startAt`, `maxResults` and `total`. Each history has `author`, `created` (RFC 3339) and `items` with `field`, `fromString` and `toString`. Null when no changelog was fetched."
+    - name: "projects[].issues[].approvals"
+      type: "array of objects"
+      description: "Service Management approvals on the issue. Left out when none."
+    - name: "projects[].issues[].approvals[].id"
+      type: "string"
+      description: "Approval ID."
+    - name: "projects[].issues[].approvals[].name"
+      type: "string"
+      description: "Approval name. Left out when empty."
+    - name: "projects[].issues[].approvals[].finalDecision"
+      type: "string"
+      description: "`approved`, `declined` or `pending`. Left out when empty."
+    - name: "projects[].issues[].approvals[].canAnswerApproval"
+      type: "boolean"
+      description: "Whether the calling account can answer the approval. Left out when false."
+    - name: "projects[].issues[].approvals[].approvers"
+      type: "array of objects"
+      description: "Each approver is an object with `approver` (a user object) and `approverDecision`, left out when empty."
+    - name: "projects[].issues[].approvals[].createdDate"
+      type: "object"
+      description: "When the approval was created, with `epochMillis`, `friendly`, `iso8601` and `jira`. Each is left out when empty."
+    - name: "projects[].issues[].approvals[].completedDate"
+      type: "object"
+      description: "When the approval was completed, with the same fields as `createdDate`."
+    - name: "projects[].issues[].slas"
+      type: "array of objects"
+      description: "Service Management SLAs on the issue. Left out when none."
+    - name: "projects[].issues[].slas[].id"
+      type: "string"
+      description: "SLA ID."
+    - name: "projects[].issues[].slas[].name"
+      type: "string"
+      description: "SLA name."
+    - name: "projects[].issues[].slas[].state"
+      type: "string"
+      description: "`MET`, `BREACHED` or `IN_PROGRESS`."
+    - name: "projects[].issues[].slas[].completedCycles"
+      type: "array of objects"
+      description: "Finished SLA cycles. Left out when none."
+    - name: "projects[].issues[].slas[].ongoingCycle"
+      type: "object"
+      description: "The running cycle. Left out when there is none. Cycles have `breached`, `withinCalendar` and the times `startTime`, `stopTime`, `breachTime`, `elapsedTime`, `remainingTime` and `goalDuration`, each with `friendly`, `millis`, `jira` and `iso8601`."
+    - name: "projects[].issues[].dev_info"
+      type: "object"
+      description: "Linked development data. Left out when none was found."
+    - name: "projects[].issues[].dev_info.pull_requests"
+      type: "array of objects"
+      description: "Pull requests linked to the issue, each with `id`, `status` and `url`."
+    - name: "projects[].issues[].deployments"
+      type: "array of objects"
+      description: "Deployments linked to the issue, each with `id`, `environment`, `status` and `timestamp` (RFC 3339). Left out when none."
+    - name: "projects[].issue_types"
+      type: "array of objects"
+      description: "Issue types used by the project's issues, each with `id` and `name`. Left out when none."
+    - name: "projects[].fields"
+      type: "array of objects"
+      description: "Field definitions matching the fields of the project's issues, each with `id`, `name` and `schema`. Left out when none."
+    - name: "projects[].statuses"
+      type: "array of objects"
+      description: "Statuses the project's issues are in, each with `id`, `name`, `scope`, and optionally `description`, `statusCategory`, `statusReference`, `iconUrl` and `self`. Left out when none."
+    - name: "global_permissions"
+      type: "array of objects"
+      description: "Global permissions of the account the plugin uses, each with `key`, `name`, `description` and `type`. Left out when none."
+    - name: "audit_records"
+      type: "array of objects"
+      description: "Jira audit log records. Left out when none."
+    - name: "audit_records[].id"
+      type: "integer"
+      description: "Record ID."
+    - name: "audit_records[].summary"
+      type: "string"
+      description: "What happened."
+    - name: "audit_records[].created"
+      type: "string (RFC 3339 time)"
+      description: "When it happened. Null when Jira gives no time."
+    - name: "audit_records[].category"
+      type: "string"
+      description: "Audit category."
+    - name: "audit_records[].authorAccountId"
+      type: "string"
+      description: "Account that made the change. Left out when empty."
+    - name: "audit_records[].authorKey"
+      type: "string"
+      description: "Legacy user key of the author. Left out when empty."
+    - name: "audit_records[].description"
+      type: "string"
+      description: "Longer description. Left out when empty."
+    - name: "audit_records[].eventSource"
+      type: "string"
+      description: "Where the change came from. Left out when empty."
+    - name: "audit_records[].remoteAddress"
+      type: "string"
+      description: "IP address of the author. Left out when empty."
+    - name: "audit_records[].objectItem"
+      type: "object"
+      description: "The object changed, with `id`, `name`, `typeName`, `parentId` and `parentName`. Left out when none."
+    - name: "audit_records[].associatedItems"
+      type: "array of objects"
+      description: "Related objects, with the same fields as `objectItem`. Left out when none."
+    - name: "audit_records[].changedValues"
+      type: "array of objects"
+      description: "Changes made, each with `fieldName`, `changedFrom` and `changedTo`. Left out when none."
+  example:
+    projects:
+      - project:
+          id: "10042"
+          key: PAY
+          name: Payments Platform
+          self: https://example.atlassian.net/rest/api/3/project/10042
+          style: classic
+          lead:
+            accountId: 5b10ac8d82e05b22cc7d4ef5
+            displayName: Alex Example
+            active: true
+        workflow_schemes:
+          - id: 10100
+            name: Change management scheme
+            defaultWorkflow: Change workflow
+            issueTypeMappings:
+              Change Request: Change workflow
+        workflows:
+          - id: 7f3a9c1e-2b44-4d6a-9a10-5e8c3d2b1f00
+            name: Change workflow
+            scope:
+              type: GLOBAL
+            startPointLayout:
+              x: 0
+              "y": 0
+            version:
+              id: 3c9e5f0a-1d2b-4c3d-8e4f-6a7b8c9d0e1f
+              versionNumber: 2
+            statuses:
+              - id: "10001"
+                name: In Review
+                scope:
+                  type: GLOBAL
+                statusCategory: IN_PROGRESS
+                statusReference: 4e5f6a7b-8c9d-4e0f-a1b2-c3d4e5f60718
+                layout:
+                  x: 120
+                  "y": 40
+                approvalConfiguration:
+                  active: "true"
+                  conditionType: number
+                  conditionValue: "1"
+                  fieldId: customfield_10200
+                  transitionApproved: "31"
+                  transitionRejected: "41"
+            transitions:
+              - id: "31"
+                name: Approve
+                toStatusReference: 9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d
+                fromStatus:
+                  - 4e5f6a7b-8c9d-4e0f-a1b2-c3d4e5f60718
+                type: DIRECTED
+        issues:
+          - key: PAY-142
+            fields:
+              summary: Rotate payment gateway credentials
+              issuetype:
+                id: "10300"
+                name: Change Request
+              project:
+                id: "10042"
+                key: PAY
+              status:
+                name: In Review
+                statusCategory:
+                  name: In Progress
+            changelog:
+              histories:
+                - author:
+                    accountId: 5b10ac8d82e05b22cc7d4ef5
+                    displayName: Alex Example
+                  created: "2026-03-02T09:15:30+01:00"
+                  items:
+                    - field: status
+                      fromString: To Do
+                      toString: In Review
+              startAt: 0
+              maxResults: 100
+              total: 1
+            approvals:
+              - id: "501"
+                name: Change approval
+                finalDecision: pending
+                approvers:
+                  - approver:
+                      accountId: 5b10ac8d82e05b22cc7d4ef6
+                      displayName: Sam Sample
+                    approverDecision: pending
+                createdDate:
+                  epochMillis: 1772442930000
+                  iso8601: "2026-03-02T09:15:30+0100"
+            slas:
+              - id: "7"
+                name: Time to approval
+                state: IN_PROGRESS
+            dev_info:
+              pull_requests:
+                - id: "88"
+                  status: MERGED
+                  url: https://git.example.com/acme/payments/pull/88
+            deployments:
+              - id: "d-2001"
+                environment: production
+                status: successful
+                timestamp: "2026-03-03T14:00:00Z"
+        issue_types:
+          - id: "10300"
+            name: Change Request
+        fields:
+          - id: summary
+            name: Summary
+            schema:
+              type: string
+              system: summary
+        statuses:
+          - id: "10001"
+            name: In Review
+            scope:
+              type: GLOBAL
+            statusCategory: IN_PROGRESS
+    global_permissions:
+      - key: ADMINISTER
+        name: Administer Jira
+        description: Create and administer projects, issue types, fields, workflows, and schemes for projects and issues.
+        type: GLOBAL
+    audit_records:
+      - id: 90210
+        summary: Workflow updated
+        created: "2026-03-01T16:11:45Z"
+        category: workflows
+        authorAccountId: 5b10ac8d82e05b22cc7d4ef5
+        eventSource: Jira Cloud
+        objectItem:
+          id: 7f3a9c1e-2b44-4d6a-9a10-5e8c3d2b1f00
+          name: Change workflow
+          typeName: WORKFLOW
+subjectTemplates:
+  - name: jira-project
+    description: >-
+      A Jira project. Title: `Jira Project: {{ .project_key }}`. The evidence also carries `provider` (`jira`),
+      `project_name` and `jira_url` labels, which are not part of the identity.
+    identityKeys:
+      - name: "project_key"
+        description: "The unique key of the Jira project, for example `PAY`."
+    example:
+      name: jira-project
+      type: component
+      title: "Jira Project: PAY"
+      description: Jira project Payments Platform (PAY)
+      purpose: Represents a Jira project being monitored for compliance
+      identityLabels:
+        project_key: PAY

@@ -1,0 +1,250 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates two kinds of input, and a policy bundle gets one of them. A repository policy receives one
+    document per repository as `input`. A dependency policy receives one document per direct dependency of a repository.
+    Bundles are matched by the behavior the agent assigns them: `dependency` for the bundle
+    `plugin-github-repositories-dependency-policies`, `repository` for every other bundle. Dependency documents are only
+    produced when `dependency_health_enabled` is on. The table lists fields by their path inside the document. Many
+    repository fields are GitHub REST API objects, passed through as GitHub returns them, so only their top level is
+    described here. A field marked as left out is missing from the document, not null. Any other field is
+    always present, but a list or an object the plugin found nothing for can be `null`, so test for that. Your own policy data from the agent configuration is in `input.policy_data` on both kinds of
+    document. Older agent configurations set it with the `policy_input` setting; the repository document still carries
+    the same data a second time under the legacy key `input.policy_input`, which the dependency document does not have.
+  fields:
+    - name: "settings"
+      type: "object"
+      description: "Repository document. The repository as the GitHub REST API returns it (name, full_name, owner, default_branch, visibility, archived, security_and_analysis and the rest)."
+    - name: "workflows"
+      type: "array of objects"
+      description: "Repository document. GitHub Actions workflows configured in the repository (id, name, path, state)."
+    - name: "workflow_runs"
+      type: "array of objects"
+      description: "Repository document. Workflow runs the plugin collected, as GitHub returns them."
+    - name: "protected_branches"
+      type: "array of strings"
+      description: "Repository document. Names of the protected branches."
+    - name: "branch_protection_rules"
+      type: "object (branch name to object)"
+      description: "Repository document. The full branch protection configuration of each branch, as GitHub returns it. A branch whose protection could not be read is missing. When no protected branch was read, the default branch is tried."
+    - name: "required_status_checks"
+      type: "object (branch name to object)"
+      description: "Repository document. The required status checks of each branch that has them."
+    - name: "sbom"
+      type: "object"
+      description: "Repository document. The repository's SBOM from the dependency graph, as GitHub returns it. `null` when none is available."
+    - name: "last_release"
+      type: "object"
+      description: "Repository document. The latest release, as GitHub returns it. `null` when the repository has no release."
+    - name: "pull_requests"
+      type: "array of objects"
+      description: "Repository document. Open pull requests, each with every field GitHub returns for a pull request plus `reviews`."
+    - name: "pull_requests[].reviews"
+      type: "array of objects"
+      description: "Reviews of the pull request, each with every field GitHub returns for a review plus `threads`."
+    - name: "pull_requests[].reviews[].threads"
+      type: "array of objects"
+      description: "Discussion threads of the review."
+    - name: "pull_requests[].reviews[].threads[].id"
+      type: "string"
+      description: "Thread ID."
+    - name: "pull_requests[].reviews[].threads[].is_resolved"
+      type: "boolean"
+      description: "Whether the thread is resolved."
+    - name: "pull_requests[].reviews[].threads[].comments"
+      type: "array of objects"
+      description: "Comments in the thread. Each has `id`, `body`, `url`, `diff_hunk` and `path`, and may have `review_id`, `position`, `original_position`, `reply_to_id`, `created_at` and `updated_at`, which are left out when empty."
+    - name: "code_owners"
+      type: "object"
+      description: "Repository document. The CODEOWNERS file as GitHub returns repository content. `null` when the repository has none."
+    - name: "org_teams"
+      type: "array of objects"
+      description: "Repository document. Teams of the organization: `id` (integer), `name`, `slug` and `members` (array of logins)."
+    - name: "deployments"
+      type: "array of objects"
+      description: "Repository document. Deployments that match the plugin's deployment settings. Each has `deployment` (the GitHub deployment) and `statuses` (its GitHub deployment statuses)."
+    - name: "failed_deployments"
+      type: "array of objects"
+      description: "Repository document. Every deployment that has a failed status, in the same shape as `deployments`."
+    - name: "collaborators"
+      type: "array of objects"
+      description: "Repository document. Direct collaborators: `login`, `role_name` and `permissions` (object, permission name to boolean)."
+    - name: "repository_teams"
+      type: "array of objects"
+      description: "Repository document. Teams with access to the repository: `id` (integer), `name`, `slug`, `permission`, `permissions` (object, permission name to boolean) and `members` (array of logins)."
+    - name: "environments"
+      type: "array of objects"
+      description: "Repository document. Deployment environments. Each has `id`, `name`, `can_admins_bypass`, and may have `url`, `html_url`, `wait_timer`, `reviewers`, `protection_rules` and `deployment_branch_policy`, which are left out when empty."
+    - name: "environments[].reviewers"
+      type: "array of objects"
+      description: "Required reviewers: `type`, and as they apply `id`, `login`, `slug` and `name`, left out when empty."
+    - name: "environments[].protection_rules"
+      type: "array of objects"
+      description: "Protection rules: `id`, `type`, `prevent_self_review`, and `wait_timer` and `reviewers` when set."
+    - name: "environments[].deployment_branch_policy"
+      type: "object"
+      description: "`protected_branches` and `custom_branch_policies`, both boolean."
+    - name: "effective_branch_rules"
+      type: "object (branch name to object)"
+      description: "Repository document. The rules that apply to each branch, from branch protection and rulesets together. Each object has `required_signatures` (boolean), and may have `required_deployments` (array of environment names), `code_scanning_tools` (array of strings), `required_approving_review_count` (integer), `dismiss_stale_reviews_on_push` and `require_code_owner_review` (booleans). These are left out when empty, 0 or false."
+    - name: "policy_data"
+      type: "object"
+      description: "Both documents. The policy data from the agent configuration. An empty object when none is set."
+    - name: "policy_input"
+      type: "object"
+      description: "Repository document only. Legacy key, the same data as `policy_data`. Use `policy_data`."
+    - name: "repository"
+      type: "object"
+      description: "Dependency document. The repository that declares the dependency."
+    - name: "repository.organization"
+      type: "string"
+      description: "Organization login."
+    - name: "repository.name"
+      type: "string"
+      description: "Repository name."
+    - name: "repository.full_name"
+      type: "string"
+      description: "`organization/name`."
+    - name: "repository.url"
+      type: "string"
+      description: "Web URL of the repository. Left out when empty."
+    - name: "dependency"
+      type: "object"
+      description: "Dependency document. One direct dependency. Today only direct `go.mod` dependencies are read."
+    - name: "dependency.name"
+      type: "string"
+      description: "Module path."
+    - name: "dependency.ecosystem"
+      type: "string"
+      description: "Package ecosystem."
+    - name: "dependency.source_file"
+      type: "string"
+      description: "File the dependency was declared in."
+    - name: "dependency.direct"
+      type: "boolean"
+      description: "Whether the dependency is direct."
+    - name: "dependency.declared_version"
+      type: "string"
+      description: "Version declared in the source file."
+    - name: "dependency.repository"
+      type: "object"
+      description: "The upstream repository the dependency resolves to. `provider`, `owner`, `name` and `url` are left out when empty."
+    - name: "dependency.repository.resolved"
+      type: "boolean"
+      description: "Whether the module path was resolved to a public GitHub repository."
+    - name: "dependency.health"
+      type: "object"
+      description: "Maintenance signals of the upstream repository. `null` when not collected."
+    - name: "dependency.health.repository_archived"
+      type: "boolean"
+      description: "Whether the upstream repository is archived."
+    - name: "dependency.health.latest_release"
+      type: "object"
+      description: "`tag` and `published_at` (RFC 3339 time) of the latest release. Left out when there is none."
+    - name: "dependency.health.latest_commit"
+      type: "object"
+      description: "`sha` and `committed_at` (RFC 3339 time) of the latest default-branch commit. Left out when unknown."
+    - name: "dependency.health.workflows"
+      type: "object"
+      description: "`count` (integer) of workflows, and `latest_default_branch_run` with `status`, `conclusion` and `created_at` when a run exists. Left out when not collected."
+    - name: "dependency.health.pull_requests"
+      type: "object"
+      description: "Pull request activity. `open_count`, `open_count_capped`, `recent_closed_count`, `recent_closed_count_capped` and `first_interaction_sampled_pull_requests` are always there; `oldest_open_created_at`, `median_days_to_close` and `median_hours_to_first_interaction` are left out when unknown. Left out as a whole when not collected."
+    - name: "dependency.supply_chain"
+      type: "object"
+      description: "License and SBOM facts. `null` when not collected."
+    - name: "dependency.supply_chain.license"
+      type: "object"
+      description: "`collected` (boolean), and `spdx_id`, `name` and `url` when known."
+    - name: "dependency.supply_chain.sbom"
+      type: "object"
+      description: "`available` (boolean), `package_count` (integer), `collected` (boolean), and `spdx_id`, `spdx_version` and `creation_info_created` when known."
+    - name: "dependency.collection_status"
+      type: "object"
+      description: "Which collection stages finished: `dependency_parsed`, `repository_resolved`, `health_collected`, `license_collected` and `sbom_collected`, all boolean. A missing upstream fact is recorded here and does not fail the run."
+    - name: "dependency.collection_status.errors"
+      type: "array of objects"
+      description: "Non-fatal collection failures, each with `scope` and `message` strings."
+  example:
+    repository:
+      organization: example-org
+      name: payments-api
+      full_name: example-org/payments-api
+      url: https://github.com/example-org/payments-api
+    dependency:
+      name: github.com/example-org/ledger-kit
+      ecosystem: go
+      source_file: go.mod
+      direct: true
+      declared_version: v1.4.2
+      repository:
+        provider: github
+        owner: example-org
+        name: ledger-kit
+        url: https://github.com/example-org/ledger-kit
+        resolved: true
+      health:
+        repository_archived: false
+        latest_release:
+          tag: v1.4.2
+          published_at: "2026-02-03T10:15:00Z"
+        latest_commit:
+          sha: 3f2c9a7d1b8e4c6a05d9f7b2e1a4c8d6f0b3e5a7
+          committed_at: "2026-03-01T16:40:12Z"
+        workflows:
+          count: 3
+          latest_default_branch_run:
+            status: completed
+            conclusion: success
+            created_at: "2026-03-01T16:45:00Z"
+        pull_requests:
+          open_count: 4
+          open_count_capped: false
+          oldest_open_created_at: "2026-01-12T09:00:00Z"
+          recent_closed_count: 18
+          recent_closed_count_capped: false
+          median_days_to_close: 2.5
+          median_hours_to_first_interaction: 6.0
+          first_interaction_sampled_pull_requests: 18
+      supply_chain:
+        license:
+          spdx_id: Apache-2.0
+          name: Apache License 2.0
+          url: https://api.github.com/licenses/apache-2.0
+          collected: true
+        sbom:
+          available: true
+          package_count: 27
+          spdx_id: SPDXRef-DOCUMENT
+          spdx_version: SPDX-2.3
+          creation_info_created: "2026-03-01T17:00:00Z"
+          collected: true
+      collection_status:
+        dependency_parsed: true
+        repository_resolved: true
+        health_collected: true
+        license_collected: true
+        sbom_collected: true
+        errors: []
+    policy_data:
+      max_days_since_last_commit: 365
+subjectTemplates:
+  - name: github-repository
+    description: >-
+      A GitHub repository. Title: `GitHub Repository: {{ .repository }}`. Dependency evaluations use the labels
+      `type` (`repository-dependency`), `dependency`, `ecosystem` and `dependency_version` on top of these, and repository
+      evaluations use `provider` (`github`) and `type` (`repository`); none of those are part of the identity.
+    identityKeys:
+      - name: "repository"
+        description: "Name of the repository, without the organization."
+      - name: "organization"
+        description: "Login of the GitHub organization that owns the repository."
+    example:
+      name: github-repository
+      type: component
+      title: "GitHub Repository: payments-api"
+      description: GitHub repository payments-api in organization example-org
+      purpose: Represents a GitHub repository being monitored for compliance
+      identityLabels:
+        repository: payments-api
+        organization: example-org

@@ -1,0 +1,700 @@
+version: 1
+policyInput:
+  description: >-
+    The plugin evaluates one kind of resource, a GitLab project (repository), and a policy receives one document per
+    project in the configured group as `input`. Archived projects are skipped. Every field comes straight from the
+    GitLab REST API, with the API's own names, so the GitLab API documentation describes each value in full. The
+    document has thirteen top-level keys, and all of them are always present. When the plugin cannot read something
+    (the token lacks permission, the feature needs GitLab Premium or Ultimate, or nothing exists), the key is `null`
+    (an empty list is `[]` when it was read and nothing exists, and `code_owners` is an empty string), so test for it
+    with a default or a `null` check. Fields are listed by their path inside the document.
+    For `settings`, only the fields policies use most are listed. The object carries every other field the GitLab
+    project API returns for the project, such as the `*_access_level` feature settings, `ci_*` settings and
+    `compliance_frameworks`.
+  fields:
+    - name: "settings"
+      type: "object"
+      description: "The project as GitLab returns it from the group's project list. Always present. Fields below are the most used."
+    - name: "settings.id"
+      type: "integer"
+      description: "GitLab project ID."
+    - name: "settings.name"
+      type: "string"
+      description: "Project name."
+    - name: "settings.path"
+      type: "string"
+      description: "Project path, the last segment of the URL. This is the `repository` identity label."
+    - name: "settings.path_with_namespace"
+      type: "string"
+      description: "Full path including the group and any subgroups."
+    - name: "settings.web_url"
+      type: "string"
+      description: "URL of the project in the GitLab UI."
+    - name: "settings.description"
+      type: "string"
+      description: "Project description. Empty when none is set."
+    - name: "settings.visibility"
+      type: "string"
+      description: "`private`, `internal` or `public`."
+    - name: "settings.default_branch"
+      type: "string"
+      description: "Name of the default branch. Empty for an empty repository."
+    - name: "settings.empty_repo"
+      type: "boolean"
+      description: "True when the repository has no commits."
+    - name: "settings.archived"
+      type: "boolean"
+      description: "Whether the project is archived. Always false, because archived projects are not collected."
+    - name: "settings.topics"
+      type: "array of strings"
+      description: "Project topics."
+    - name: "settings.namespace"
+      type: "object"
+      description: "The group or user namespace that owns the project: `id`, `name`, `path`, `kind`, `full_path`, `parent_id` and `web_url`."
+    - name: "settings.created_at"
+      type: "string (RFC 3339 time)"
+      description: "When the project was created. Left out when GitLab returns no date."
+    - name: "settings.last_activity_at"
+      type: "string (RFC 3339 time)"
+      description: "Time of the last activity on the project. Left out when GitLab returns no date."
+    - name: "settings.merge_method"
+      type: "string"
+      description: "`merge`, `rebase_merge` or `ff`."
+    - name: "settings.squash_option"
+      type: "string"
+      description: "`never`, `always`, `default_on` or `default_off`."
+    - name: "settings.only_allow_merge_if_pipeline_succeeds"
+      type: "boolean"
+      description: "Merge requests can only be merged when the pipeline succeeds."
+    - name: "settings.only_allow_merge_if_all_discussions_are_resolved"
+      type: "boolean"
+      description: "Merge requests can only be merged when all discussions are resolved."
+    - name: "settings.allow_merge_on_skipped_pipeline"
+      type: "boolean"
+      description: "A merge request with a skipped pipeline can be merged."
+    - name: "settings.remove_source_branch_after_merge"
+      type: "boolean"
+      description: "The source branch is removed after a merge by default."
+    - name: "settings.request_access_enabled"
+      type: "boolean"
+      description: "Users can request access to the project."
+    - name: "settings.ci_config_path"
+      type: "string"
+      description: "Path of the CI/CD configuration file. Empty when the default is used."
+    - name: "settings.shared_runners_enabled"
+      type: "boolean"
+      description: "Instance runners are enabled for the project."
+    - name: "settings.public_jobs"
+      type: "boolean"
+      description: "Job logs and artifacts are visible to anyone who can see the project."
+    - name: "settings.auto_devops_enabled"
+      type: "boolean"
+      description: "Auto DevOps is enabled."
+    - name: "settings.compliance_frameworks"
+      type: "array of strings"
+      description: "Compliance frameworks applied to the project, when GitLab returns any."
+    - name: "settings.shared_with_groups"
+      type: "array of objects"
+      description: "Groups the project is shared with, each with `group_id`, `group_name`, `group_full_path` and `group_access_level`."
+    - name: "settings.forked_from_project"
+      type: "object"
+      description: "The parent project when this one is a fork. `null` otherwise."
+    - name: "settings.mirror"
+      type: "boolean"
+      description: "Whether the project is a pull mirror."
+    - name: "settings.issues_access_level"
+      type: "string"
+      description: "`disabled`, `private` or `enabled`. The other feature settings (`merge_requests_access_level`, `wiki_access_level`, `builds_access_level`, `container_registry_access_level` and so on) take the same values."
+    - name: "protected_branches"
+      type: "array of objects"
+      description: "Protected branches. `null` when the token cannot read them, `[]` when there are none."
+    - name: "protected_branches[].id"
+      type: "integer"
+      description: "Protected branch ID."
+    - name: "protected_branches[].name"
+      type: "string"
+      description: "Branch name or wildcard pattern."
+    - name: "protected_branches[].allow_force_push"
+      type: "boolean"
+      description: "Whether force pushes are allowed."
+    - name: "protected_branches[].code_owner_approval_required"
+      type: "boolean"
+      description: "Whether pushes to the branch need code owner approval."
+    - name: "protected_branches[].push_access_levels"
+      type: "array of objects"
+      description: "Who can push. Same shape as `merge_access_levels`."
+    - name: "protected_branches[].merge_access_levels"
+      type: "array of objects"
+      description: "Who can merge. Each entry has `id`, `access_level` (0 none, 30 developer, 40 maintainer, 60 admin), `access_level_description`, `deploy_key_id`, `user_id`, `group_id` and `member_role_id`."
+    - name: "protected_branches[].unprotect_access_levels"
+      type: "array of objects"
+      description: "Who can unprotect the branch. Same shape as `merge_access_levels`."
+    - name: "approval_config"
+      type: "object"
+      description: "Project-level merge request approval settings. `null` when the token cannot read them."
+    - name: "approval_config.approvals_before_merge"
+      type: "integer"
+      description: "Approvals required before merging (deprecated by GitLab in favor of approval rules)."
+    - name: "approval_config.reset_approvals_on_push"
+      type: "boolean"
+      description: "Approvals are removed when new commits are pushed."
+    - name: "approval_config.disable_overriding_approvers_per_merge_request"
+      type: "boolean"
+      description: "Merge requests cannot override the approver list."
+    - name: "approval_config.merge_requests_author_approval"
+      type: "boolean"
+      description: "Authors can approve their own merge requests."
+    - name: "approval_config.merge_requests_disable_committers_approval"
+      type: "boolean"
+      description: "Users who added commits cannot approve the merge request."
+    - name: "approval_config.require_reauthentication_to_approve"
+      type: "boolean"
+      description: "Approvers must authenticate again. Left out when GitLab does not return it."
+    - name: "approval_config.selective_code_owner_removals"
+      type: "boolean"
+      description: "Only code owner approvals are removed on push. Left out when GitLab does not return it."
+    - name: "approval_config.approvers"
+      type: "array of objects"
+      description: "Individual approvers, each with a `user` and `approved_at`."
+    - name: "approval_config.approver_groups"
+      type: "array of objects"
+      description: "Approver groups."
+    - name: "approval_rules"
+      type: "array of objects"
+      description: "Project-level approval rules. `null` when the token cannot read them."
+    - name: "approval_rules[].id"
+      type: "integer"
+      description: "Rule ID."
+    - name: "approval_rules[].name"
+      type: "string"
+      description: "Rule name."
+    - name: "approval_rules[].rule_type"
+      type: "string"
+      description: "`regular`, `any_approver` or `code_owner`."
+    - name: "approval_rules[].approvals_required"
+      type: "integer"
+      description: "Approvals the rule needs."
+    - name: "approval_rules[].eligible_approvers"
+      type: "array of objects"
+      description: "Users who can approve under the rule. Each has `id`, `username`, `name`, `state`, `avatar_url` and `web_url`."
+    - name: "approval_rules[].users"
+      type: "array of objects"
+      description: "Users named in the rule, same shape as `eligible_approvers`."
+    - name: "approval_rules[].groups"
+      type: "array of objects"
+      description: "Groups named in the rule."
+    - name: "approval_rules[].protected_branches"
+      type: "array of objects"
+      description: "Protected branches the rule applies to."
+    - name: "approval_rules[].applies_to_all_protected_branches"
+      type: "boolean"
+      description: "Whether the rule applies to every protected branch."
+    - name: "approval_rules[].report_type"
+      type: "string"
+      description: "Report type for security approval rules. Empty for other rules."
+    - name: "approval_rules[].contains_hidden_groups"
+      type: "boolean"
+      description: "Whether the rule has groups the token cannot see."
+    - name: "last_pipeline_run"
+      type: "object"
+      description: "The most recent pipeline, whatever its age. `null` when the project has never had a pipeline."
+    - name: "last_pipeline_run.id"
+      type: "integer"
+      description: "Pipeline ID. The `pipeline_runs[]` entries have the same fields."
+    - name: "last_pipeline_run.iid"
+      type: "integer"
+      description: "Project-scoped pipeline ID."
+    - name: "last_pipeline_run.project_id"
+      type: "integer"
+      description: "Project ID."
+    - name: "last_pipeline_run.status"
+      type: "string"
+      description: "Pipeline status, such as `success`, `failed`, `canceled` or `running`."
+    - name: "last_pipeline_run.source"
+      type: "string"
+      description: "What started the pipeline, such as `push`, `schedule` or `merge_request_event`."
+    - name: "last_pipeline_run.ref"
+      type: "string"
+      description: "Branch or tag the pipeline ran for."
+    - name: "last_pipeline_run.sha"
+      type: "string"
+      description: "Commit SHA."
+    - name: "last_pipeline_run.name"
+      type: "string"
+      description: "Pipeline name. Empty when none is set."
+    - name: "last_pipeline_run.web_url"
+      type: "string"
+      description: "URL of the pipeline."
+    - name: "last_pipeline_run.created_at"
+      type: "string (RFC 3339 time)"
+      description: "When the pipeline was created."
+    - name: "last_pipeline_run.updated_at"
+      type: "string (RFC 3339 time)"
+      description: "When the pipeline last changed. Use it to measure how long ago CI last ran."
+    - name: "pipeline_runs"
+      type: "array of objects"
+      description: "Pipelines updated within the configured look-back window (`pipeline_lookback_days`), newest first. `[]` when none ran in the window, and `null` when the token cannot read pipelines."
+    - name: "merge_requests"
+      type: "array of objects"
+      description: "Open merge requests. `[]` when there are none, `null` when the token cannot read them. Each entry has the fields of a GitLab merge request list item, listed below, plus `approval_state`."
+    - name: "merge_requests[].id"
+      type: "integer"
+      description: "Global merge request ID."
+    - name: "merge_requests[].iid"
+      type: "integer"
+      description: "Project-scoped merge request number."
+    - name: "merge_requests[].title"
+      type: "string"
+      description: "Title."
+    - name: "merge_requests[].state"
+      type: "string"
+      description: "Always `opened`."
+    - name: "merge_requests[].draft"
+      type: "boolean"
+      description: "Whether the merge request is a draft."
+    - name: "merge_requests[].source_branch"
+      type: "string"
+      description: "Source branch."
+    - name: "merge_requests[].target_branch"
+      type: "string"
+      description: "Target branch."
+    - name: "merge_requests[].author"
+      type: "object"
+      description: "Author, with `id`, `username`, `name`, `state`, `avatar_url` and `web_url`."
+    - name: "merge_requests[].reviewers"
+      type: "array of objects"
+      description: "Assigned reviewers, same user shape as `author`."
+    - name: "merge_requests[].assignees"
+      type: "array of objects"
+      description: "Assignees, same user shape as `author`."
+    - name: "merge_requests[].created_at"
+      type: "string (RFC 3339 time)"
+      description: "When it was opened."
+    - name: "merge_requests[].updated_at"
+      type: "string (RFC 3339 time)"
+      description: "When it last changed."
+    - name: "merge_requests[].detailed_merge_status"
+      type: "string"
+      description: "GitLab's merge status, such as `mergeable`, `not_approved` or `ci_must_pass`."
+    - name: "merge_requests[].has_conflicts"
+      type: "boolean"
+      description: "Whether the merge request has conflicts."
+    - name: "merge_requests[].labels"
+      type: "array of strings"
+      description: "Labels."
+    - name: "merge_requests[].web_url"
+      type: "string"
+      description: "URL of the merge request."
+    - name: "merge_requests[].approval_state"
+      type: "object"
+      description: "Approval state of this merge request. `null` when it could not be read."
+    - name: "merge_requests[].approval_state.approval_rules_overwritten"
+      type: "boolean"
+      description: "Whether the merge request overrides the project's approval rules."
+    - name: "merge_requests[].approval_state.rules"
+      type: "array of objects"
+      description: "Approval rules in effect. Each has `id`, `name`, `rule_type`, `report_type`, `section`, `approvals_required`, `approved`, `approved_by`, `eligible_approvers`, `users`, `groups`, `contains_hidden_groups` and `source_rule`."
+    - name: "last_release"
+      type: "object"
+      description: "The most recent release. `null` when the project has no releases."
+    - name: "last_release.tag_name"
+      type: "string"
+      description: "Release tag."
+    - name: "last_release.name"
+      type: "string"
+      description: "Release name."
+    - name: "last_release.description"
+      type: "string"
+      description: "Release notes."
+    - name: "last_release.created_at"
+      type: "string (RFC 3339 time)"
+      description: "When the release was created."
+    - name: "last_release.released_at"
+      type: "string (RFC 3339 time)"
+      description: "When the release was published."
+    - name: "last_release.upcoming_release"
+      type: "boolean"
+      description: "True for a release with a future `released_at`."
+    - name: "last_release.author"
+      type: "object"
+      description: "Who created the release, same user shape as a merge request `author`."
+    - name: "last_release.commit"
+      type: "object"
+      description: "The commit the release tag points to."
+    - name: "last_release.assets"
+      type: "object"
+      description: "Release assets: `count`, `sources`, `links` and `evidence_file_path`."
+    - name: "last_release.evidences"
+      type: "array of objects"
+      description: "Release evidence records."
+    - name: "code_owners"
+      type: "string"
+      description: "Decoded content of the CODEOWNERS file, looked for at `CODEOWNERS`, `.gitlab/CODEOWNERS` and `docs/CODEOWNERS` on the default branch (`main` when the project has none). Empty string when there is no file or it cannot be read."
+    - name: "group_members"
+      type: "array of objects"
+      description: "Members of the configured group, including members inherited from parent groups. The same list is given for every project. `null` when the token cannot list members."
+    - name: "group_members[].id"
+      type: "integer"
+      description: "User ID."
+    - name: "group_members[].username"
+      type: "string"
+      description: "Username."
+    - name: "group_members[].name"
+      type: "string"
+      description: "Display name."
+    - name: "group_members[].state"
+      type: "string"
+      description: "Account state, such as `active` or `blocked`."
+    - name: "group_members[].access_level"
+      type: "integer"
+      description: "Access level in the group: 10 guest, 20 reporter, 30 developer, 40 maintainer, 50 owner."
+    - name: "group_members[].expires_at"
+      type: "string (date)"
+      description: "When the membership expires. `null` when it does not."
+    - name: "group_members[].created_at"
+      type: "string (RFC 3339 time)"
+      description: "When the membership was created."
+    - name: "group_members[].web_url"
+      type: "string"
+      description: "URL of the user's profile."
+    - name: "group_members[].email"
+      type: "string"
+      description: "Email address. Left out when GitLab does not return it."
+    - name: "group_members[].public_email"
+      type: "string"
+      description: "Public email address. Left out when empty."
+    - name: "group_members[].is_using_seat"
+      type: "boolean"
+      description: "Whether the member uses a license seat. Left out when false."
+    - name: "environments"
+      type: "array of objects"
+      description: "Deployment environments. `[]` when there are none, `null` when the token cannot read them."
+    - name: "environments[].id"
+      type: "integer"
+      description: "Environment ID."
+    - name: "environments[].name"
+      type: "string"
+      description: "Environment name."
+    - name: "environments[].slug"
+      type: "string"
+      description: "URL-safe name."
+    - name: "environments[].state"
+      type: "string"
+      description: "`available` or `stopped`."
+    - name: "environments[].tier"
+      type: "string"
+      description: "`production`, `staging`, `testing`, `development` or `other`."
+    - name: "environments[].external_url"
+      type: "string"
+      description: "URL of the deployed environment."
+    - name: "environments[].last_deployment"
+      type: "object"
+      description: "The last deployment, when there is one. `null` otherwise."
+    - name: "environments[].created_at"
+      type: "string (RFC 3339 time)"
+      description: "When the environment was created."
+    - name: "environments[].updated_at"
+      type: "string (RFC 3339 time)"
+      description: "When the environment last changed."
+    - name: "push_rules"
+      type: "object"
+      description: "Project push rules. `null` on GitLab Free or when the token cannot read them."
+    - name: "push_rules.prevent_secrets"
+      type: "boolean"
+      description: "Files that are likely to hold secrets are rejected."
+    - name: "push_rules.reject_unsigned_commits"
+      type: "boolean"
+      description: "Unsigned commits are rejected."
+    - name: "push_rules.reject_non_dco_commits"
+      type: "boolean"
+      description: "Commits without a DCO sign-off are rejected."
+    - name: "push_rules.member_check"
+      type: "boolean"
+      description: "Commit authors must be GitLab users."
+    - name: "push_rules.commit_committer_check"
+      type: "boolean"
+      description: "Users can only push commits they committed with a verified email."
+    - name: "push_rules.commit_committer_name_check"
+      type: "boolean"
+      description: "The committer name must match the GitLab user name."
+    - name: "push_rules.deny_delete_tag"
+      type: "boolean"
+      description: "Tags cannot be deleted."
+    - name: "push_rules.commit_message_regex"
+      type: "string"
+      description: "Commit messages must match this regular expression. Empty when unset."
+    - name: "push_rules.commit_message_negative_regex"
+      type: "string"
+      description: "Commit messages must not match this regular expression. Empty when unset."
+    - name: "push_rules.branch_name_regex"
+      type: "string"
+      description: "Branch names must match this regular expression. Empty when unset."
+    - name: "push_rules.author_email_regex"
+      type: "string"
+      description: "Author emails must match this regular expression. Empty when unset."
+    - name: "push_rules.file_name_regex"
+      type: "string"
+      description: "Files matching this regular expression cannot be pushed. Empty when unset."
+    - name: "push_rules.max_file_size"
+      type: "integer"
+      description: "Largest file size in MB. 0 for no limit."
+    - name: "push_rules.id"
+      type: "integer"
+      description: "Push rule ID. `project_id` and `created_at` are also present."
+    - name: "has_ci_config"
+      type: "boolean"
+      description: "True when `last_pipeline_run` is set or `settings.ci_config_path` is not empty, so it stays true when every pipeline is older than the look-back window."
+  example:
+    settings:
+      id: 48213
+      name: Billing Service
+      path: billing-service
+      path_with_namespace: acme-platform/billing-service
+      web_url: https://gitlab.example.com/acme-platform/billing-service
+      description: Invoicing and payment reconciliation API.
+      visibility: private
+      default_branch: main
+      empty_repo: false
+      archived: false
+      topics:
+        - billing
+        - api
+      namespace:
+        id: 9120
+        name: Acme Platform
+        path: acme-platform
+        kind: group
+        full_path: acme-platform
+        parent_id: 0
+        web_url: https://gitlab.example.com/groups/acme-platform
+      created_at: "2024-06-03T09:15:27Z"
+      last_activity_at: "2026-05-11T16:42:08Z"
+      merge_method: ff
+      squash_option: default_on
+      only_allow_merge_if_pipeline_succeeds: true
+      only_allow_merge_if_all_discussions_are_resolved: true
+      allow_merge_on_skipped_pipeline: false
+      remove_source_branch_after_merge: true
+      request_access_enabled: false
+      ci_config_path: ""
+      shared_runners_enabled: true
+      public_jobs: false
+      auto_devops_enabled: false
+      compliance_frameworks: []
+      shared_with_groups: []
+      forked_from_project: null
+      mirror: false
+      issues_access_level: enabled
+      merge_requests_access_level: enabled
+    protected_branches:
+      - id: 7701
+        name: main
+        allow_force_push: false
+        code_owner_approval_required: true
+        push_access_levels:
+          - id: 11001
+            access_level: 0
+            access_level_description: No one
+            deploy_key_id: 0
+            user_id: 0
+            group_id: 0
+            member_role_id: 0
+        merge_access_levels:
+          - id: 11002
+            access_level: 40
+            access_level_description: Maintainers
+            deploy_key_id: 0
+            user_id: 0
+            group_id: 0
+            member_role_id: 0
+        unprotect_access_levels:
+          - id: 11003
+            access_level: 40
+            access_level_description: Maintainers
+            deploy_key_id: 0
+            user_id: 0
+            group_id: 0
+            member_role_id: 0
+    approval_config:
+      approvals_before_merge: 2
+      reset_approvals_on_push: true
+      disable_overriding_approvers_per_merge_request: true
+      merge_requests_author_approval: false
+      merge_requests_disable_committers_approval: true
+      approvers: []
+      approver_groups: []
+    approval_rules:
+      - id: 3301
+        name: Platform reviewers
+        rule_type: regular
+        report_type: ""
+        approvals_required: 2
+        contains_hidden_groups: false
+        applies_to_all_protected_branches: true
+        eligible_approvers:
+          - id: 5001
+            username: avery.stone
+            name: Avery Stone
+            state: active
+            avatar_url: ""
+            web_url: https://gitlab.example.com/avery.stone
+        users:
+          - id: 5001
+            username: avery.stone
+            name: Avery Stone
+            state: active
+            avatar_url: ""
+            web_url: https://gitlab.example.com/avery.stone
+        groups: []
+        protected_branches: []
+    last_pipeline_run:
+      id: 990412
+      iid: 1873
+      project_id: 48213
+      status: success
+      source: push
+      ref: main
+      sha: 4f1c9a07b3d25e86a1c04d7f9b2e3a581c6d0e42
+      name: ""
+      web_url: https://gitlab.example.com/acme-platform/billing-service/-/pipelines/990412
+      created_at: "2026-05-11T16:30:12Z"
+      updated_at: "2026-05-11T16:41:55Z"
+    pipeline_runs:
+      - id: 990412
+        iid: 1873
+        project_id: 48213
+        status: success
+        source: push
+        ref: main
+        sha: 4f1c9a07b3d25e86a1c04d7f9b2e3a581c6d0e42
+        name: ""
+        web_url: https://gitlab.example.com/acme-platform/billing-service/-/pipelines/990412
+        created_at: "2026-05-11T16:30:12Z"
+        updated_at: "2026-05-11T16:41:55Z"
+    merge_requests:
+      - id: 331870
+        iid: 212
+        title: Add retry to the invoice export job
+        state: opened
+        draft: false
+        source_branch: feature/invoice-export-retry
+        target_branch: main
+        author:
+          id: 5002
+          username: jordan.wells
+          name: Jordan Wells
+          state: active
+          avatar_url: ""
+          web_url: https://gitlab.example.com/jordan.wells
+        reviewers: []
+        assignees: []
+        labels:
+          - backend
+        created_at: "2026-05-09T10:04:33Z"
+        updated_at: "2026-05-11T08:12:19Z"
+        detailed_merge_status: not_approved
+        has_conflicts: false
+        web_url: https://gitlab.example.com/acme-platform/billing-service/-/merge_requests/212
+        approval_state:
+          approval_rules_overwritten: false
+          rules:
+            - id: 3301
+              name: Platform reviewers
+              rule_type: regular
+              report_type: ""
+              section: ""
+              approvals_required: 2
+              approved: false
+              approved_by: []
+              eligible_approvers:
+                - id: 5001
+                  username: avery.stone
+                  name: Avery Stone
+                  state: active
+                  avatar_url: ""
+                  web_url: https://gitlab.example.com/avery.stone
+              users: []
+              groups: []
+              contains_hidden_groups: false
+    last_release:
+      tag_name: v2.4.0
+      name: Billing Service 2.4.0
+      description: Adds multi-currency invoices.
+      created_at: "2026-04-28T13:00:00Z"
+      released_at: "2026-04-28T13:00:00Z"
+      upcoming_release: false
+      author:
+        id: 5001
+        username: avery.stone
+        name: Avery Stone
+        state: active
+        avatar_url: ""
+        web_url: https://gitlab.example.com/avery.stone
+    code_owners: |
+      * @acme-platform/platform-reviewers
+      /infra/ @avery.stone
+    group_members:
+      - id: 5001
+        username: avery.stone
+        name: Avery Stone
+        state: active
+        access_level: 40
+        expires_at: null
+        created_at: "2023-11-20T09:00:00Z"
+        web_url: https://gitlab.example.com/avery.stone
+      - id: 5002
+        username: jordan.wells
+        name: Jordan Wells
+        state: active
+        access_level: 30
+        expires_at: null
+        created_at: "2024-02-12T14:30:00Z"
+        web_url: https://gitlab.example.com/jordan.wells
+    environments:
+      - id: 640
+        name: production
+        slug: production
+        state: available
+        tier: production
+        external_url: https://billing.example.com
+        last_deployment: null
+        created_at: "2024-06-10T08:00:00Z"
+        updated_at: "2026-04-28T13:20:00Z"
+    push_rules:
+      id: 88
+      project_id: 48213
+      prevent_secrets: true
+      reject_unsigned_commits: true
+      reject_non_dco_commits: false
+      member_check: true
+      commit_committer_check: false
+      commit_committer_name_check: false
+      deny_delete_tag: true
+      commit_message_regex: ""
+      commit_message_negative_regex: ""
+      branch_name_regex: ""
+      author_email_regex: "@example\\.com$"
+      file_name_regex: ""
+      max_file_size: 50
+      created_at: "2024-06-10T08:05:00Z"
+    has_ci_config: true
+subjectTemplates:
+  - name: gitlab-repository
+    description: >-
+      A GitLab repository (project) in the configured group. Title: `GitLab Repository: {{ .repository }}`. The
+      `repository` value is the project path, not the full path with the group. The evidence also carries `provider`
+      (`gitlab`) and `type` (`repository`) labels that are not part of the identity.
+    identityKeys:
+      - name: "repository"
+        description: "Path of the GitLab project, such as `billing-service`."
+      - name: "group"
+        description: "The `group` setting of the plugin: the numeric ID or full path of the GitLab group that owns the repository."
+    example:
+      name: gitlab-repository
+      type: component
+      title: "GitLab Repository: billing-service"
+      description: GitLab repository billing-service in group acme-platform
+      purpose: Represents a GitLab repository being monitored for compliance
+      identityLabels:
+        repository: billing-service
+        group: acme-platform

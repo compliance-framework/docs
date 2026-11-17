@@ -49,6 +49,476 @@ If `group` is configured as a short name instead of a numeric ID or full path, G
 
 If group-member enumeration is inaccessible after group resolution succeeds, the plugin logs a warning and continues evaluating repositories without `group_members` data.
 
+## Policy input
+
+The plugin evaluates one kind of resource, a GitLab project (repository), and a policy receives one document per project in the configured group as `input`. Archived projects are skipped. Every field comes straight from the GitLab REST API, with the API's own names, so the GitLab API documentation describes each value in full. The document has thirteen top-level keys, and all of them are always present. When the plugin cannot read something (the token lacks permission, the feature needs GitLab Premium or Ultimate, or nothing exists), the key is `null` (an empty list is `[]` when it was read and nothing exists, and `code_owners` is an empty string), so test for it with a default or a `null` check. Fields are listed by their path inside the document. For `settings`, only the fields policies use most are listed. The object carries every other field the GitLab project API returns for the project, such as the `*_access_level` feature settings, `ci_*` settings and `compliance_frameworks`.
+
+| Field | Type | Description |
+|---|---|---|
+| `settings` | object | The project as GitLab returns it from the group's project list. Always present. Fields below are the most used. |
+| `settings.id` | integer | GitLab project ID. |
+| `settings.name` | string | Project name. |
+| `settings.path` | string | Project path, the last segment of the URL. This is the `repository` identity label. |
+| `settings.path_with_namespace` | string | Full path including the group and any subgroups. |
+| `settings.web_url` | string | URL of the project in the GitLab UI. |
+| `settings.description` | string | Project description. Empty when none is set. |
+| `settings.visibility` | string | `private`, `internal` or `public`. |
+| `settings.default_branch` | string | Name of the default branch. Empty for an empty repository. |
+| `settings.empty_repo` | boolean | True when the repository has no commits. |
+| `settings.archived` | boolean | Whether the project is archived. Always false, because archived projects are not collected. |
+| `settings.topics` | array of strings | Project topics. |
+| `settings.namespace` | object | The group or user namespace that owns the project: `id`, `name`, `path`, `kind`, `full_path`, `parent_id` and `web_url`. |
+| `settings.created_at` | string (RFC 3339 time) | When the project was created. Left out when GitLab returns no date. |
+| `settings.last_activity_at` | string (RFC 3339 time) | Time of the last activity on the project. Left out when GitLab returns no date. |
+| `settings.merge_method` | string | `merge`, `rebase_merge` or `ff`. |
+| `settings.squash_option` | string | `never`, `always`, `default_on` or `default_off`. |
+| `settings.only_allow_merge_if_pipeline_succeeds` | boolean | Merge requests can only be merged when the pipeline succeeds. |
+| `settings.only_allow_merge_if_all_discussions_are_resolved` | boolean | Merge requests can only be merged when all discussions are resolved. |
+| `settings.allow_merge_on_skipped_pipeline` | boolean | A merge request with a skipped pipeline can be merged. |
+| `settings.remove_source_branch_after_merge` | boolean | The source branch is removed after a merge by default. |
+| `settings.request_access_enabled` | boolean | Users can request access to the project. |
+| `settings.ci_config_path` | string | Path of the CI/CD configuration file. Empty when the default is used. |
+| `settings.shared_runners_enabled` | boolean | Instance runners are enabled for the project. |
+| `settings.public_jobs` | boolean | Job logs and artifacts are visible to anyone who can see the project. |
+| `settings.auto_devops_enabled` | boolean | Auto DevOps is enabled. |
+| `settings.compliance_frameworks` | array of strings | Compliance frameworks applied to the project, when GitLab returns any. |
+| `settings.shared_with_groups` | array of objects | Groups the project is shared with, each with `group_id`, `group_name`, `group_full_path` and `group_access_level`. |
+| `settings.forked_from_project` | object | The parent project when this one is a fork. `null` otherwise. |
+| `settings.mirror` | boolean | Whether the project is a pull mirror. |
+| `settings.issues_access_level` | string | `disabled`, `private` or `enabled`. The other feature settings (`merge_requests_access_level`, `wiki_access_level`, `builds_access_level`, `container_registry_access_level` and so on) take the same values. |
+| `protected_branches` | array of objects | Protected branches. `null` when the token cannot read them, `[]` when there are none. |
+| `protected_branches[].id` | integer | Protected branch ID. |
+| `protected_branches[].name` | string | Branch name or wildcard pattern. |
+| `protected_branches[].allow_force_push` | boolean | Whether force pushes are allowed. |
+| `protected_branches[].code_owner_approval_required` | boolean | Whether pushes to the branch need code owner approval. |
+| `protected_branches[].push_access_levels` | array of objects | Who can push. Same shape as `merge_access_levels`. |
+| `protected_branches[].merge_access_levels` | array of objects | Who can merge. Each entry has `id`, `access_level` (0 none, 30 developer, 40 maintainer, 60 admin), `access_level_description`, `deploy_key_id`, `user_id`, `group_id` and `member_role_id`. |
+| `protected_branches[].unprotect_access_levels` | array of objects | Who can unprotect the branch. Same shape as `merge_access_levels`. |
+| `approval_config` | object | Project-level merge request approval settings. `null` when the token cannot read them. |
+| `approval_config.approvals_before_merge` | integer | Approvals required before merging (deprecated by GitLab in favor of approval rules). |
+| `approval_config.reset_approvals_on_push` | boolean | Approvals are removed when new commits are pushed. |
+| `approval_config.disable_overriding_approvers_per_merge_request` | boolean | Merge requests cannot override the approver list. |
+| `approval_config.merge_requests_author_approval` | boolean | Authors can approve their own merge requests. |
+| `approval_config.merge_requests_disable_committers_approval` | boolean | Users who added commits cannot approve the merge request. |
+| `approval_config.require_reauthentication_to_approve` | boolean | Approvers must authenticate again. Left out when GitLab does not return it. |
+| `approval_config.selective_code_owner_removals` | boolean | Only code owner approvals are removed on push. Left out when GitLab does not return it. |
+| `approval_config.approvers` | array of objects | Individual approvers, each with a `user` and `approved_at`. |
+| `approval_config.approver_groups` | array of objects | Approver groups. |
+| `approval_rules` | array of objects | Project-level approval rules. `null` when the token cannot read them. |
+| `approval_rules[].id` | integer | Rule ID. |
+| `approval_rules[].name` | string | Rule name. |
+| `approval_rules[].rule_type` | string | `regular`, `any_approver` or `code_owner`. |
+| `approval_rules[].approvals_required` | integer | Approvals the rule needs. |
+| `approval_rules[].eligible_approvers` | array of objects | Users who can approve under the rule. Each has `id`, `username`, `name`, `state`, `avatar_url` and `web_url`. |
+| `approval_rules[].users` | array of objects | Users named in the rule, same shape as `eligible_approvers`. |
+| `approval_rules[].groups` | array of objects | Groups named in the rule. |
+| `approval_rules[].protected_branches` | array of objects | Protected branches the rule applies to. |
+| `approval_rules[].applies_to_all_protected_branches` | boolean | Whether the rule applies to every protected branch. |
+| `approval_rules[].report_type` | string | Report type for security approval rules. Empty for other rules. |
+| `approval_rules[].contains_hidden_groups` | boolean | Whether the rule has groups the token cannot see. |
+| `last_pipeline_run` | object | The most recent pipeline, whatever its age. `null` when the project has never had a pipeline. |
+| `last_pipeline_run.id` | integer | Pipeline ID. The `pipeline_runs[]` entries have the same fields. |
+| `last_pipeline_run.iid` | integer | Project-scoped pipeline ID. |
+| `last_pipeline_run.project_id` | integer | Project ID. |
+| `last_pipeline_run.status` | string | Pipeline status, such as `success`, `failed`, `canceled` or `running`. |
+| `last_pipeline_run.source` | string | What started the pipeline, such as `push`, `schedule` or `merge_request_event`. |
+| `last_pipeline_run.ref` | string | Branch or tag the pipeline ran for. |
+| `last_pipeline_run.sha` | string | Commit SHA. |
+| `last_pipeline_run.name` | string | Pipeline name. Empty when none is set. |
+| `last_pipeline_run.web_url` | string | URL of the pipeline. |
+| `last_pipeline_run.created_at` | string (RFC 3339 time) | When the pipeline was created. |
+| `last_pipeline_run.updated_at` | string (RFC 3339 time) | When the pipeline last changed. Use it to measure how long ago CI last ran. |
+| `pipeline_runs` | array of objects | Pipelines updated within the configured look-back window (`pipeline_lookback_days`), newest first. `[]` when none ran in the window, and `null` when the token cannot read pipelines. |
+| `merge_requests` | array of objects | Open merge requests. `[]` when there are none, `null` when the token cannot read them. Each entry has the fields of a GitLab merge request list item, listed below, plus `approval_state`. |
+| `merge_requests[].id` | integer | Global merge request ID. |
+| `merge_requests[].iid` | integer | Project-scoped merge request number. |
+| `merge_requests[].title` | string | Title. |
+| `merge_requests[].state` | string | Always `opened`. |
+| `merge_requests[].draft` | boolean | Whether the merge request is a draft. |
+| `merge_requests[].source_branch` | string | Source branch. |
+| `merge_requests[].target_branch` | string | Target branch. |
+| `merge_requests[].author` | object | Author, with `id`, `username`, `name`, `state`, `avatar_url` and `web_url`. |
+| `merge_requests[].reviewers` | array of objects | Assigned reviewers, same user shape as `author`. |
+| `merge_requests[].assignees` | array of objects | Assignees, same user shape as `author`. |
+| `merge_requests[].created_at` | string (RFC 3339 time) | When it was opened. |
+| `merge_requests[].updated_at` | string (RFC 3339 time) | When it last changed. |
+| `merge_requests[].detailed_merge_status` | string | GitLab's merge status, such as `mergeable`, `not_approved` or `ci_must_pass`. |
+| `merge_requests[].has_conflicts` | boolean | Whether the merge request has conflicts. |
+| `merge_requests[].labels` | array of strings | Labels. |
+| `merge_requests[].web_url` | string | URL of the merge request. |
+| `merge_requests[].approval_state` | object | Approval state of this merge request. `null` when it could not be read. |
+| `merge_requests[].approval_state.approval_rules_overwritten` | boolean | Whether the merge request overrides the project's approval rules. |
+| `merge_requests[].approval_state.rules` | array of objects | Approval rules in effect. Each has `id`, `name`, `rule_type`, `report_type`, `section`, `approvals_required`, `approved`, `approved_by`, `eligible_approvers`, `users`, `groups`, `contains_hidden_groups` and `source_rule`. |
+| `last_release` | object | The most recent release. `null` when the project has no releases. |
+| `last_release.tag_name` | string | Release tag. |
+| `last_release.name` | string | Release name. |
+| `last_release.description` | string | Release notes. |
+| `last_release.created_at` | string (RFC 3339 time) | When the release was created. |
+| `last_release.released_at` | string (RFC 3339 time) | When the release was published. |
+| `last_release.upcoming_release` | boolean | True for a release with a future `released_at`. |
+| `last_release.author` | object | Who created the release, same user shape as a merge request `author`. |
+| `last_release.commit` | object | The commit the release tag points to. |
+| `last_release.assets` | object | Release assets: `count`, `sources`, `links` and `evidence_file_path`. |
+| `last_release.evidences` | array of objects | Release evidence records. |
+| `code_owners` | string | Decoded content of the CODEOWNERS file, looked for at `CODEOWNERS`, `.gitlab/CODEOWNERS` and `docs/CODEOWNERS` on the default branch (`main` when the project has none). Empty string when there is no file or it cannot be read. |
+| `group_members` | array of objects | Members of the configured group, including members inherited from parent groups. The same list is given for every project. `null` when the token cannot list members. |
+| `group_members[].id` | integer | User ID. |
+| `group_members[].username` | string | Username. |
+| `group_members[].name` | string | Display name. |
+| `group_members[].state` | string | Account state, such as `active` or `blocked`. |
+| `group_members[].access_level` | integer | Access level in the group: 10 guest, 20 reporter, 30 developer, 40 maintainer, 50 owner. |
+| `group_members[].expires_at` | string (date) | When the membership expires. `null` when it does not. |
+| `group_members[].created_at` | string (RFC 3339 time) | When the membership was created. |
+| `group_members[].web_url` | string | URL of the user's profile. |
+| `group_members[].email` | string | Email address. Left out when GitLab does not return it. |
+| `group_members[].public_email` | string | Public email address. Left out when empty. |
+| `group_members[].is_using_seat` | boolean | Whether the member uses a license seat. Left out when false. |
+| `environments` | array of objects | Deployment environments. `[]` when there are none, `null` when the token cannot read them. |
+| `environments[].id` | integer | Environment ID. |
+| `environments[].name` | string | Environment name. |
+| `environments[].slug` | string | URL-safe name. |
+| `environments[].state` | string | `available` or `stopped`. |
+| `environments[].tier` | string | `production`, `staging`, `testing`, `development` or `other`. |
+| `environments[].external_url` | string | URL of the deployed environment. |
+| `environments[].last_deployment` | object | The last deployment, when there is one. `null` otherwise. |
+| `environments[].created_at` | string (RFC 3339 time) | When the environment was created. |
+| `environments[].updated_at` | string (RFC 3339 time) | When the environment last changed. |
+| `push_rules` | object | Project push rules. `null` on GitLab Free or when the token cannot read them. |
+| `push_rules.prevent_secrets` | boolean | Files that are likely to hold secrets are rejected. |
+| `push_rules.reject_unsigned_commits` | boolean | Unsigned commits are rejected. |
+| `push_rules.reject_non_dco_commits` | boolean | Commits without a DCO sign-off are rejected. |
+| `push_rules.member_check` | boolean | Commit authors must be GitLab users. |
+| `push_rules.commit_committer_check` | boolean | Users can only push commits they committed with a verified email. |
+| `push_rules.commit_committer_name_check` | boolean | The committer name must match the GitLab user name. |
+| `push_rules.deny_delete_tag` | boolean | Tags cannot be deleted. |
+| `push_rules.commit_message_regex` | string | Commit messages must match this regular expression. Empty when unset. |
+| `push_rules.commit_message_negative_regex` | string | Commit messages must not match this regular expression. Empty when unset. |
+| `push_rules.branch_name_regex` | string | Branch names must match this regular expression. Empty when unset. |
+| `push_rules.author_email_regex` | string | Author emails must match this regular expression. Empty when unset. |
+| `push_rules.file_name_regex` | string | Files matching this regular expression cannot be pushed. Empty when unset. |
+| `push_rules.max_file_size` | integer | Largest file size in MB. 0 for no limit. |
+| `push_rules.id` | integer | Push rule ID. `project_id` and `created_at` are also present. |
+| `has_ci_config` | boolean | True when `last_pipeline_run` is set or `settings.ci_config_path` is not empty, so it stays true when every pipeline is older than the look-back window. |
+
+An example input:
+
+```json
+{
+  "settings": {
+    "id": 48213,
+    "name": "Billing Service",
+    "path": "billing-service",
+    "path_with_namespace": "acme-platform/billing-service",
+    "web_url": "https://gitlab.example.com/acme-platform/billing-service",
+    "description": "Invoicing and payment reconciliation API.",
+    "visibility": "private",
+    "default_branch": "main",
+    "empty_repo": false,
+    "archived": false,
+    "topics": [
+      "billing",
+      "api"
+    ],
+    "namespace": {
+      "id": 9120,
+      "name": "Acme Platform",
+      "path": "acme-platform",
+      "kind": "group",
+      "full_path": "acme-platform",
+      "parent_id": 0,
+      "web_url": "https://gitlab.example.com/groups/acme-platform"
+    },
+    "created_at": "2024-06-03T09:15:27Z",
+    "last_activity_at": "2026-05-11T16:42:08Z",
+    "merge_method": "ff",
+    "squash_option": "default_on",
+    "only_allow_merge_if_pipeline_succeeds": true,
+    "only_allow_merge_if_all_discussions_are_resolved": true,
+    "allow_merge_on_skipped_pipeline": false,
+    "remove_source_branch_after_merge": true,
+    "request_access_enabled": false,
+    "ci_config_path": "",
+    "shared_runners_enabled": true,
+    "public_jobs": false,
+    "auto_devops_enabled": false,
+    "compliance_frameworks": [],
+    "shared_with_groups": [],
+    "forked_from_project": null,
+    "mirror": false,
+    "issues_access_level": "enabled",
+    "merge_requests_access_level": "enabled"
+  },
+  "protected_branches": [
+    {
+      "id": 7701,
+      "name": "main",
+      "allow_force_push": false,
+      "code_owner_approval_required": true,
+      "push_access_levels": [
+        {
+          "id": 11001,
+          "access_level": 0,
+          "access_level_description": "No one",
+          "deploy_key_id": 0,
+          "user_id": 0,
+          "group_id": 0,
+          "member_role_id": 0
+        }
+      ],
+      "merge_access_levels": [
+        {
+          "id": 11002,
+          "access_level": 40,
+          "access_level_description": "Maintainers",
+          "deploy_key_id": 0,
+          "user_id": 0,
+          "group_id": 0,
+          "member_role_id": 0
+        }
+      ],
+      "unprotect_access_levels": [
+        {
+          "id": 11003,
+          "access_level": 40,
+          "access_level_description": "Maintainers",
+          "deploy_key_id": 0,
+          "user_id": 0,
+          "group_id": 0,
+          "member_role_id": 0
+        }
+      ]
+    }
+  ],
+  "approval_config": {
+    "approvals_before_merge": 2,
+    "reset_approvals_on_push": true,
+    "disable_overriding_approvers_per_merge_request": true,
+    "merge_requests_author_approval": false,
+    "merge_requests_disable_committers_approval": true,
+    "approvers": [],
+    "approver_groups": []
+  },
+  "approval_rules": [
+    {
+      "id": 3301,
+      "name": "Platform reviewers",
+      "rule_type": "regular",
+      "report_type": "",
+      "approvals_required": 2,
+      "contains_hidden_groups": false,
+      "applies_to_all_protected_branches": true,
+      "eligible_approvers": [
+        {
+          "id": 5001,
+          "username": "avery.stone",
+          "name": "Avery Stone",
+          "state": "active",
+          "avatar_url": "",
+          "web_url": "https://gitlab.example.com/avery.stone"
+        }
+      ],
+      "users": [
+        {
+          "id": 5001,
+          "username": "avery.stone",
+          "name": "Avery Stone",
+          "state": "active",
+          "avatar_url": "",
+          "web_url": "https://gitlab.example.com/avery.stone"
+        }
+      ],
+      "groups": [],
+      "protected_branches": []
+    }
+  ],
+  "last_pipeline_run": {
+    "id": 990412,
+    "iid": 1873,
+    "project_id": 48213,
+    "status": "success",
+    "source": "push",
+    "ref": "main",
+    "sha": "4f1c9a07b3d25e86a1c04d7f9b2e3a581c6d0e42",
+    "name": "",
+    "web_url": "https://gitlab.example.com/acme-platform/billing-service/-/pipelines/990412",
+    "created_at": "2026-05-11T16:30:12Z",
+    "updated_at": "2026-05-11T16:41:55Z"
+  },
+  "pipeline_runs": [
+    {
+      "id": 990412,
+      "iid": 1873,
+      "project_id": 48213,
+      "status": "success",
+      "source": "push",
+      "ref": "main",
+      "sha": "4f1c9a07b3d25e86a1c04d7f9b2e3a581c6d0e42",
+      "name": "",
+      "web_url": "https://gitlab.example.com/acme-platform/billing-service/-/pipelines/990412",
+      "created_at": "2026-05-11T16:30:12Z",
+      "updated_at": "2026-05-11T16:41:55Z"
+    }
+  ],
+  "merge_requests": [
+    {
+      "id": 331870,
+      "iid": 212,
+      "title": "Add retry to the invoice export job",
+      "state": "opened",
+      "draft": false,
+      "source_branch": "feature/invoice-export-retry",
+      "target_branch": "main",
+      "author": {
+        "id": 5002,
+        "username": "jordan.wells",
+        "name": "Jordan Wells",
+        "state": "active",
+        "avatar_url": "",
+        "web_url": "https://gitlab.example.com/jordan.wells"
+      },
+      "reviewers": [],
+      "assignees": [],
+      "labels": [
+        "backend"
+      ],
+      "created_at": "2026-05-09T10:04:33Z",
+      "updated_at": "2026-05-11T08:12:19Z",
+      "detailed_merge_status": "not_approved",
+      "has_conflicts": false,
+      "web_url": "https://gitlab.example.com/acme-platform/billing-service/-/merge_requests/212",
+      "approval_state": {
+        "approval_rules_overwritten": false,
+        "rules": [
+          {
+            "id": 3301,
+            "name": "Platform reviewers",
+            "rule_type": "regular",
+            "report_type": "",
+            "section": "",
+            "approvals_required": 2,
+            "approved": false,
+            "approved_by": [],
+            "eligible_approvers": [
+              {
+                "id": 5001,
+                "username": "avery.stone",
+                "name": "Avery Stone",
+                "state": "active",
+                "avatar_url": "",
+                "web_url": "https://gitlab.example.com/avery.stone"
+              }
+            ],
+            "users": [],
+            "groups": [],
+            "contains_hidden_groups": false
+          }
+        ]
+      }
+    }
+  ],
+  "last_release": {
+    "tag_name": "v2.4.0",
+    "name": "Billing Service 2.4.0",
+    "description": "Adds multi-currency invoices.",
+    "created_at": "2026-04-28T13:00:00Z",
+    "released_at": "2026-04-28T13:00:00Z",
+    "upcoming_release": false,
+    "author": {
+      "id": 5001,
+      "username": "avery.stone",
+      "name": "Avery Stone",
+      "state": "active",
+      "avatar_url": "",
+      "web_url": "https://gitlab.example.com/avery.stone"
+    }
+  },
+  "code_owners": "* @acme-platform/platform-reviewers\n/infra/ @avery.stone\n",
+  "group_members": [
+    {
+      "id": 5001,
+      "username": "avery.stone",
+      "name": "Avery Stone",
+      "state": "active",
+      "access_level": 40,
+      "expires_at": null,
+      "created_at": "2023-11-20T09:00:00Z",
+      "web_url": "https://gitlab.example.com/avery.stone"
+    },
+    {
+      "id": 5002,
+      "username": "jordan.wells",
+      "name": "Jordan Wells",
+      "state": "active",
+      "access_level": 30,
+      "expires_at": null,
+      "created_at": "2024-02-12T14:30:00Z",
+      "web_url": "https://gitlab.example.com/jordan.wells"
+    }
+  ],
+  "environments": [
+    {
+      "id": 640,
+      "name": "production",
+      "slug": "production",
+      "state": "available",
+      "tier": "production",
+      "external_url": "https://billing.example.com",
+      "last_deployment": null,
+      "created_at": "2024-06-10T08:00:00Z",
+      "updated_at": "2026-04-28T13:20:00Z"
+    }
+  ],
+  "push_rules": {
+    "id": 88,
+    "project_id": 48213,
+    "prevent_secrets": true,
+    "reject_unsigned_commits": true,
+    "reject_non_dco_commits": false,
+    "member_check": true,
+    "commit_committer_check": false,
+    "commit_committer_name_check": false,
+    "deny_delete_tag": true,
+    "commit_message_regex": "",
+    "commit_message_negative_regex": "",
+    "branch_name_regex": "",
+    "author_email_regex": "@example\\.com$",
+    "file_name_regex": "",
+    "max_file_size": 50,
+    "created_at": "2024-06-10T08:05:00Z"
+  },
+  "has_ci_config": true
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### gitlab-repository
+
+A GitLab repository (project) in the configured group. Title: `GitLab Repository: {{ .repository }}`. The `repository` value is the project path, not the full path with the group. The evidence also carries `provider` (`gitlab`) and `type` (`repository`) labels that are not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `repository` | Path of the GitLab project, such as `billing-service`. |
+| `group` | The `group` setting of the plugin: the numeric ID or full path of the GitLab group that owns the repository. |
+
+Example:
+
+```json
+{
+  "name": "gitlab-repository",
+  "type": "component",
+  "title": "GitLab Repository: billing-service",
+  "description": "GitLab repository billing-service in group acme-platform",
+  "purpose": "Represents a GitLab repository being monitored for compliance",
+  "identityLabels": {
+    "repository": "billing-service",
+    "group": "acme-platform"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

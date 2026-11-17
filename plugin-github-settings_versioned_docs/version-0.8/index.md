@@ -99,6 +99,210 @@ plugins:
 A `token`, when set, takes precedence over the app settings. As noted above, GitHub does not
 let app installation tokens read IP allow-list entries, so keep `collect_ip_allow_list` off.
 
+## Policy input
+
+The plugin evaluates one kind of resource, a GitHub organization (the one set in the plugin's `organization` setting), and a policy receives one document per run as `input`. There is no separate repository document. The document has five top-level keys: `settings`, `teams`, `members`, `sso` and `ip_allow_list`. `settings`, `teams` and `members` are always present; `sso` and `ip_allow_list` are `null` when they could not be collected. The plugin continues with partial data when the teams, members, SSO or IP allow-list requests fail, so a policy should check for an empty or `null` value before it judges one. Fields of GitHub objects are left out of the document when GitHub does not return them, not null, so test for them with `object.get` or a default. A bundle is matched by its name, `plugin-github-settings-policies`. Fields are listed by their path inside the document.
+
+| Field | Type | Description |
+|---|---|---|
+| `settings` | object | The organization as GitHub's `GET /orgs/{org}` returns it. Every field below is left out when GitHub does not return it, so test with a default. |
+| `settings.login` | string | Organization login name. |
+| `settings.id` | integer | Numeric organization ID. |
+| `settings.node_id` | string | GraphQL node ID. |
+| `settings.name` | string | Display name. |
+| `settings.description` | string | Organization description. |
+| `settings.company` | string | Company name. |
+| `settings.blog` | string | Website URL. |
+| `settings.location` | string | Location. |
+| `settings.email` | string | Public contact email. |
+| `settings.twitter_username` | string | Twitter/X username. |
+| `settings.billing_email` | string | Billing email address. |
+| `settings.type` | string | Account type, `Organization`. |
+| `settings.html_url` | string | Web URL of the organization. |
+| `settings.url` | string | API URL of the organization. |
+| `settings.avatar_url` | string | Avatar image URL. |
+| `settings.created_at` | string (RFC 3339 time) | When the organization was created. |
+| `settings.updated_at` | string (RFC 3339 time) | When the organization was last updated. |
+| `settings.archived_at` | string (RFC 3339 time) | When the organization was archived. |
+| `settings.public_repos` | integer | Number of public repositories. |
+| `settings.public_gists` | integer | Number of public gists. |
+| `settings.followers` | integer | Number of followers. |
+| `settings.following` | integer | Number of accounts followed. |
+| `settings.total_private_repos` | integer | Total private repositories. |
+| `settings.owned_private_repos` | integer | Private repositories owned by the organization. |
+| `settings.private_gists` | integer | Number of private gists. |
+| `settings.disk_usage` | integer | Disk usage in kilobytes. |
+| `settings.collaborators` | integer | Number of collaborators. |
+| `settings.plan` | object | Billing plan: `name` (string), `space`, `collaborators`, `private_repos`, `filled_seats` and `seats` (integers). Left out unless the token may see billing details. |
+| `settings.two_factor_requirement_enabled` | boolean | Whether members must use two-factor authentication. |
+| `settings.is_verified` | boolean | Whether the organization's domains are verified. |
+| `settings.has_organization_projects` | boolean | Whether organization projects are enabled. |
+| `settings.has_repository_projects` | boolean | Whether repository projects are enabled. |
+| `settings.default_repository_permission` | string | Base permission members have on repositories, for example `read`. |
+| `settings.default_repository_branch` | string | Default branch name for new repositories. |
+| `settings.members_can_create_repositories` | boolean | Whether members may create repositories. |
+| `settings.members_can_create_public_repositories` | boolean | Whether members may create public repositories. |
+| `settings.members_can_create_private_repositories` | boolean | Whether members may create private repositories. |
+| `settings.members_can_create_internal_repositories` | boolean | Whether members may create internal repositories. |
+| `settings.members_allowed_repository_creation_type` | string | Which repository types members may create: `all`, `private` or `none`. |
+| `settings.members_can_fork_private_repositories` | boolean | Whether members may fork private repositories. |
+| `settings.members_can_create_pages` | boolean | Whether members may publish GitHub Pages. |
+| `settings.members_can_create_public_pages` | boolean | Whether members may publish public Pages sites. |
+| `settings.members_can_create_private_pages` | boolean | Whether members may publish private Pages sites. |
+| `settings.members_can_create_teams` | boolean | Whether members may create teams. |
+| `settings.members_can_delete_repositories` | boolean | Whether members may delete repositories. |
+| `settings.members_can_change_repo_visibility` | boolean | Whether members may change repository visibility. |
+| `settings.members_can_invite_outside_collaborators` | boolean | Whether members may invite outside collaborators. |
+| `settings.members_can_delete_issues` | boolean | Whether members may delete issues. |
+| `settings.members_can_view_dependency_insights` | boolean | Whether members may view dependency insights. |
+| `settings.deploy_keys_enabled_for_repositories` | boolean | Whether repositories may use deploy keys. |
+| `settings.web_commit_signoff_required` | boolean | Whether web-based commits must be signed off. |
+| `settings.readers_can_create_discussions` | boolean | Whether readers may create discussions. |
+| `settings.display_commenter_full_name_setting_enabled` | boolean | Whether commenters' full names are shown. |
+| `settings.advanced_security_enabled_for_new_repositories` | boolean | Whether Advanced Security is on for new repositories. |
+| `settings.dependabot_alerts_enabled_for_new_repositories` | boolean | Whether Dependabot alerts are on for new repositories. |
+| `settings.dependabot_security_updates_enabled_for_new_repositories` | boolean | Whether Dependabot security updates are on for new repositories. |
+| `settings.dependency_graph_enabled_for_new_repositories` | boolean | Whether the dependency graph is on for new repositories. |
+| `settings.secret_scanning_enabled_for_new_repositories` | boolean | Whether secret scanning is on for new repositories. |
+| `settings.secret_scanning_push_protection_enabled_for_new_repositories` | boolean | Whether secret scanning push protection is on for new repositories. |
+| `settings.secret_scanning_push_protection_custom_link_enabled` | boolean | Whether a custom push protection link is shown. |
+| `settings.secret_scanning_push_protection_custom_link` | string | The custom push protection link. |
+| `settings.secret_scanning_validity_checks_enabled` | boolean | Whether secret scanning validity checks are on. |
+| `teams` | array of objects | Every team in the organization, all pages collected. An empty array when there are none or when the teams request failed. |
+| `teams[].id` | integer | Team ID. Left out when GitHub does not return it. |
+| `teams[].node_id` | string | GraphQL node ID. Left out when GitHub does not return it. |
+| `teams[].name` | string | Team name. Left out when GitHub does not return it. |
+| `teams[].slug` | string | URL slug of the team. Left out when GitHub does not return it. |
+| `teams[].description` | string | Team description. Left out when GitHub does not return it. |
+| `teams[].privacy` | string | `secret` or `closed`. Left out when GitHub does not return it. |
+| `teams[].permission` | string | Default repository permission of the team. Left out when GitHub does not return it. |
+| `teams[].notification_setting` | string | Team notification setting. Left out when GitHub does not return it. |
+| `teams[].html_url` | string | Web URL of the team. Left out when GitHub does not return it. |
+| `teams[].url` | string | API URL of the team. Left out when GitHub does not return it. |
+| `teams[].members_url` | string | API URL template for team members. Left out when GitHub does not return it. |
+| `teams[].repositories_url` | string | API URL of the team's repositories. Left out when GitHub does not return it. |
+| `teams[].parent` | object | Parent team, same fields as a team. Left out for a top-level team. |
+| `members` | array of objects | Organization members with the owner/admin role only, all pages collected. An empty array when there are none or when the request failed. |
+| `members[].login` | string | Account login. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].id` | integer | Account ID. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].node_id` | string | GraphQL node ID. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].type` | string | Account type, `User`. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].site_admin` | boolean | Whether the user is a GitHub site administrator. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].html_url` | string | Web URL of the profile. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].url` | string | API URL of the user. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `members[].avatar_url` | string | Avatar image URL. Left out when GitHub does not return it. The other fields GitHub's user list returns, such as `gravatar_id` and the `*_url` links, appear the same way. |
+| `sso` | object or null | SAML single sign-on state. `null` when the SSO request failed with an error other than not-found, so check for it before reading `sso.enabled`. |
+| `sso.enabled` | boolean | True when the organization has a SAML identity provider. False when GitHub answers 404 or reports none. |
+| `sso.sso_url` | string | Sign-on URL of the identity provider. Empty when SSO is not enabled. |
+| `sso.idp_issuer` | string | Issuer of the identity provider. Empty when SSO is not enabled. |
+| `ip_allow_list` | array of objects or null | IP allow-list entries. Only collected when `collect_ip_allow_list` is true; `null` when it is off or when collection failed, an empty array when collected and the organization has no entries. |
+| `ip_allow_list[].allow_list_value` | string | IP address or CIDR range. |
+| `ip_allow_list[].is_active` | boolean | Whether the entry is active. |
+| `ip_allow_list[].name` | string | Entry name. |
+
+An example input:
+
+```json
+{
+  "settings": {
+    "login": "acme-example-org",
+    "id": 90210,
+    "node_id": "O_kgDOExample1",
+    "name": "Acme Example Org",
+    "description": "Fictional organization used for documentation",
+    "email": "security@acme-example.test",
+    "billing_email": "billing@acme-example.test",
+    "type": "Organization",
+    "html_url": "https://github.com/acme-example-org",
+    "url": "https://api.github.com/orgs/acme-example-org",
+    "created_at": "2021-04-12T09:30:00Z",
+    "updated_at": "2026-02-03T14:05:12Z",
+    "public_repos": 4,
+    "total_private_repos": 31,
+    "owned_private_repos": 31,
+    "two_factor_requirement_enabled": true,
+    "is_verified": true,
+    "default_repository_permission": "read",
+    "default_repository_branch": "main",
+    "members_can_create_repositories": false,
+    "members_can_create_public_repositories": false,
+    "members_can_create_private_repositories": false,
+    "members_can_fork_private_repositories": false,
+    "members_can_delete_repositories": false,
+    "members_can_invite_outside_collaborators": false,
+    "web_commit_signoff_required": true,
+    "dependabot_alerts_enabled_for_new_repositories": true,
+    "dependency_graph_enabled_for_new_repositories": true,
+    "secret_scanning_enabled_for_new_repositories": true,
+    "secret_scanning_push_protection_enabled_for_new_repositories": true
+  },
+  "teams": [
+    {
+      "id": 4410001,
+      "node_id": "T_kwDOExample1",
+      "name": "Platform",
+      "slug": "platform",
+      "description": "Platform engineering",
+      "privacy": "closed",
+      "permission": "pull",
+      "notification_setting": "notifications_enabled",
+      "html_url": "https://github.com/orgs/acme-example-org/teams/platform",
+      "url": "https://api.github.com/organizations/90210/team/4410001"
+    }
+  ],
+  "members": [
+    {
+      "login": "octo-admin-example",
+      "id": 700001,
+      "node_id": "U_kgDOExample2",
+      "type": "User",
+      "site_admin": false,
+      "html_url": "https://github.com/octo-admin-example",
+      "url": "https://api.github.com/users/octo-admin-example"
+    }
+  ],
+  "sso": {
+    "enabled": true,
+    "sso_url": "https://idp.acme-example.test/saml/sso",
+    "idp_issuer": "https://idp.acme-example.test/saml/metadata"
+  },
+  "ip_allow_list": [
+    {
+      "allow_list_value": "203.0.113.0/24",
+      "is_active": true,
+      "name": "Example office"
+    }
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### github-organization
+
+A GitHub organization. Title: `GitHub Organization: {{ .organization }}`. The evidence also carries `provider` (`github`) and `type` (`organization`) labels that are not part of the identity.
+
+| Identity key | Description |
+|---|---|
+| `organization` | The GitHub organization login name. |
+
+Example:
+
+```json
+{
+  "name": "github-organization",
+  "type": "component",
+  "title": "GitHub Organization: acme-example-org",
+  "description": "GitHub organization acme-example-org",
+  "purpose": "Represents a GitHub organization being monitored for compliance",
+  "identityLabels": {
+    "organization": "acme-example-org"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.

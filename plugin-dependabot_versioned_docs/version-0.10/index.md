@@ -69,6 +69,217 @@ the agent can fill them from environment variables such as
 `CCF_PLUGINS_DEPENDABOT_CONFIG_PRIVATE_KEY`, when the agent's config file declares the key
 (for example `private_key: ""`).
 
+## Policy input
+
+The plugin evaluates GitHub repositories and passes alerts to a policy as `input`. What `input` looks like depends on the plugin's `operational-mode`. In `Bundled` mode (the default) a policy runs once per repository and receives one object with the keys `alerts` and `security_team_members`. In `Granular` mode a policy runs once per alert, and receives an array that holds that single alert. The alert objects are the same in both modes: the Dependabot alert as the GitHub REST API returns it, and every alert field below is left out of the document, not null, when GitHub does not send it, so test for it with `object.get` or a default. Alerts in all four states (`open`, `fixed`, `dismissed`, `auto_dismissed`) are included, so a policy that only cares about open alerts has to filter on `state`. Repositories that the token cannot read alerts for are skipped and no policy runs for them. Fields are listed by their path inside an alert; `alerts[]` is the alert in Bundled mode, and `input[0]` is the same alert in Granular mode.
+
+| Field | Type | Description |
+|---|---|---|
+| `alerts` | array of alert objects | Bundled mode only. Every Dependabot alert of the repository, in all four states. An empty array when the repository has none. |
+| `security_team_members` | array of objects | Bundled mode only. The members of the GitHub team named by `security-team-name`, as GitHub user objects (`login`, `id`, `html_url`, `type` and the rest of the user). Left out when no security team is configured; an empty array when the team has no members. |
+| `alerts[].number` | integer | Alert number within the repository. |
+| `alerts[].state` | string | `open`, `fixed`, `dismissed` or `auto_dismissed`. |
+| `alerts[].dependency.package.ecosystem` | string | Package ecosystem of the vulnerable dependency, such as `go`, `npm` or `pip`. |
+| `alerts[].dependency.package.name` | string | Name of the vulnerable package. |
+| `alerts[].dependency.manifest_path` | string | Path of the manifest file that declares the dependency. |
+| `alerts[].dependency.scope` | string | `runtime` or `development`. Left out when GitHub does not report a scope. |
+| `alerts[].security_advisory.ghsa_id` | string | GitHub advisory ID (`GHSA-...`). |
+| `alerts[].security_advisory.cve_id` | string | CVE ID. Left out when the advisory has none. |
+| `alerts[].security_advisory.summary` | string | One-line summary of the advisory. |
+| `alerts[].security_advisory.description` | string | Full advisory text, in Markdown. |
+| `alerts[].security_advisory.severity` | string | Advisory severity: `low`, `medium`, `high` or `critical`. |
+| `alerts[].security_advisory.classification` | string | Advisory classification, such as `general` or `malware`. Left out when GitHub does not send it. |
+| `alerts[].security_advisory.cvss.score` | number | CVSS base score, 0 to 10. |
+| `alerts[].security_advisory.cvss.vector_string` | string | CVSS vector string. Left out when the advisory has no vector. |
+| `alerts[].security_advisory.cvss_severities` | object | CVSS scores by version, `cvss_v3` and `cvss_v4`, each with `score` and `vector_string`. Left out when GitHub does not send it. |
+| `alerts[].security_advisory.cwes` | array of objects | Weakness classes, each with `cwe_id` and `name`. |
+| `alerts[].security_advisory.epss` | object | Exploit Prediction Scoring System data, with `percentage` and `percentile`. Left out when GitHub does not send it. |
+| `alerts[].security_advisory.identifiers` | array of objects | Other identifiers of the advisory, each with `type` (`GHSA` or `CVE`) and `value`. |
+| `alerts[].security_advisory.references` | array of objects | Links about the advisory, each with `url`. |
+| `alerts[].security_advisory.vulnerabilities` | array of objects | Every package version range the advisory covers, each with `package` (`ecosystem`, `name`), `severity`, `vulnerable_version_range` and `first_patched_version.identifier`. |
+| `alerts[].security_advisory.published_at` | string (RFC 3339 time) | When the advisory was published. |
+| `alerts[].security_advisory.updated_at` | string (RFC 3339 time) | When the advisory was last updated. |
+| `alerts[].security_advisory.withdrawn_at` | string (RFC 3339 time) | When the advisory was withdrawn. Left out for advisories that were not. |
+| `alerts[].security_vulnerability.package.ecosystem` | string | Ecosystem of the package version range that applies to this alert. |
+| `alerts[].security_vulnerability.package.name` | string | Package name of the range that applies to this alert. |
+| `alerts[].security_vulnerability.severity` | string | Severity of the range that applies to this alert: `low`, `medium`, `high` or `critical`. The policy-friendly severity of the alert. |
+| `alerts[].security_vulnerability.vulnerable_version_range` | string | Vulnerable versions, such as `< 1.4.2`. |
+| `alerts[].security_vulnerability.first_patched_version.identifier` | string | First version with a fix. The `first_patched_version` object is left out when no fix exists. |
+| `alerts[].url` | string | API URL of the alert. |
+| `alerts[].html_url` | string | Web URL of the alert. |
+| `alerts[].created_at` | string (RFC 3339 time) | When the alert was created. |
+| `alerts[].updated_at` | string (RFC 3339 time) | When the alert was last updated. |
+| `alerts[].fixed_at` | string (RFC 3339 time) | When the alert was fixed. Left out unless `state` is `fixed`. |
+| `alerts[].dismissed_at` | string (RFC 3339 time) | When the alert was dismissed. Left out unless it was dismissed. |
+| `alerts[].dismissed_by` | object | GitHub user who dismissed the alert (`login`, `id`, `html_url`, `type` and the rest of the user). Left out unless it was dismissed by a person. |
+| `alerts[].dismissed_reason` | string | Reason given for dismissing the alert, such as `no_bandwidth` or `tolerable_risk`. Left out unless it was dismissed. |
+| `alerts[].dismissed_comment` | string | Comment left when dismissing the alert. Left out when there is none. |
+| `alerts[].auto_dismissed_at` | string (RFC 3339 time) | When GitHub dismissed the alert automatically. Left out unless `state` is `auto_dismissed`. |
+| `alerts[].repository` | object | The repository, as GitHub returns it. Left out when GitHub does not send it. |
+
+An example input:
+
+```json
+{
+  "alerts": [
+    {
+      "number": 14,
+      "state": "open",
+      "dependency": {
+        "package": {
+          "ecosystem": "npm",
+          "name": "example-markdown-parser"
+        },
+        "manifest_path": "web/package-lock.json",
+        "scope": "runtime"
+      },
+      "security_advisory": {
+        "ghsa_id": "GHSA-abcd-1234-wxyz",
+        "cve_id": "CVE-2099-12345",
+        "summary": "example-markdown-parser allows script injection through crafted link targets",
+        "description": "### Impact\nCrafted link targets are rendered without escaping.\n\n### Patches\nFixed in 2.3.1.",
+        "severity": "high",
+        "cvss": {
+          "score": 7.4,
+          "vector_string": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:N"
+        },
+        "cwes": [
+          {
+            "cwe_id": "CWE-79",
+            "name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+          }
+        ],
+        "identifiers": [
+          {
+            "type": "GHSA",
+            "value": "GHSA-abcd-1234-wxyz"
+          },
+          {
+            "type": "CVE",
+            "value": "CVE-2099-12345"
+          }
+        ],
+        "references": [
+          {
+            "url": "https://example.com/advisories/CVE-2099-12345"
+          }
+        ],
+        "vulnerabilities": [
+          {
+            "package": {
+              "ecosystem": "npm",
+              "name": "example-markdown-parser"
+            },
+            "severity": "high",
+            "vulnerable_version_range": "< 2.3.1",
+            "first_patched_version": {
+              "identifier": "2.3.1"
+            }
+          }
+        ],
+        "published_at": "2099-01-10T09:00:00Z",
+        "updated_at": "2099-01-12T14:30:00Z"
+      },
+      "security_vulnerability": {
+        "package": {
+          "ecosystem": "npm",
+          "name": "example-markdown-parser"
+        },
+        "severity": "high",
+        "vulnerable_version_range": "< 2.3.1",
+        "first_patched_version": {
+          "identifier": "2.3.1"
+        }
+      },
+      "url": "https://api.github.com/repos/example-org/example-repo/dependabot/alerts/14",
+      "html_url": "https://github.com/example-org/example-repo/security/dependabot/14",
+      "created_at": "2099-01-11T08:15:00Z",
+      "updated_at": "2099-01-11T08:15:00Z"
+    },
+    {
+      "number": 9,
+      "state": "dismissed",
+      "dependency": {
+        "package": {
+          "ecosystem": "go",
+          "name": "example.com/acme/netutil"
+        },
+        "manifest_path": "go.mod",
+        "scope": "runtime"
+      },
+      "security_advisory": {
+        "ghsa_id": "GHSA-efgh-5678-stuv",
+        "summary": "acme/netutil panics on malformed headers",
+        "severity": "medium",
+        "cvss": {
+          "score": 5.3
+        }
+      },
+      "security_vulnerability": {
+        "package": {
+          "ecosystem": "go",
+          "name": "example.com/acme/netutil"
+        },
+        "severity": "medium",
+        "vulnerable_version_range": "< 0.8.0",
+        "first_patched_version": {
+          "identifier": "0.8.0"
+        }
+      },
+      "html_url": "https://github.com/example-org/example-repo/security/dependabot/9",
+      "created_at": "2098-11-02T10:00:00Z",
+      "updated_at": "2098-11-20T16:45:00Z",
+      "dismissed_at": "2098-11-20T16:45:00Z",
+      "dismissed_by": {
+        "login": "example-maintainer",
+        "id": 1001,
+        "html_url": "https://github.com/example-maintainer",
+        "type": "User"
+      },
+      "dismissed_reason": "tolerable_risk",
+      "dismissed_comment": "Only reachable from internal tooling."
+    }
+  ],
+  "security_team_members": [
+    {
+      "login": "example-secops",
+      "id": 1002,
+      "html_url": "https://github.com/example-secops",
+      "type": "User"
+    }
+  ]
+}
+```
+
+## Subject templates
+
+The subject templates this plugin registers. Each example is built from sample data.
+
+### dependabot-repository
+
+A GitHub repository whose Dependabot alerts are evaluated. Title: `Dependabot for repository: {{ .repository }}`. The evidence also carries `provider` (`github`) and `type` labels that are not part of the identity: `type` is `repository` in Bundled mode and `dependabot` in Granular mode, where each alert's evidence also carries `cve_id`, `package_name`, `ecosystem`, `severity`, `impact` and `cvss_score` labels.
+
+| Identity key | Description |
+|---|---|
+| `repository` | Name of the GitHub repository, without the organization. |
+| `organization` | GitHub organization (or owner login) of the repository. |
+
+Example:
+
+```json
+{
+  "name": "dependabot-repository",
+  "type": "component",
+  "title": "Dependabot for repository: example-repo",
+  "description": "Dependabot alerts for GitHub repository example-repo in organization example-org",
+  "purpose": "Represents Dependabot monitoring for a GitHub repository being evaluated for compliance",
+  "identityLabels": {
+    "repository": "example-repo",
+    "organization": "example-org"
+  }
+}
+```
+
 ## Policies
 
 The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
