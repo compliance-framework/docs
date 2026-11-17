@@ -9,7 +9,12 @@
       "version": "v0.7.2",
       "line": "0.7",
       "description": "",
-      "policies": []
+      "policies": [
+        {
+          "repo": "compliance-framework/plugin-apt-versions-policies",
+          "version": "v0.5.2"
+        }
+      ]
     },
     {
       "id": "plugin-aws-acm",
@@ -34,7 +39,12 @@
       "version": "v0.1.2",
       "line": "0.1",
       "description": "AWS API Gateway compliance plugin for the Continuous Compliance Framework",
-      "policies": []
+      "policies": [
+        {
+          "repo": "compliance-framework/plugin-aws-apigateway-policies",
+          "version": "v0.1.1"
+        }
+      ]
     },
     {
       "id": "plugin-aws-cloudfront",
@@ -44,7 +54,12 @@
       "version": "v0.1.2",
       "line": "0.1",
       "description": "AWS CloudFront compliance plugin for the Continuous Compliance Framework",
-      "policies": []
+      "policies": [
+        {
+          "repo": "compliance-framework/plugin-aws-cloudfront-policies",
+          "version": "v0.1.1"
+        }
+      ]
     },
     {
       "id": "plugin-aws-ec2",
@@ -115,7 +130,24 @@
       "version": "v0.1.3",
       "line": "0.1",
       "description": "This plugin collects read-only AWS Elastic Load Balancing v2 evidence and evaluates CCF Rego policy bundles against one normalized input document per ELBv2 resource.",
-      "policies": []
+      "policies": [
+        {
+          "repo": "compliance-framework/plugin-aws-elb-listener-policies",
+          "version": "v0.1.1"
+        },
+        {
+          "repo": "compliance-framework/plugin-aws-elb-loadbalancer-policies",
+          "version": "v0.1.1"
+        },
+        {
+          "repo": "compliance-framework/plugin-aws-elb-targetgroup-policies",
+          "version": "v0.1.1"
+        },
+        {
+          "repo": "compliance-framework/plugin-aws-elb-targethealth-policies",
+          "version": "v0.1.1"
+        }
+      ]
     },
     {
       "id": "plugin-aws-rds-aurora-psql",
@@ -125,7 +157,12 @@
       "version": "v0.3.4",
       "line": "0.3",
       "description": "This plugin collects read-only evidence for Amazon RDS instances, Amazon Aurora clusters, and RDS snapshots, then evaluates configured CCF/Rego policy bundles against a normalized per-resource input document.",
-      "policies": []
+      "policies": [
+        {
+          "repo": "compliance-framework/plugin-aws-rds-aurora-psql-policies",
+          "version": "v0.3.1"
+        }
+      ]
     },
     {
       "id": "plugin-aws-s3",
@@ -215,6 +252,10 @@
         {
           "repo": "compliance-framework/plugin-dependabot-granular-policies",
           "version": "v0.2.1"
+        },
+        {
+          "repo": "compliance-framework/plugin-dependabot-policies",
+          "version": "v0.5.1"
         }
       ]
     },
@@ -339,6 +380,10 @@
       "policies": [
         {
           "repo": "compliance-framework/plugin-jira-custom-policies",
+          "version": "v0.2.1"
+        },
+        {
+          "repo": "compliance-framework/plugin-jira-policies",
           "version": "v0.2.1"
         }
       ]

@@ -54,7 +54,11 @@ Each evidence carries the labels `provider=aws`, `type=cloudfront-distribution`,
 
 ## Policies
 
-No policy bundles are mapped to this plugin yet.
+The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
+
+| Bundle | Latest version | Controls covered | Compatible plugin lines |
+|---|---|---|---|
+| [`plugin-aws-cloudfront-policies`](https://github.com/compliance-framework/plugin-aws-cloudfront-policies) | `v0.1.1` | CC6.7 | latest |
 
 ### Default policy bundle mapping
 

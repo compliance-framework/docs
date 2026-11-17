@@ -54,6 +54,8 @@ instances:
     path: plugins/apt-versions
     route: catalog/apt-versions
     label: APT Versions
+    policies:
+      - compliance-framework/plugin-apt-versions-policies  # released policy bundle named after the plugin
   - id: plugin-aws-acm
     kind: plugin
     repo: compliance-framework/plugin-aws-acm
@@ -68,12 +70,16 @@ instances:
     path: plugins/aws-apigateway
     route: catalog/aws-apigateway
     label: AWS API Gateway
+    policies:
+      - compliance-framework/plugin-aws-apigateway-policies  # released policy bundle named after the plugin
   - id: plugin-aws-cloudfront
     kind: plugin
     repo: compliance-framework/plugin-aws-cloudfront
     path: plugins/aws-cloudfront
     route: catalog/aws-cloudfront
     label: AWS CloudFront
+    policies:
+      - compliance-framework/plugin-aws-cloudfront-policies  # released policy bundle named after the plugin
   - id: plugin-aws-ec2
     kind: plugin
     repo: compliance-framework/plugin-aws-ec2
@@ -98,12 +104,19 @@ instances:
     path: plugins/aws-elb
     route: catalog/aws-elb
     label: AWS ELB
+    policies:
+      - compliance-framework/plugin-aws-elb-listener-policies  # released policy bundle named after the plugin
+      - compliance-framework/plugin-aws-elb-loadbalancer-policies  # released policy bundle named after the plugin
+      - compliance-framework/plugin-aws-elb-targetgroup-policies  # released policy bundle named after the plugin
+      - compliance-framework/plugin-aws-elb-targethealth-policies  # released policy bundle named after the plugin
   - id: plugin-aws-rds-aurora-psql
     kind: plugin
     repo: compliance-framework/plugin-aws-rds-aurora-psql
     path: plugins/aws-rds-aurora-psql
     route: catalog/aws-rds-aurora-psql
     label: AWS RDS Aurora PostgreSQL
+    policies:
+      - compliance-framework/plugin-aws-rds-aurora-psql-policies  # released policy bundle named after the plugin
   - id: plugin-aws-s3
     kind: plugin
     repo: compliance-framework/plugin-aws-s3
@@ -148,6 +161,7 @@ instances:
     label: Dependabot
     policies:
       - compliance-framework/plugin-dependabot-granular-policies  # exact name: its README links plugin-dependabot
+      - compliance-framework/plugin-dependabot-policies  # released policy bundle named after the plugin
   - id: plugin-file-attestation
     kind: plugin
     repo: compliance-framework/plugin-file-attestation
@@ -209,6 +223,7 @@ instances:
     label: Jira
     policies:
       - compliance-framework/plugin-jira-custom-policies  # exact name: its README links plugin-jira
+      - compliance-framework/plugin-jira-policies  # released policy bundle named after the plugin
   - id: plugin-k8s
     kind: plugin
     repo: compliance-framework/plugin-k8s

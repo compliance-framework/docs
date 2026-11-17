@@ -110,6 +110,7 @@ The policy bundles that work with this plugin, at their newest releases. The con
 | Bundle | Latest version | Controls covered | Compatible plugin lines |
 |---|---|---|---|
 | [`plugin-jira-custom-policies`](https://github.com/compliance-framework/plugin-jira-custom-policies) | `v0.2.1` | *none listed* | latest |
+| [`plugin-jira-policies`](https://github.com/compliance-framework/plugin-jira-policies) | `v0.2.1` | *none listed* | latest |
 
 ## Related
 

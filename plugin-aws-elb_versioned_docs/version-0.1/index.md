@@ -75,7 +75,14 @@ Out of scope:
 
 ## Policies
 
-No policy bundles are mapped to this plugin yet.
+The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
+
+| Bundle | Latest version | Controls covered | Compatible plugin lines |
+|---|---|---|---|
+| [`plugin-aws-elb-listener-policies`](https://github.com/compliance-framework/plugin-aws-elb-listener-policies) | `v0.1.1` | ctrl-cc6-2-014, ctrl-cc6-2-018, ctrl-cc6-3-004, ctrl-cc6-7-001, ctrl-cc6-7-002, ctrl-cc6-7-004, ctrl-cc6-7-005, ctrl-cc6-7-007, ctrl-cc6-7-008, ctrl-cc6-7-009, ctrl-cc6-7-010, ctrl-cc6-7-011 | latest |
+| [`plugin-aws-elb-loadbalancer-policies`](https://github.com/compliance-framework/plugin-aws-elb-loadbalancer-policies) | `v0.1.1` | ctrl-a1-1-009, ctrl-a1-2-006, ctrl-a1-2-007, ctrl-cc5-2-005, ctrl-cc6-2-015, ctrl-cc6-2-019, ctrl-cc6-3-013, ctrl-cc6-5-001, ctrl-cc6-7-003, ctrl-cc6-7-006, ctrl-cc6-7-017, ctrl-cc6-7-018 | latest |
+| [`plugin-aws-elb-targetgroup-policies`](https://github.com/compliance-framework/plugin-aws-elb-targetgroup-policies) | `v0.1.1` | ctrl-a1-1-009, ctrl-a1-2-007, ctrl-cc6-7-002, ctrl-cc6-7-005 | latest |
+| [`plugin-aws-elb-targethealth-policies`](https://github.com/compliance-framework/plugin-aws-elb-targethealth-policies) | `v0.1.1` | ctrl-a1-1-009, ctrl-a1-2-007 | latest |
 
 ### Rego Input Schema
 

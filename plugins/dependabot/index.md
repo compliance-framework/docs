@@ -76,6 +76,7 @@ The policy bundles that work with this plugin, at their newest releases. The con
 | Bundle | Latest version | Controls covered | Compatible plugin lines |
 |---|---|---|---|
 | [`plugin-dependabot-granular-policies`](https://github.com/compliance-framework/plugin-dependabot-granular-policies) | `v0.2.1` | *none listed* | latest |
+| [`plugin-dependabot-policies`](https://github.com/compliance-framework/plugin-dependabot-policies) | `v0.5.1` | *none listed* | latest |
 
 When writing OPA / Rego policies for this plugin, they must be added under the `compliance_framework` rego package:
 

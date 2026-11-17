@@ -121,7 +121,11 @@ out of scope for this plugin.
 
 ## Policies
 
-No policy bundles are mapped to this plugin yet.
+The policy bundles that work with this plugin, at their newest releases. The controls are the ones the bundle's policies list in their metadata.
+
+| Bundle | Latest version | Controls covered | Compatible plugin lines |
+|---|---|---|---|
+| [`plugin-aws-rds-aurora-psql-policies`](https://github.com/compliance-framework/plugin-aws-rds-aurora-psql-policies) | `v0.3.1` | ctrl-a1-1-002, ctrl-a1-1-009, ctrl-a1-2-006, ctrl-a1-2-007, ctrl-a1-2-008, ctrl-a1-2-009, ctrl-a1-2-010, ctrl-a1-2-011, ctrl-a1-3-007, ctrl-c1-1-004, ctrl-c1-1-011, ctrl-c1-1-012, ctrl-c1-2-001, ctrl-c1-2-006, ctrl-cc6-2-014, ctrl-cc6-2-015, ctrl-cc6-2-018, ctrl-cc6-2-019, ctrl-cc6-3-004, ctrl-cc6-3-013, ctrl-cc6-5-001, ctrl-cc6-5-004, ctrl-cc6-7-001, ctrl-cc6-7-002, ctrl-cc6-7-003, ctrl-cc6-7-004, ctrl-cc6-7-005, ctrl-cc6-7-006, ctrl-cc6-7-007, ctrl-cc6-7-008, ctrl-cc6-7-009, ctrl-cc6-7-010, ctrl-cc6-7-011, ctrl-cc6-7-014, ctrl-cc6-7-016, ctrl-cc6-7-018, ctrl-cc9-1-006, ctrl-cc9-1-009, ctrl-p4-2-002, ctrl-p4-2-004, ctrl-p4-3-003, ctrl-p6-5-001, ctrl-p6-5-002, ctrl-p6-5-003 | latest |
 
 ### Rego Input Schema
 
