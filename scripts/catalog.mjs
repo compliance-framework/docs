@@ -178,6 +178,49 @@ export function policiesTable(bundles) {
   ].join('\n');
 }
 
+// ---- reference file → plugin page sections ------------------------------------------------------
+
+const cell = (text) => String(text).trim().replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' ');
+const jsonBlock = (value) => ['```json', JSON.stringify(value, null, 2), '```', ''];
+
+/** The `## Policy input` section: the document a policy receives, its fields and an example. */
+export function policyInputSection(input) {
+  return [
+    '## Policy input',
+    '',
+    input.description.trim(),
+    '',
+    '| Field | Type | Description |',
+    '|---|---|---|',
+    ...input.fields.map((f) => `| \`${cell(f.name)}\` | ${cell(f.type)} | ${cell(f.description)} |`),
+    '',
+    'An example input:',
+    '',
+    ...jsonBlock(input.example),
+  ];
+}
+
+/** The `## Subject templates` section: each template's identity keys and one example. */
+export function subjectTemplatesSection(templates) {
+  const out = ['## Subject templates', '', 'The subject templates this plugin registers. Each example is built from sample data.', ''];
+  for (const t of templates) {
+    out.push(
+      `### ${t.name.trim()}`,
+      '',
+      t.description.trim(),
+      '',
+      '| Identity key | Description |',
+      '|---|---|',
+      ...t.identityKeys.map((k) => `| \`${cell(k.name)}\` | ${cell(k.description)} |`),
+      '',
+      'Example:',
+      '',
+      ...jsonBlock(t.example),
+    );
+  }
+  return out;
+}
+
 // ---- README → plugin page ---------------------------------------------------------------------
 
 /**
@@ -338,8 +381,9 @@ export function summarize({readme, description}) {
  * @param {string | null} p.readme the README at the tag, or null when the release has none
  * @param {string | null} p.description the repository's GitHub description
  * @param {{repo: string, version: string, controls: string[]}[]} p.bundles
+ * @param {object | null} [p.ref] the plugin's reference file (scripts/plugin-ref.schema.json)
  */
-export function renderPluginPage({instance, tag, readme, description, bundles}) {
+export function renderPluginPage({instance, tag, readme, description, bundles, ref = null}) {
   const {repo, label} = instance;
   const name = repo.split('/')[1];
   const parts = readme ? splitReadme(readme) : {title: null, intro: [], sections: []};
@@ -381,6 +425,8 @@ export function renderPluginPage({instance, tag, readme, description, bundles}) 
   ];
   for (const [key, heading] of PAGE_SECTIONS) {
     if (key === 'policies') {
+      if (ref?.policyInput) out.push(...policyInputSection(ref.policyInput));
+      if (ref?.subjectTemplates) out.push(...subjectTemplatesSection(ref.subjectTemplates));
       out.push('## Policies', '');
       if (bundles.length > 0) {
         out.push(

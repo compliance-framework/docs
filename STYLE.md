@@ -114,11 +114,15 @@ The landing page of a plugin's own versioned instance:
 <!-- A configuration reference table (see above), then a complete example. -->
 ## Evidence collected
 <!-- What it gathers and how often. -->
+## Policy input
+<!-- The document a policy receives: a table of its fields (name, type, meaning), then one example input. -->
+## Subject templates
+<!-- One `###` per subject template the plugin registers: what it describes, a table of its identity keys, and one example built from sample data. -->
 ## Policies
 <!-- The policies catalog (below). -->
 ```
 
-`scripts/sync-catalog.mjs` generates this page from the plugin's README at its release. README sections that fit none of these go under a `## How it works` section before **Requirements**, and its links under a `## Related` section at the end, as in the feature guide.
+`scripts/sync-catalog.mjs` generates this page from the plugin's README at its release. `## Policy input` and `## Subject templates` come from the plugin's reference file, `scripts/plugin-ref/<instance id>.yaml`, not from the README; a plugin without one has neither section. README sections that fit none of these go under a `## How it works` section before **Requirements**, and its links under a `## Related` section at the end, as in the feature guide.
 
 ### Policies catalog
 

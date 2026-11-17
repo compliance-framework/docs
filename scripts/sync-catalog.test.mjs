@@ -20,6 +20,7 @@ import {
   summarize,
 } from './catalog.mjs';
 import {collect, githubSource} from './sync-catalog.mjs';
+import {PluginRefError, parsePluginRef, pluginRefValidator} from './plugin-ref.mjs';
 
 test('latestFinalRelease takes the highest plain semver tag of a non-draft, non-pre-release', () => {
   const cases = [
@@ -382,4 +383,71 @@ test('githubSource reads through gh api and treats a 404 as a missing file', asy
     }).file('o/r', 'v1', 'x'),
     /boom/,
   );
+});
+
+const REF = `
+version: 1
+policyInput:
+  description: The document a policy receives.
+  fields:
+    - {name: certificate.arn, type: string, description: The certificate | ARN.}
+  example: {certificate: {arn: 'arn:aws:acm:eu-west-1:111122223333:certificate/example'}}
+subjectTemplates:
+  - name: aws-acm-certificate
+    description: One certificate.
+    identityKeys:
+      - {name: arn, description: The ARN.}
+    example: {type: aws-acm-certificate, identity: {arn: 'arn:aws:acm:eu-west-1:111122223333:certificate/example'}}
+`;
+const refValidator = pluginRefValidator(new URL('..', import.meta.url).pathname);
+
+test('renderPluginPage adds Policy input and Subject templates after Evidence collected, only with a reference', () => {
+  const base = {
+    instance: {id: 'plugin-x', repo: 'o/plugin-x', label: 'X'},
+    tag: 'v1.2.3',
+    readme: README,
+    description: null,
+    bundles: [],
+  };
+  const withRef = renderPluginPage({...base, ref: parsePluginRef(REF, 'x.yaml', refValidator)});
+  const headings = withRef.match(/^#{2,3} .*$/gm);
+  assert.deepEqual(headings.slice(-4), ['## Policy input', '## Subject templates', '### aws-acm-certificate', '## Policies']);
+  assert.match(withRef, /\| `certificate\.arn` \| string \| The certificate \\\| ARN\. \|/);
+  assert.match(withRef, /```json\n\{\n {2}"certificate"/);
+  assert.match(withRef, /\| Identity key \| Description \|/);
+  const without = renderPluginPage(base);
+  assert.doesNotMatch(without, /Policy input|Subject templates/);
+  assert.equal(renderPluginPage({...base, ref: null}), without);
+});
+
+test('collect gives each plugin the reference loadRef returns', async () => {
+  const gh = {
+    repos: async () => [{name: 'plugin-x', archived: false, description: 'X'}],
+    releases: async () => [{tag_name: 'v1.0.0'}],
+    description: async () => 'X',
+    file: async () => '# X\n',
+    tree: async () => [],
+  };
+  const manifest = {version: 1, instances: [{id: 'plugin-x', kind: 'plugin', repo: 'o/plugin-x', path: 'plugins/x', route: 'catalog/x', label: 'X'}]};
+  const seen = [];
+  const {plugins} = await collect(gh, {org: 'o', manifest, loadRef: (id) => (seen.push(id), {version: 1})});
+  assert.deepEqual(seen, ['plugin-x']);
+  assert.deepEqual(plugins[0].ref, {version: 1});
+  assert.equal((await collect(gh, {org: 'o', manifest})).plugins[0].ref, null);
+});
+
+test('the reference schema fails on a missing example or an unnamed field', () => {
+  const doc = () => yaml.load(REF);
+  const check = (mutate) => {
+    const d = doc();
+    mutate(d);
+    return () => parsePluginRef(yaml.dump(d), 'x.yaml', refValidator);
+  };
+  assert.doesNotThrow(check(() => {}));
+  assert.throws(check((d) => delete d.policyInput.example), PluginRefError);
+  assert.throws(check((d) => delete d.subjectTemplates[0].example), PluginRefError);
+  assert.throws(check((d) => delete d.policyInput.fields[0].name), PluginRefError);
+  assert.throws(check((d) => (d.policyInput.fields[0].name = ' ')), PluginRefError);
+  assert.throws(check((d) => (d.subjectTemplates[0].identityKeys = [])), PluginRefError);
+  assert.throws(check((d) => { delete d.policyInput; delete d.subjectTemplates; }), PluginRefError);
 });

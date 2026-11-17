@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "plugin-ref.schema.json",
+  "title": "Plugin reference file (scripts/plugin-ref/<instance id>.yaml)",
+  "description": "What a plugin page shows beyond the plugin's README: the policy input a policy receives and the subject templates the plugin registers. scripts/sync-catalog.mjs renders it as `## Policy input` and `## Subject templates`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "anyOf": [{"required": ["policyInput"]}, {"required": ["subjectTemplates"]}],
+  "properties": {
+    "version": {"const": 1},
+    "policyInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "fields", "example"],
+      "properties": {
+        "description": {"$ref": "#/definitions/text"},
+        "fields": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/field"}},
+        "example": {"$ref": "#/definitions/example"}
+      }
+    },
+    "subjectTemplates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description", "identityKeys", "example"],
+        "properties": {
+          "name": {"$ref": "#/definitions/text"},
+          "description": {"$ref": "#/definitions/text"},
+          "identityKeys": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "description"],
+              "properties": {"name": {"$ref": "#/definitions/text"}, "description": {"$ref": "#/definitions/text"}}
+            }
+          },
+          "example": {"$ref": "#/definitions/example"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "example": {"type": "object", "minProperties": 1, "description": "One example document built from sample data."},
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "description"],
+      "properties": {
+        "name": {"$ref": "#/definitions/text"},
+        "type": {"$ref": "#/definitions/text"},
+        "description": {"$ref": "#/definitions/text"}
+      }
+    }
+  }
+}
