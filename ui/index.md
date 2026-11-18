@@ -42,6 +42,36 @@ npm run build
 
 The app is written to `dist/`. Serve it from any web server that sends unknown paths to `index.html`, as the image's nginx configuration does.
 
+## How it works
+
+The UI has no server-side logic of its own. The browser downloads the static app once, then every screen talks to the API.
+
+```mermaid
+flowchart LR
+    user([User's browser])
+    subgraph web["Web server (nginx in the container image)"]
+        app["Static app: index.html and JavaScript"]
+        cfg["config.json"]
+    end
+    api["CCF API"]
+    idp["SSO provider"]
+    db[("Database")]
+
+    user -->|"1. Load the app"| app
+    user -->|"2. Read API_URL"| cfg
+    user -->|"3. Sign in and call the API"| api
+    user -.->|"Single sign-on"| idp
+    idp -.-> api
+    api -->|"Check roles, read and write"| db
+```
+
+1. **Load the app.** The web server sends the static files. Paths the server doesn't know go to `index.html`, so the app handles page addresses itself in the browser.
+2. **Read `config.json`.** The app fetches `config.json` from its own address and takes the API address from `API_URL`. A UI built with `VITE_API_URL` skips this step. See the [configuration reference](./configuration.md).
+3. **Call the API.** The browser sends every request straight to the API, so the API address must be reachable from your users' machines, and the API must list the UI's address in `CCF_API_ALLOWED_ORIGINS`. The web server never proxies these calls.
+4. **Sign in.** You sign in with a password or with single sign-on through the API. The API decides what you can see and change from your roles, and the UI only shows the sidebar entries those roles allow.
+
+Because the app runs in the browser, `config.json` is public: never put a secret in it. The data itself, including systems, evidence, controls, risks and workflows, lives behind the API and its database, not in the UI.
+
 ## Sign in
 
 Open the UI and sign in in one of two ways:
