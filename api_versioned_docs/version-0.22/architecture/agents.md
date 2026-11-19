@@ -92,14 +92,14 @@ that often.
 
 ### In CI/CD
 
-The agent can be used during CICD in single-execution mode to:
+The agent can be used during CI/CD in single-execution mode to:
 * Report Code Security scans (SCA, SAST, DAST),
 * Report Open Source License Compliance scans
 * Report the results for quality scans (Sonarqube)
 * Report IaC, Container, and Software Image scans (Snyk, Gitlab, Wiz)
 * Report SBOMs (Software Bill Of Materials)
 
-These can be used during CICD to add rich data, which can later be used in compliance reporting. You can also schedule
+These can be used during CI/CD to add rich data, which can later be used in compliance reporting. You can also schedule
 this agent configuration to be run periodically through your Version Control system.
 
 ### Testing Cloud Configurations
