@@ -25,6 +25,14 @@ yarn start
 
 This starts a local development server and opens a browser window. Most changes show up live, without a restart.
 
+## Test
+
+```sh
+yarn test
+```
+
+Runs Node's test runner over the scripts' tests (`scripts/*.test.mjs`: `openapi-display`, `gen-config-ref`, `sync-catalog`). The [Test Build](.github/workflows/test-build.yml) workflow runs it on every push, before `yarn build`, so run it before opening a pull request.
+
 ## Build
 
 ```sh
