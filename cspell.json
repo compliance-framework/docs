@@ -1,0 +1,66 @@
+{
+  "version": "0.2",
+  "language": "en-US",
+  "words": [],
+  "flagWords": [],
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "build",
+    ".docusaurus",
+    "yarn.lock",
+    "package-lock.json",
+    "*.min.js",
+    "*.min.css"
+  ],
+  "dictionaries": [
+    "softwareTerms",
+    "html",
+    "css",
+    "typescript",
+    "node",
+    "npm",
+    "cspell-dict"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "cspell-dict",
+      "path": "./cspell-dict.txt",
+      "addWords": true
+    }
+  ],
+  "ignoreRegExpList": [
+    "/```[\\s\\S]*?```/g",
+    "/`[^`]*`/g",
+    "/\\[[^\\]]+\\]\\([^)]+\\)/g",
+    "/https?:\\/\\/[^\\s]+/g",
+    "/@[\\w-]+/g",
+    "/#\\d+/g"
+  ],
+  "overrides": [
+    {
+      "filename": "**/*.md",
+      "enabled": true,
+      "dictionaries": [
+        "softwareTerms",
+        "html",
+        "typescript",
+        "node",
+        "npm",
+        "cspell-dict"
+      ]
+    },
+    {
+      "filename": "**/*.mdx",
+      "enabled": true,
+      "dictionaries": [
+        "softwareTerms",
+        "html",
+        "typescript",
+        "node",
+        "npm",
+        "cspell-dict"
+      ]
+    }
+  ]
+}

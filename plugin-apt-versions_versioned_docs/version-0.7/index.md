@@ -15,7 +15,7 @@ This page is for **operators** who run the `plugin-apt-versions` plugin with the
 
 ### Usage
 
-You can use this plugin by passing it to the compliiance agent
+You can use this plugin by passing it to the compliance agent
 
 ```shell
 agent --plugin=[PATH_TO_YOUR_BINARY]
