@@ -33,6 +33,14 @@ yarn test
 
 Runs Node's test runner over the scripts' tests (`scripts/*.test.mjs`: `openapi-display`, `gen-config-ref`, `sync-catalog`). The [Test Build](.github/workflows/test-build.yml) workflow runs it on every push, before `yarn build`, so run it before opening a pull request.
 
+## Spellcheck
+
+```sh
+yarn spellcheck
+```
+
+Runs [cspell](https://cspell.org/) over every `.md` and `.mdx` file using `cspell.json` and the project dictionary `cspell-dict.txt`. The [Spellcheck](.github/workflows/spellcheck.yml) workflow runs it on every push and pull request to `main`, so run it before you open one. If cspell flags a word you use that it does not know (a product name, a proper noun), add it to `cspell-dict.txt`. If it flags a real typo, fix it in the page instead of adding the word to the dictionary.
+
 ## Build
 
 ```sh
