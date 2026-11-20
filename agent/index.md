@@ -27,6 +27,7 @@ With service account credentials (`api.auth`), the agent also reports its config
 - A running API, and its address.
 - To authenticate the agent: an agent registered in the UI under **Admin** > **Agents**, with a service account key. The key's client ID and client secret go in `api.auth`.
 - Network access from the agent to the API, and to the OCI registries your plugins and policies come from.
+- For information about how the API signs the evidence the agent sends, see the [evidence signing](../api/evidence-signing.md) feature guide.
 
 ## Install the agent
 
