@@ -189,6 +189,61 @@ To ensure every agent's evidence is always signed:
 1. **On the API:** Set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` to persistent PEM file paths.
 2. **On the agent:** Set `api.auth.client_id` and `api.auth.client_secret` (via environment or config file) so every evidence submission authenticates.
 
+### Verify in the UI
+
+1. Open the evidence record detail page and select the **Signature** tab.
+2. Select **Verify** to check the record against its stored signed payload.
+
+The UI sends `POST /api/evidence/{id}/verify` (needs `evidence:read`). **Verification** then shows the result of each check:
+
+| Check | What it verifies |
+|---|---|
+| **Payload hash** | The evidence content hash matches the record in the database |
+| **Signature** | The JWS signature is cryptographically valid for the stored key |
+| **Credential match** | The signing credential matches a registered key under **Admin** > **Agents** |
+| **Chain** | The credential chain is valid and trusted |
+| **Completeness** | All required signature fields are present |
+
+When all checks pass, **Verification** shows **All checks passed**. When one or more checks fail, it lists the failed checks by name.
+
+Below verification, **Signature Details** shows the stored envelope and signer: the JWS, the signing algorithm, the signed-at time, the content hash, and the signer's type, ID, name, and credential ID. The signer's credential ID matches the `credential_id` under **Admin** > **Agents** for agents, or the user's session credential ID for users. To match the credential to a specific key, navigate to **Admin** > **Agents**, find the agent that submitted the record, and look at the key list. The key whose `credential_id` matches the `signer.credentialId` field is the one that signed the evidence.
+
+The **Signature** tab also lets you download the raw signature envelope with `GET /api/evidence/{id}/signature` (needs `evidence:read`).
+
+## Troubleshooting
+
+### Token exchange fails
+
+When an agent's `POST /api/auth/agent/token` call fails, it returns one of these status codes:
+
+| Status | Cause | Fix |
+|---|---|---|
+| `401 Unauthorized` | The client ID or client secret is wrong, the agent's service account is disabled, or the request body is missing credentials. | Check the agent's `api.auth.client_id` and `api.auth.client_secret` values against what's registered under **Admin** > **Agents**. |
+| `403 Forbidden` | The agent's IP is not allowed, or the service account lacks permission to request tokens. | Verify the IP allowlist and the service account's permissions under **Admin** > **Agents**. |
+| `429 Too Many Requests` | The API rate-limits the token endpoint. | Reduce the token request frequency or increase the rate limit. |
+| `500 Internal Server Error` | The API's token service is down or the database is unavailable. | Check the API logs and the health of the API and its PostgreSQL database. |
+| `502 Bad Gateway` | The API cannot reach the token issuer. | Check the API's network configuration and the issuer's availability. |
+| `503 Service Unavailable` | The API is shutting down or the token service is not ready. | Wait and retry, or check the API deployment status. |
+
+### Record shows Unsigned
+
+A record is stored **Unsigned** when the API cannot sign it. Check the following:
+
+- **The API has no persistent key pair.** `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` must point to PEM file paths. See [Enable it](#enable-it).
+- **The agent did not send a token.** The request to `POST /api/evidence` had no `Authorization` header. Verify the agent's token exchange succeeds (see above) and the agent caches and sends the token with each submission.
+- **The agent sent an anonymous request.** If `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS` is `false`, unauthenticated `POST /api/evidence` calls are accepted but stored unsigned.
+- **The key pair was rotated or regenerated.** If the API was restarted without persistent keys, the new key pair cannot sign records with the old signature.
+
+### A verification check fails
+
+When **Verification** shows a failed check, the cause is usually:
+
+- **Payload hash failed** — the record content was modified after signing. The stored hash doesn't match the current record body.
+- **Signature failed** — the signature doesn't match the key or the content was tampered with.
+- **Credential match failed** — the signing credential isn't found under **Admin** > **Agents**. For agent submissions, the `credential_id` in the signature must match a registered key.
+- **Chain failed** — the credential chain is broken or untrusted. Check that the credential is valid and the chain of trust is intact.
+- **Completeness failed** — some signature fields are missing. This can happen if the record was created before the signing feature was enabled or if the signature data was corrupted.
+
 ## Related
 
 - [Configuration reference](./configuration.md): `CCF_JWT_PRIVATE_KEY`, `CCF_JWT_PUBLIC_KEY`, `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS`
