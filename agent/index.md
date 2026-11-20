@@ -13,7 +13,7 @@ The Continuous Compliance Framework (CCF) Agent runs CCF Plugins, which collect 
 
 1. The agent reads its configuration file: the API to report to, and the plugins to run, each with its policies and settings.
 2. It downloads every plugin and policy bundle that isn't a local path. If a download fails, the run fails.
-3. It starts each plugin as a separate process, passes it its settings and policies, and asks it to evaluate them. The plugin sends its evidence back through the agent, which adds its own labels and sends it to the API.
+3. It starts each plugin as a separate process, passes it its settings and policies, and asks it to evaluate them. The plugin sends its evidence back through the agent, which adds its own labels and sends it to the API. If the API has signing keys configured, the API signs the record with an [RSA signature](/api/evidence-signing).
 
 The agent runs in one of two modes:
 

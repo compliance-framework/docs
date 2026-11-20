@@ -97,6 +97,8 @@ Open **Media** to inspect the resources linked from the evidence's back matter. 
 
 Open **Signature** and select **Verify** to check the record against its stored signed payload. **Verification** shows the result of each check. Below it, **Signature Details** shows the stored envelope and signer. Verification checks integrity; the evidence's compliance status still comes from the check that produced it.
 
+The API signs records with an RSA key pair configured on the API. Not all records are signed — those submitted without authentication, or when the API has no private key configured, are stored **Unsigned**. See [Evidence signing](/api/evidence-signing) for the full guide on how signing works, which key signs and verifies, and what to do when a record shows **Unsigned** or a verification check fails.
+
 ![Verify an evidence signature and inspect the verification checks and stored signature details.](/img/ui/2.15/verify-evidence.gif)
 
 ### History
