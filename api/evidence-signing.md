@@ -30,21 +30,76 @@ If the API lacks a persistent key pair, or the request has no token, the API sto
 
 The same RSA key pair that signs evidence is the one used for JWT issuance. To make it survive restarts, set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` to paths of PEM files. Without them, the API generates a new key pair at each start.
 
+### Key management
+
+The API uses one RSA key pair for both signing and verification. The **private key** (set with `CCF_JWT_PRIVATE_KEY`) signs evidence records and JWTs. The **public key** (set with `CCF_JWT_PUBLIC_KEY`) verifies them. Anyone with the public key can verify an evidence signature without accessing the private key.
+
+#### What happens when the key isn't persistent
+
+If neither `CCF_JWT_PRIVATE_KEY` nor `CCF_JWT_PUBLIC_KEY` is set, the API generates a new RSA key pair at each start. Evidence signed before the restart becomes **unverifiable**: the new private key cannot produce signatures matching the old public key, and the old public key is gone. Records already stored remain in the database, but their signatures cannot be verified after a restart without the old key files.
+
+To avoid this, always set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` to persistent file paths. See [Enable it](#enable-it).
+
+#### What happens on key rotation
+
+When you rotate the key pair (generate a new pair and set the new paths):
+
+- **Earlier signatures created with the old key** remain valid. Anyone holding the old public key can still verify those signatures.
+- **New evidence submissions** are signed with the new private key. The public key the API stores and distributes is the new one.
+- The API does **not** re-sign earlier records. If you need to re-sign historical records, you must use the old key pair.
+- To keep a record of both key versions, store the old `private.pem` and `public.pem` files alongside the new ones.
+
 ### What the signature covers
 
-The API canonicalizes the evidence record (all lists sorted by canonical JSON, times in RFC 3339 nano, fields in a fixed order), computes a SHA-256 hash of the canonical form, and wraps the hash with a JWS (RS256). The signature stores:
+The API canonicalizes the evidence record (all lists sorted by canonical JSON, times in RFC 3339 nano, fields in a fixed order), computes a SHA-256 hash of the canonical form, and wraps the hash with a JWS (RS256). The signature breaks down into three parts:
 
-- **Version:** `"v1"`
-- **Signature algorithm:** `"RS256"`
-- **Signed at:** UTC time when the API signed it
-- **Content hash:** the SHA-256 of the canonical JSON
-- **Signer:** type (`"user"` or `"agent"`), ID, name, and for agents the credential ID
-- **Claims:** token kind, subject, issuer, issued at, expires at, and agent-specific fields (agent ID, credential ID, auth method)
+#### JWS header
+
+The header contains the algorithm metadata:
+
+- **alg:** `"RS256"` — the signing algorithm (RSA SHA-256)
+- **kid:** the key ID of the public key used to sign, matching the `credential_id` of an agent's registered key under **Admin** > **Agents**
+
+#### JWS payload
+
+The payload carries the signature metadata and the record hash:
+
+| Field | Type | Description |
+|---|---|---|
+| `version` | string | Always `"v1"` |
+| `algorithm` | string | Always `"RS256"` |
+| `signedAt` | string | UTC timestamp when the API created the signature, in RFC 3339 with nanosecond precision |
+| `contentHash` | string | SHA-256 hash of the canonical JSON evidence record, encoded as lowercase hex |
+| `signer.type` | string | `"user"` for UI/API submissions, `"agent"` for CCF Agent submissions |
+| `signer.id` | string | The authenticated caller's ID (`user_id` or `agent_id`) |
+| `signer.name` | string | The authenticated caller's display name |
+| `signer.credentialId` | string | For agents: the `credential_id` that authenticated, matching the key under **Admin** > **Agents**. For users: the user's session credential ID |
+| `claims.tokenKind` | string | `"agent"` for agent tokens, `"user"` for user JWT cookies |
+| `claims.subject` | string | The JWT subject (`sub`) claim |
+| `claims.issuer` | string | The JWT issuer (`iss`) claim |
+| `claims.issuedAt` | string | The JWT `iat` claim, when the token was issued |
+| `claims.expiresAt` | string | The JWT `exp` claim, when the token expires |
+| `claims.agentId` | string | For agent tokens: the agent's registered ID. Omitted for user tokens |
+| `claims.authMethod` | string | For agent tokens: the authentication method used (e.g. `"service_account"`) |
+
+#### The hashed record
+
+The `contentHash` is computed over the evidence record itself. The API hashes the following fields:
+
+- `id` — the evidence record ID
+- `createdAt` — the record creation timestamp
+- `labels` — all labels on the record, including `_agent`, `_plugin`, and user-defined labels
+- `content` — the full evidence content (the structured data from the plugin)
+- `contentHash` — the hash inside the evidence content
+- All other top-level fields except those listed in [Excluded fields](#excluded-fields) below
+
+##### Excluded fields
 
 The following fields are **excluded** from the hash so that later updates to them don't invalidate earlier signatures:
 
 - `implemented_components` on inventory items — they are shared across evidence records and updated independently
-- The `_plugin` label is **included** in the hash (it is part of the canonical label list)
+
+The `_plugin` label **is included** in the hash (it is part of the canonical label list).
 
 ### When batch evidence is signed
 
