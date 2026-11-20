@@ -12,7 +12,7 @@ This page is for **operators**. The Continuous Compliance Framework (CCF) Agent 
 
 ## Configuration file
 
-Pass the file with `--config`. It can be YAML, JSON or TOML: the agent goes by the file's extension. Keys are lowercase, and `<name>` stands for a plugin name you choose.
+Pass the file with `--config`. It can be YAML, JSON or TOML: the agent goes by the file's extension. Keys are lowercase, and `<name>` stands for a plugin name you choose. For the `remote_config` block, see [Remote configuration](./remote-configuration.md).
 
 An environment variable named `CCF_` followed by a key's path in upper case, with `_` between the parts, overrides that key when the file sets it: `CCF_PLUGINS_GITHUB_CONFIG_TOKEN` overrides `plugins.github.config.token`. Only `api.auth.client_id`, `api.auth.client_secret` and `remote_config.mode` can come from the environment when the file doesn't set them.
 
