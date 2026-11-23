@@ -18,7 +18,7 @@ Whether a record is signed depends on all three components. The CCF Agent authen
 
 With credentials set on the agent (`api.auth.client_id` and `api.auth.client_secret`, or `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET`), the agent:
 
-1. Exchanges its client ID and client secret for a token at `POST /api/auth/agent/token`, sent as HTTP Basic authentication. The response carries `access_token`, `token_type` `Bearer` and `expires_in` `86400`: a day.
+1. Exchanges its client ID and client secret for a token at `POST /api/auth/agent/token`, sent as HTTP Basic authentication. The response carries `access_token`, `token_type` `Bearer` and `expires_in` `86400`: the token lasts a day.
 2. Caches the token and gets a new one 1 minute before it expires. When any API call answers `401`, the agent drops the cached token, exchanges for a new one and retries that call once.
 3. Sends every evidence record to `POST /api/evidence`, one record per request, with the token as a `Bearer` token.
 
