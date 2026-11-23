@@ -6,7 +6,7 @@ sidebar_position: 6
 
 # Evidence signing
 
-Evidence records the API stores are either **Signed** or **Unsigned**: when you submit evidence with a valid token, the API signs the record with its own key, so anyone with access can later check that the record hasn't changed since it was submitted and who submitted it. This page is for **operators** who want their agents' evidence to arrive signed, and for **compliance and GRC users** who read the **Signature** tab and its checks.
+Evidence records the Continuous Compliance Framework (CCF) API stores are either **Signed** or **Unsigned**: when you submit evidence with a valid token, the API signs the record with its own key, so anyone with access can later check that the record hasn't changed since it was submitted and who submitted it. This page is for **operators** who want their agents' evidence to arrive signed, and for **compliance and GRC users** who read the **Signature** tab and its checks.
 
 This page documents API `v0.22.5`, agent `v0.9.6` and UI `v2.15.2`.
 
@@ -117,7 +117,7 @@ The evidence detail page shows a badge next to its title: **Signed** when the re
 ### Run verification
 
 1. Open the record's **Signature** tab and select **Verify** (it becomes **Re-verify** after a run). The **Verification** section fills in.
-2. Read the overall pill: **Valid** when every check passed, **Invalid** when any failed. Beside it, "Verification status:" echoes the stored status, `signed` or `unsigned`. An **Unsigned** record verifies as neither: it has no checks.
+2. Read the overall pill: **Valid** when every check passed, **Invalid** when any failed. Beside it, "Verification status:" echoes the stored status, `signed` or `unsigned`. For an **Unsigned** record, verification has nothing to check: the pill reads **Invalid**, the status line reads `unsigned`, and all four checks show **Fail**.
 3. Each check shows **Pass** or **Fail**. What each one compares, and what a **Fail** means:
 
 | Check | What it compares | A **Fail** means |
@@ -128,6 +128,8 @@ The evidence detail page shows a badge next to its title: **Signed** when the re
 | **Signed Content Matches** | The hash recomputed now, against the hash inside the signed payload. | The record diverged from the content the signature attests to. |
 
 4. Below the checks, **Verified Content Hash** shows the recomputed hash's algorithm and value, and **Verification Errors** lists one line per failed check, as the API phrased it.
+
+![Verify an evidence signature and inspect the verification checks and stored signature details.](/img/ui/2.15/verify-evidence.gif)
 
 Verification checks integrity only: the evidence's compliance status still comes from the check that produced it.
 
@@ -154,7 +156,7 @@ For an agent's evidence, match the signature to a registered agent like this:
 - **The agent logs `agent auth failed with status code: 500`:** the API failed to look up the key or agent, to generate the token, or to record the key's last-used and the agent's last-authenticated times. Check the API's logs and its database.
 - **The agent logs `agent auth response missing access_token`:** something in front of the API (a proxy or cache) answered the token request without a token. Check the path from the agent to the API.
 - **Records show as Unsigned:** they were submitted without a token. An agent does this when `api.auth` is unset (it then sends evidence unauthenticated), and scripts do it when they post to `POST /api/evidence` without a bearer token. Give the sender credentials, or set `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS=true` so the API refuses them. Older records stay **Unsigned**: the API signs at ingest and never goes back to sign earlier records.
-- **Every earlier record verifies as **Invalid** with "stored JWS signature is invalid":** the API's key pair is no longer the one that signed them. It regenerated one at a restart (the key settings were unset; its log says "No JWT key files have been provided"), or you rotated the keys. Signatures made with the old key don't verify against the new public key: the API keeps no key history.
+- **Every earlier record fails with "stored JWS signature is invalid":** the API's key pair is no longer the one that signed them. It regenerated one at a restart (the key settings were unset; its log says "No JWT key files have been provided"), or you rotated the keys. Signatures made with the old key don't verify against the new public key: the API keeps no key history.
 - **One record fails **Hash Match** and **Signed Content Matches**, or **Signature Valid** fails:** the stored record no longer matches what was signed, which a later edit of the record explains. If nothing edited it, investigate who could write to the API's database.
 - **Only **Temporal Valid** fails:** the signature's `signed_at` falls outside the submitter token's window, which normal submissions and batch accepts don't produce. Compare **Claims** > **Issued At**, **Not Before** and **Expires At** with **Signed At**, and check the clocks of the machines involved.
 - **`401 Unauthorized` on the signature endpoints:** you're not signed in as a user. Agent tokens can't read signatures; sign in to the UI, or get a user token with `POST /api/auth/token`.
