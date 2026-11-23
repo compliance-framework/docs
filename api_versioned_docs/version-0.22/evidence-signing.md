@@ -63,7 +63,7 @@ The API hashes a canonical form of the record: empty fields are left out, and li
 | `uuid` | The evidence stream identifier. |
 | `title`, `description`, `remarks` | The record's text. |
 | `start`, `end`, `expires` | Times as RFC 3339 in UTC. |
-| `props` | Name, namespace and value. |
+| `props` | Each property as stored: namespace, name and value, plus class, remarks and group when set. |
 | `links` | Text, URL and other link fields. |
 | `origins` | Including each origin's actors. |
 | `activities` | Including the activity's steps. |
