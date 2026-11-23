@@ -22,7 +22,7 @@ The API signs evidence with the RSA key pair it also uses to sign tokens: the pr
 
 The API signs a record once, at creation, in the same database transaction that stores it. Nothing re-signs a record later. A record is signed when two things hold:
 
-1. The API has a signing key. It always does: without `CCF_JWT_PRIVATE_KEY` it generates an ephemeral one (see above).
+1. The API has a signing key. It always does: when `CCF_JWT_PRIVATE_KEY` or `CCF_JWT_PUBLIC_KEY` is unset, it generates an ephemeral pair (see above).
 2. The submission carried a valid user or agent token, which identifies the signer. If the submission has no signer, the record is stored **Unsigned** without an error.
 
 In practice:
@@ -43,7 +43,7 @@ So an agent's evidence is always signed when the operator sets, on the agent, th
 
 ### What the signature covers
 
-The signature is an RS256 JSON Web Signature over a small envelope: `version` (`v1`), `signature_algorithm`, `signed_at`, the SHA-256 `content_hash`, the `signer` snapshot, the submitter's token `claims`, and the detached `jws`. The JWS covers the envelope; the envelope's `content_hash` covers the record's content, computed over a canonical form of these fields:
+The stored signature is a small envelope: `version` (`v1`), `signature_algorithm` (`RS256`), `signed_at`, the SHA-256 `content_hash`, the `signer` snapshot, the submitter's token `claims`, and the `jws`: an RS256 JSON Web Signature over the same fields, so verification can compare the envelope with what was actually signed. The `content_hash` covers the record's content, computed over a canonical form of these fields:
 
 | Covered | Notes |
 |---|---|
@@ -75,7 +75,7 @@ The envelope records who submitted the record, from the token it submitted with:
 | Signer **Credential ID** | The service account key's UUID | (not set) |
 | Claims | `token_kind` (`agent`), **Subject** (the key's client ID), **Issuer** (`compliance-framework`), **Issued At**, **Expires At**, **Not Before**, **Agent ID**, **Credential ID**, **Auth Method** (`service_account`) | `token_kind` (`user`), **Subject** (the email), **Issuer**, **Issued At**, **Expires At**, **Not Before**, **Given Name**, **Family Name** |
 
-The signer is a snapshot taken when the token was exchanged, not a live reference: renaming the agent later doesn't change stored signatures.
+The signer fields are a snapshot taken when the record is created, not a live reference: renaming the agent later doesn't change stored signatures.
 
 ### Verification
 
@@ -162,7 +162,7 @@ The agent logs `agent auth failed with status code: N`. `POST /api/auth/agent/to
 ### A record shows Unsigned
 
 - It was submitted without a token. Check that the agent runs with `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET` (or `api.auth`), and that its calls don't reach the API anonymously: set `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS=true` to reject such submissions. `concom submit-evidence` without the two environment variables posts anonymously.
-- Only records created while the API could sign are signed: records stored before you set a persistent key pair stay **Unsigned**, and re-submitting the same record creates a new record rather than signing the old one.
+- A record is signed only at creation: one that was stored **Unsigned** stays that way. Submit it again with credentials to get a new record in its stream, signed this time.
 
 ### A check fails
 
