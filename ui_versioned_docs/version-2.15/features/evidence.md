@@ -95,7 +95,7 @@ Open **Media** to inspect the resources linked from the evidence's back matter. 
 
 ### Signature
 
-Open **Signature** and select **Verify** to check the record against its stored signed payload. **Verification** shows the result of each check. Below it, **Signature Details** shows the stored envelope and signer. Verification checks integrity; the evidence's compliance status still comes from the check that produced it.
+Open **Signature** and select **Verify** to check the record against its stored signed payload. **Verification** shows the result of each check. Below it, **Signature Details** shows the stored envelope and signer. Verification checks integrity; the evidence's compliance status still comes from the check that produced it. For when the API signs a record, what the signature covers and what each check means, see [Evidence signing](/api/evidence-signing).
 
 ![Verify an evidence signature and inspect the verification checks and stored signature details.](/img/ui/2.15/verify-evidence.gif)
 
@@ -133,4 +133,5 @@ You can also link filters to a control from the **Implementation** page; see [Co
 - [Systems](./systems.md)
 - [Controls and the Compliance Map](./controls.md)
 - [Risks](./risks.md)
+- [Evidence signing](/api/evidence-signing): how the API signs records and what the checks mean.
 - [Agent overview](/agent)

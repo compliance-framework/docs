@@ -22,6 +22,8 @@ The agent runs in one of two modes:
 
 With service account credentials (`api.auth`), the agent also reports its configuration to the API, and can apply a configuration overlay that an administrator saves in the UI. See `remote_config` in the [configuration reference](./configuration.md).
 
+With those credentials the agent gets an agent token from the API and sends evidence with it, so the API signs every record the agent submits. Records submitted without credentials are stored **Unsigned**. See [Evidence signing](/api/evidence-signing) for what those signatures cover and how to verify them.
+
 ## Before you start
 
 - A running API, and its address.
@@ -134,3 +136,4 @@ It authenticates with `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET`,
 - [Configuration reference](./configuration.md)
 - [Plugins](./plugins.md)
 - [Agent architecture](/api/architecture/agents)
+- [Evidence signing](/api/evidence-signing): how the API signs the evidence the agent submits.
