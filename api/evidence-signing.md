@@ -62,7 +62,7 @@ What the signature leaves out: the database `id` and the record's created and up
 | **Hash Match** | The hash computed from the record as stored now equals the content hash in the stored envelope. | `current evidence content does not match the stored signature envelope hash` |
 | **Signature Valid** | The stored JWS verifies with the API's current public key, and the claims inside it match the stored envelope. | `stored JWS signature is invalid: ...` or `stored signature envelope does not match the signed payload` |
 | **Signed Content Matches** | The hash inside the signed JWS payload equals the hash of the record as stored now. | `current evidence content does not match the hash contained in the signed payload` |
-| **Temporal Valid** | The signature's `signed_at` is not before the signer token's `issued_at` or `not_before`, and not after its `expires_at`. | `signed_at is before the token issued_at time`, and its two siblings |
+| **Temporal Valid** | The signature's `signed_at` is not before the signer token's `issued_at` or `not_before`, and not after its `expires_at`. | `signed_at is before the token issued_at time`, `signed_at is before the token not_before time` or `signed_at is after the token expiration time` |
 
 Verification checks integrity. The evidence's compliance status still comes from the check that produced it.
 
@@ -101,14 +101,14 @@ See the [agent configuration reference](/agent/configuration) for `api.auth` and
 
 Evidence is signed when the submitter is authenticated and the API has its signing key. Set both sides:
 
-1. On the API, point the token-signing settings at persistent key files and restart:
+1. On the API, point the token-signing settings at persistent key files:
 
    ```sh
    CCF_JWT_PRIVATE_KEY=/etc/ccf/jwt/private.pem
    CCF_JWT_PUBLIC_KEY=/etc/ccf/jwt/public.pem
    ```
 
-   `api bootstrap` creates the key files at those paths.
+   `api bootstrap` creates the key files at those paths. Then restart the API.
 
 2. In the UI, register the agent under **Admin** > **Agents** and select **Manage Keys**. Select **Create Service Account Key**, and copy the **Client ID** and the **Client Secret** before closing the dialog.
 
@@ -176,7 +176,7 @@ When `POST /api/auth/agent/token` doesn't answer `200`, the agent logs `agent au
 | Status | Cause | Fix |
 |---|---|---|
 | `401` | The request carried no client credentials; the client ID matches no service account key; the secret doesn't match; or the key belongs to no agent. | Check `api.auth` or `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET` against the key's **Client ID**. A lost **Client Secret** can't be recovered: create a new key. |
-| `403`, message `agent key is revoked` | The key was revoked (**Status** shows revoked). | Create a new key and put it in the agent. |
+| `403`, message `agent key is revoked` | The key was revoked (the key's **Status** is **Revoked**). | Create a new key and put it in the agent. |
 | `403`, message `agent key is expired` | The key is past its **Expires** time. | Create a new key; key expiry can't be extended. |
 | `403`, message `agent is inactive` | The agent's **Status** is **Inactive**. | An administrator edits the agent and activates it. |
 | `500` | The API couldn't read its database. | Check the API's log and the database. |
