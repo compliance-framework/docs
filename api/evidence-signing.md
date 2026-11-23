@@ -51,7 +51,7 @@ The stored envelope records the signature `version` (`v1`), the `signature_algor
 
 ## Before you start
 
-- The versions above. Check pages for other versions may describe behavior that differs.
+- The versions above: the behavior described here is theirs, and other version lines can differ.
 - A migrated PostgreSQL database, as in the [API overview](./index.md).
 - A persistent JWT key pair: set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` to paths you keep across restarts. See the [configuration reference](./configuration.md).
 - A registered agent with a service account key: **Admin** > **Agents** > **Register Agent**, then **Create Service Account Key** on the agent's **Service Account Keys** tab. The tab lists each key's **Client ID**; the **Client Secret** is shown only once, when you create the key.
@@ -167,8 +167,8 @@ If the badge reads **Unavailable**, the signed-in user can't load the stored sig
 ### A check fails
 
 - **Signature Valid** fails, with the error "stored JWS signature is invalid", on records signed before the API's key pair changed: a restart with `CCF_JWT_PRIVATE_KEY` or `CCF_JWT_PUBLIC_KEY` unset, or deliberate rotation of the key files. There is no way to make those records verify again without the old public key; the JWS in **Signature Details** can still be checked against it offline. Set the key paths and keep the pair.
-- **Hash Match** or **Signed Content Matches** fails means the record as stored no longer matches what was signed. The **Verification Errors** list names which comparison failed. Treat such a record as untrustworthy and re-collect the evidence.
-- **Temporal Valid** fails means the recorded signing time is outside the submitter token's window. Check the API host's clock. For a batch, the signature is dated with the time the API accepted the batch, not the time the background worker stored it.
+- A **Hash Match** or **Signed Content Matches** failure means the record as stored no longer matches what was signed. The **Verification Errors** list names which comparison failed. Treat such a record as untrustworthy and re-collect the evidence.
+- A **Temporal Valid** failure means the recorded signing time is outside the submitter token's window. Check the API host's clock. For a batch, the signature is dated with the time the API accepted the batch, not the time the background worker stored it.
 
 ## Related
 
