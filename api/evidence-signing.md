@@ -23,13 +23,13 @@ With `api.auth.client_id` and `api.auth.client_secret` set (or `CCF_API_AUTH_CLI
 
 - Requests a token with `POST /api/auth/agent/token`, with the client ID and secret as HTTP basic auth. The API answers `200` with `access_token`, `token_type` `Bearer` and `expires_in` `86400`: the token lasts 24 hours.
 - Caches the token and requests a new one when less than a minute of its life is left. A call the API answers `401` is retried once with a fresh token.
-- Sends each evidence record to `POST /api/evidence`, and batches to `POST /api/evidence/batches`, with the token.
+- Sends each evidence record to `POST /api/evidence` with the token.
 
-On every record the agent sends, it adds:
+On each plugin's evidence the agent adds:
 
-- The `_agent` label: the client ID when it has one, otherwise `KUBERNETES_POD_NAME`, otherwise `KUBERNETES_POD`, otherwise a hash of the configuration.
-- The `_plugin=<plugin name>` label and the plugin's configured `labels`. Its own run evidence carries `tool=ccf` and `type=operations` as well.
-- The props `_plugin_source`, `_plugin_digest`, `_policy_source` and `_policy_digest`, which record where the plugin and its policy bundles came from, and `agent-config-revision` (namespace `https://compliance-framework.github.io/ns`) when a remote configuration overlay is applied. These props are the agent's: values a plugin sets for them are replaced.
+- The `_agent` label: the client ID when it has one, otherwise `KUBERNETES_POD_NAME`, otherwise `KUBERNETES_POD`, otherwise a hash of the configuration. The agent's own run evidence carries this label plus `tool=ccf` and `type=operations`.
+- The `_plugin=<plugin name>` label and the plugin's configured `labels`.
+- The props `_plugin_source` and `_plugin_digest`, which record where the plugin came from, and `_policy_source` and `_policy_digest` for the policy bundle the evaluation used, when the agent knows them. When a remote configuration overlay is applied, `agent-config-revision` (namespace `https://compliance-framework.github.io/ns`) names its revision. These props are the agent's: values a plugin sets for them are replaced.
 
 Without `api.auth`, the agent sends evidence with no token. The API still stores it (see [Enable it](#enable-it)), but with no signer the record is stored **Unsigned**.
 
@@ -76,7 +76,7 @@ The API hashes a canonical form of the record: empty fields are left out, and li
 
 Left out, on purpose:
 
-- The record's own database id and the server-side timestamps.
+- The record's own database id.
 - The signature envelope itself.
 - The links from an inventory item to implemented components. They are shared between records and later submissions add to them, so signing them would invalidate earlier signatures.
 - Any `status` field beyond `state`, `reason` and `remarks`.
@@ -95,7 +95,7 @@ Left out, on purpose:
 ## Before you start
 
 - API `v0.22.5` or later, UI `v2.15.2` or later, and an agent from the `v0.9` line.
-- `evidence:read` to open the **Signature** tab and call the endpoints behind it. Both endpoints also require a signed-in user; agent tokens don't work there.
+- `evidence:read` for the two endpoints behind the **Signature** tab. Both also require a signed-in user; agent tokens don't work there.
 - `agent:read` to open the Agents page, and `admin:manage` to see an agent's service account keys.
 - Persistent API keys: set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` (see the [configuration reference](./configuration.md)).
 
@@ -128,7 +128,7 @@ Signing itself needs no setting: the API signs every record an authenticated sub
        client_secret: <the key's client secret>
    ```
 
-   Create the agent and its key first, under **Global** > **Integrations** > **Agents**: select the agent, then **Create Service Account Key**, and copy the **Client ID** and **Client Secret** before you close the dialog. See [Agents](/ui/features/administration#agents).
+   Create the agent and its key first, under **Global** > **Integrations** > **Agents**: select **Register Agent** and give it a name, open it, select **Create Service Account Key**, then copy the **Client ID** and the **Client Secret** before you close the dialog. See [Agents](/ui/features/administration#agents).
 
 New records now show **Signed**. Evidence stored before the agent had credentials stays **Unsigned**; send it again to get a signed record.
 
@@ -169,12 +169,12 @@ The `_agent` label on the record equals the key's client ID when the agent runs 
 
 - **`401 Unauthorized` from `POST /api/auth/agent/token`:** the client ID or secret is wrong. The causes the API answers `401` for: no credentials in the request (no basic auth header and no `client_id`/`client_secret` form fields), a client ID that matches no service account key, a key not attached to an agent, an agent record that no longer exists, or a client secret that doesn't match the key. Check the key's **Client ID** against `api.auth.client_id`, then re-create the key if the secret is lost.
 - **`403 Forbidden` from the token exchange:** the key or agent is unusable. The API answers `403` with `agent key is revoked` (the key was revoked on the **Service Account Keys** tab), `agent key is expired` (past its **Expires** time) or `agent is inactive` (the agent's **Status** is **Inactive**). Issue a new key, or set the agent active again.
-- **`500 Internal Server Error` from the token exchange:** the API failed a database write (the key's `last_used_at`, the agent's `last_authenticated_at` or the auth event). Check the API's log and database, and retry.
+- **`500 Internal Server Error` from the token exchange:** the API failed one of its database writes (the key's `last_used_at`, the agent's `last_authenticated_at` or the auth event) or the token generation. Check the API's log and database, and retry.
 - **A record shows Unsigned:** its submitter had no token. Set `api.auth` on the agent and send the evidence again, and set `CCF_STRICT_DISABLE_PUBLIC_AGENT_ENDPOINTS=true` on the API so anonymous submissions are rejected rather than stored. With strict mode on, an agent without working credentials gets `401` from `POST /api/evidence` instead of quietly storing unsigned evidence.
-- **Every record fails verification after an API restart, with `stored JWS signature is invalid`:** the API was started without `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` and generated a new key pair (or the pair was rotated). Earlier envelopes can no longer be verified with the new public key. Set the two paths to persistent files before the first start, and keep the pair through upgrades.
-- **Only Signature Valid fails on one old record:** that record was signed with a key pair the API no longer has, most often a record created while the API ran with generated keys and then imported into a deployment with its own pair.
-- **Hash Match or Signed Content Matches fails:** the stored record no longer matches what was signed. Records aren't edited in place, so treat this as tampering or a database restore from a different backup, and compare **Verified Content Hash** with the envelope's **Content Hash**.
-- **Temporal Valid fails:** the signing time falls outside the token's issue-to-expiry window. Check the clocks on the API host: `signed_at` is written from the API's clock, and the claims come from the token the agent used.
+- **Hash Match fails** (with `current evidence content does not match the stored signature envelope hash`): the stored record no longer matches what was signed. Records aren't edited in place, so treat this as tampering or a database restore from a different backup, and compare **Verified Content Hash** with the envelope's **Content Hash** under **Signature Details**.
+- **`stored JWS signature is invalid`, with Hash Match the only check that passes:** the stored JWS no longer verifies against the API's current public key. The API generated a fresh key pair at some start because `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` weren't both set, or the pair was rotated since the record was signed. Set the two paths to persistent files and keep the pair through upgrades; records signed under a lost pair can't be made to pass again, though their signer and claims stay readable.
+- **Signature Valid fails while the JWS parses** (with `stored signature envelope does not match the signed payload`): the stored envelope no longer matches what the API signed, so the envelope itself was altered.
+- **Temporal Valid fails** (with `signed_at is before the token issued_at time`, `signed_at is before the token not_before time` or `signed_at is after the token expiration time`): the signing time falls outside the token's issue-to-expiry window. Check the clocks on the API host: `signed_at` is written from the API's clock, and the claims come from the token the agent used.
 - **A check fails and the overall result is Invalid:** read **Verification Errors** for the cause per failed check; the overall badge is **Valid** only when all four checks **Pass**.
 
 ## Related
