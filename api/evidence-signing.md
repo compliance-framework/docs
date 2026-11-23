@@ -45,7 +45,7 @@ The content hash covers the evidence's OSCAL content, field by field, as the API
 | `inventory_items`, `components`, `subjects`, `subject_references` | What the record is about. |
 | `back_matter` | The record's resources, including artifact hashes. |
 
-Within each repeated field, API-signed items are sorted before hashing, so an equivalent record always hashes the same. The signature leaves out the record's database row ID and its stored timestamps, the signature itself, and an inventory item's links to implemented components: those links hang off rows shared across evidence records and grow with later submissions, so signing them would invalidate earlier signatures. A field added to the record after storage, such as a risk linked to its stream, is therefore not covered either.
+Within each repeated field, items are sorted by their canonical JSON before hashing, so an equivalent record always hashes the same. The signature leaves out the record's database row ID and its stored timestamps, the signature itself, and an inventory item's links to implemented components: those links hang off rows shared across evidence records and grow with later submissions, so signing them would invalidate earlier signatures. A field added to the record after storage, such as a risk linked to its stream, is therefore not covered either.
 
 The stored envelope records the signature `version` (`v1`), the `signature_algorithm` (`RS256`), the time it was signed, the content hash, the signer and the token claims. For an agent, the signer records the type (`agent`), the agent's ID and name, and the **Credential ID** of the service account key that authenticated; for a user, the type (`user`), email and name.
 
@@ -54,7 +54,7 @@ The stored envelope records the signature `version` (`v1`), the `signature_algor
 - The versions above. Check pages for other versions may describe behavior that differs.
 - A migrated PostgreSQL database, as in the [API overview](./index.md).
 - A persistent JWT key pair: set `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY` to paths you keep across restarts. See the [configuration reference](./configuration.md).
-- A registered agent with a service account key: **Admin** > **Agents** > **Register Agent**, then **Create Service Account Key** on the agent's **Service Account Keys** tab. The UI shows the key's **Client ID** and its **Client Secret** once, when you create the key.
+- A registered agent with a service account key: **Admin** > **Agents** > **Register Agent**, then **Create Service Account Key** on the agent's **Service Account Keys** tab. The tab lists each key's **Client ID**; the **Client Secret** is shown only once, when you create the key.
 - To open the **Signature** tab or call its endpoints: a signed-in user who can `evidence:read`. With the default `builtin` driver that's every signed-in user; with `cedar`, the `viewer`, `auditor`, `contributor` or `admin` role. Agent tokens are not accepted on the signature endpoints. See [Authentication and permissions](./authentication-and-permissions.md).
 - To map a signature's **Credential ID** to a key (below): `admin:manage`, which the `admin` role has.
 - The recording below is the UI's verify flow, taken in a temporary environment with fictional data at UI v2.15.2 and API v0.22.5.
@@ -70,7 +70,7 @@ To make your agents' evidence always signed, set both ends:
    CCF_JWT_PUBLIC_KEY=/etc/ccf/jwt/public.pem
    ```
 
-   `api run` writes both files if they don't exist yet; `api bootstrap` does the same without starting the server, and its `--force` flag regenerates them.
+   `api run` writes both files if they don't exist yet; `api bootstrap` does the same without starting the server, falling back to `private.pem` and `public.pem` when the settings and flags give no paths, and its `--force` flag regenerates existing files.
 
 2. Give the agent its credentials. On the agent's **Service Account Keys** tab (**Admin** > **Agents**), create a key and put its client ID and secret in the agent's environment:
 
@@ -129,7 +129,7 @@ For agent evidence, match the signer to **Admin** > **Agents**:
     https://ccf-api.example.com/api/admin/agents/<agent-id>/keys
   ```
 
-  Each item carries `id` (the **Credential ID** in the signature) and `client-id` (the **Client ID** in the UI). The key's **Last Used** time should sit near **Signed At** for records sent with that key.
+  Each item carries `id` (the **Credential ID** in the signature) and `client-id` (the **Client ID** in the UI). The key's **Last Used** time updates when the agent exchanges its credentials for a token, so it tracks the agent's token refreshes, not each stored record.
 - For an agent that authenticates, the record's `_agent` label equals the key's **Client ID**, so you can often identify the key without any API call.
 
 ### The endpoints behind the tab
