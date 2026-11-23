@@ -20,7 +20,7 @@ The agent runs in one of two modes:
 - **One-shot** (the default): it runs every plugin once, in name order, and exits. It stops at the first plugin that fails. Use it in CI pipelines, cron jobs and Kubernetes jobs.
 - **Daemon** (`--daemon`, or `daemon: true` in the file): it keeps running, runs each plugin on its own `schedule`, sends a heartbeat to the API every minute, and reloads the configuration file when it changes. Use it on a host or in a long-running container.
 
-With service account credentials (`api.auth`), the agent also reports its configuration to the API, and can apply a configuration overlay that an administrator saves in the UI. See `remote_config` in the [configuration reference](./configuration.md).
+With service account credentials (`api.auth`), the agent also reports its configuration to the API, and can apply a configuration overlay that an administrator saves in the UI. See `remote_config` in the [configuration reference](./configuration.md). The API signs evidence from an authenticated agent, so its records show as **Signed** in the UI; without `api.auth` they show as **Unsigned**. See [Evidence signing and verification](/api/evidence-signing).
 
 ## Before you start
 
@@ -134,3 +134,4 @@ It authenticates with `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET`,
 - [Configuration reference](./configuration.md)
 - [Plugins](./plugins.md)
 - [Agent architecture](/api/architecture/agents)
+- [Evidence signing and verification](/api/evidence-signing)
