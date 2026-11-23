@@ -37,7 +37,7 @@ So an agent's evidence is always signed when the operator sets, on the agent, th
 ### From the agent: credentials, labels and the endpoint
 
 1. The agent authenticates with `POST /api/auth/agent/token`, sending its client ID and secret as HTTP basic auth. The response carries `access_token`, `token_type` (`Bearer`) and `expires_in` (86400: tokens last 24 hours).
-2. The agent caches the token and reuses it until it's within a minute of expiring, then exchanges for a new one. On a `401` from any API call, it drops the cached token, gets a fresh one and retries the request once.
+2. The agent caches the token and reuses it until it's within a minute of expiring, then exchanges for a new one. On a `401` from an API call it drops the cached token, gets a fresh one and retries the request once.
 3. It sends each evidence record to `POST /api/evidence`, one record per request, with the bearer token, and heartbeats to `POST /api/agent/heartbeat`. (The batch endpoint, `POST /api/evidence/batches`, stores records in the background and signs each one as its submitter, dated with the time the API accepted the batch. `concom` doesn't use it.)
 4. Before sending, the agent labels each plugin record with `_agent` (its client ID, or a Kubernetes pod name, or a hash of its configuration) and `_plugin` (the plugin's name), merges in the plugin's own labels, and adds props that record where the evidence came from: `_plugin_source`, `_plugin_digest`, `_policy_source`, `_policy_digest`, and `agent-config-revision` in the `https://compliance-framework.github.io/ns` namespace when a remote configuration revision was applied. Hidden labels whose names start with `_` (including `_policy` and `_policy_path` from the policy engine) ride along too. All of these are part of the signed content, so the signature attests to them.
 
@@ -156,7 +156,7 @@ The agent logs `agent auth failed with status code: N`. `POST /api/auth/agent/to
 | `401` `invalid client credentials` | Unknown **Client ID**, a key not tied to an agent, or a wrong secret. | Recreate the key under **Admin** > **Agents** and copy the secret shown at creation. |
 | `403` `agent key is revoked` | The key was revoked in **Admin** > **Agents**. | Create a new key. |
 | `403` `agent key is expired` | The key's **Expires** date passed. | Create a key that never expires, or replace it before the date. |
-| `403` `agent is inactive` | The agent row is deactivated. | Set the agent **Active** under **Admin** > **Agents**. |
+| `403` `agent is inactive` | The agent row is deactivated. | Open the agent's **Edit Agent** dialog under **Admin** > **Agents** and tick **Agent is active**. |
 | `500` | Database error or token signing failed. | Check the API's logs and database. |
 
 ### A record shows Unsigned
