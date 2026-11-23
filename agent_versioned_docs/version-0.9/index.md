@@ -25,7 +25,7 @@ With service account credentials (`api.auth`), the agent also reports its config
 ## Before you start
 
 - A running API, and its address.
-- To authenticate the agent: an agent registered in the UI under **Admin** > **Agents**, with a service account key. The key's client ID and client secret go in `api.auth`.
+- To authenticate the agent: an agent registered in the UI under **Global** > **Integrations** > **Agents**, with a service account key. The key's client ID and client secret go in `api.auth`. With credentials set, the API signs the evidence the agent sends; see [Evidence signing](/api/evidence-signing).
 - Network access from the agent to the API, and to the OCI registries your plugins and policies come from.
 
 ## Install the agent
@@ -134,3 +134,4 @@ It authenticates with `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET`,
 - [Configuration reference](./configuration.md)
 - [Plugins](./plugins.md)
 - [Agent architecture](/api/architecture/agents)
+- [Evidence signing](/api/evidence-signing): how the API signs the evidence you send, and how to check a signature.
