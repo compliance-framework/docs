@@ -69,4 +69,5 @@ api users add
 - [Configuration reference](./configuration.md)
 - [Notifications](./notifications.md)
 - [Authentication and permissions](./authentication-and-permissions.md)
+- [Evidence signing](./evidence-signing.md)
 - [Architecture](./architecture/index.md)

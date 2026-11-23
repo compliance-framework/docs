@@ -95,7 +95,7 @@ Open **Media** to inspect the resources linked from the evidence's back matter. 
 
 ### Signature
 
-Open **Signature** and select **Verify** to check the record against its stored signed payload. **Verification** shows the result of each check. Below it, **Signature Details** shows the stored envelope and signer. Verification checks integrity; the evidence's compliance status still comes from the check that produced it.
+Open **Signature** and select **Verify** to check the record against its stored signed payload. **Verification** shows the result of each check. Below it, **Signature Details** shows the stored envelope and signer. Verification checks integrity; the evidence's compliance status still comes from the check that produced it. The [Evidence signing](/api/evidence-signing) guide explains when the API signs a record and stores one unsigned, what each check tests, and how to match a signer to a key under **Admin** > **Agents**.
 
 ![Verify an evidence signature and inspect the verification checks and stored signature details.](/img/ui/2.15/verify-evidence.gif)
 

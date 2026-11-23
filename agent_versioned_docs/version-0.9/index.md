@@ -134,3 +134,4 @@ It authenticates with `CCF_API_AUTH_CLIENT_ID` and `CCF_API_AUTH_CLIENT_SECRET`,
 - [Configuration reference](./configuration.md)
 - [Plugins](./plugins.md)
 - [Agent architecture](/api/architecture/agents)
+- [Evidence signing](/api/evidence-signing): how the API signs the evidence an agent sends, and what makes a record show **Unsigned**
