@@ -43,12 +43,6 @@ None.
 
 ## v0.22.2 (2026-11-02)
 
-### Fixed
-
-- Update `github.com/labstack/echo/v4` to v5, a security fix ([#539](https://github.com/compliance-framework/api/pull/539))
-- Build with the Go 1.26.10 toolchain so Renovate can ship Go security fixes ([#538](https://github.com/compliance-framework/api/pull/538))
-- Update the `aws-sdk-go-v2` modules ([#544](https://github.com/compliance-framework/api/pull/544))
-
 ### Changed
 
 - Pin the `gcr.io/distroless/base-debian12` Docker tag ([#540](https://github.com/compliance-framework/api/pull/540))
@@ -56,6 +50,12 @@ None.
 - Update the `postgres` image in `docker-compose.yml` to v18 ([#543](https://github.com/compliance-framework/api/pull/543))
 - Update the non-major dependencies ([#542](https://github.com/compliance-framework/api/pull/542))
 - Bump the shared CI workflows to v1.9.2 ([#537](https://github.com/compliance-framework/api/pull/537))
+
+### Fixed
+
+- Update `github.com/labstack/echo/v4` to v5, a security fix ([#539](https://github.com/compliance-framework/api/pull/539))
+- Build with the Go 1.26.10 toolchain so Renovate can ship Go security fixes ([#538](https://github.com/compliance-framework/api/pull/538))
+- Update the `aws-sdk-go-v2` modules ([#544](https://github.com/compliance-framework/api/pull/544))
 
 ### Breaking changes
 
@@ -105,7 +105,7 @@ None. If you set any of these variables while running v0.22.0, they now take eff
 - Speed up profile compliance progress and leverage posture by loading the latest evidence once for all controls ([#502](https://github.com/compliance-framework/api/pull/502)) and matching filters through a label index ([#514](https://github.com/compliance-framework/api/pull/514))
 - Store evidence in 36 SQL statements instead of 65 ([#510](https://github.com/compliance-framework/api/pull/510))
 - Find the latest evidence per stream with a skip scan instead of `DISTINCT ON`. Status over time for 2000 streams drops from 2.98 s to 75 ms ([#511](https://github.com/compliance-framework/api/pull/511))
-- Cache the Compliance Map's lineage data and match filters through a label index. A warm request drops from 320-400 ms to about 1 ms. `CCF_LINEAGE_CACHE_TTL` (default `5m`, `0` disables the cache) and `CCF_LINEAGE_CACHE_MAX_ENTRIES` (default `32`) tune it, `?refresh=true` on `/api/lineage/roots`, `/children` and `/ssps` rebuilds a scope, and responses carry `X-Lineage-Generated-At`. The lineage routes return a generic message for 5xx errors ([#513](https://github.com/compliance-framework/api/pull/513))
+- Cache the Compliance Map's lineage data and match filters through a label index. A warm request drops from 320-400 ms to about 1 ms. `CCF_LINEAGE_CACHE_TTL` (default `5m`, `0` disables the cache) and `CCF_LINEAGE_CACHE_MAX_ENTRIES` (default `8`) tune it, `?refresh=true` on `/api/lineage/roots`, `/children` and `/ssps` rebuilds a scope, and responses carry `X-Lineage-Generated-At`. The lineage routes return a generic message for 5xx errors ([#513](https://github.com/compliance-framework/api/pull/513))
 - Refactor SSP creation and profile attachment into a service ([#523](https://github.com/compliance-framework/api/pull/523))
 - Bump the shared CI workflows to v1.7.0 ([#527](https://github.com/compliance-framework/api/pull/527))
 
