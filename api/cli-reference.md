@@ -77,7 +77,7 @@ api bootstrap --bit-size 4096
 ```
 
 ```text
-JWT bootstrap complete (action=created, private=private.pem, public=public.pem)
+JWT bootstrap complete (action=generated, private=private.pem, public=public.pem)
 ```
 
 | Flag | Purpose | Type | Default |
