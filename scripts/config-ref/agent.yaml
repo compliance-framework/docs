@@ -13,7 +13,7 @@
 # have code defaults). Write `purpose` and `default` as Markdown; keep `{`, `}` and `<` inside
 # code. An example is shown as written: the value for a file key, the whole flag for a flag.
 #
-# Checked against compliance-framework/agent v0.9.3 (api v0.21.1).
+# Checked against compliance-framework/agent v0.9.6 (api v0.22.2).
 version: 1
 settings:
   daemon:
