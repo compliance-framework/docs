@@ -184,7 +184,9 @@ api dashboards export --output dashboards_export.json
 
 | Flag | Purpose | Type | Default |
 |---|---|---|---|
-| `-o`, `--output` | Output file for exported dashboards. | `string` | `dashboards_export.json` |
+| `-o`, `--output` | Output file for exported dashboards. | `string` | required |
+
+The command registers `dashboards_export.json` as the flag's default, but marks `--output` required, so the default is never used: `api dashboards export` without `--output` fails with `required flag(s) "output" not set`.
 
 ### `api dashboards import`
 
