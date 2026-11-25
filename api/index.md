@@ -40,21 +40,14 @@ Before the first start, create the database schema and a first user:
 
 ```sh
 api migrate up
-api users add
+api users add --email ada@example.com --first-name Ada --last-name Lovelace
 ```
 
-`api users add` asks for the user's email, name and password.
+`api users add` needs the user's email and name; it generates and prints a password when you don't set one.
 
 ## Other commands
 
-| Command | What it does |
-|---|---|
-| `api migrate up` | Creates the database schema, or upgrades it to this version. |
-| `api bootstrap` | Creates the JWT key files at the paths in `CCF_JWT_PRIVATE_KEY` and `CCF_JWT_PUBLIC_KEY`, or `private.pem` and `public.pem` when they're unset. |
-| `api users add` | Adds a user who signs in with a password. |
-| `api oscal import -f <file or directory>` | Imports OSCAL documents. |
-| `api authz export --format cedar` | Prints the authorization vocabulary, here as a Cedar schema. The other formats are `json`, `yaml` and `openfga`. |
-| `api help` | Lists every command. |
+The full list of commands and their flags is in the [CLI reference](./cli-reference.md): `api bootstrap`, `api users`, `api oscal import` and `export`, `api authz export`, `api dashboards`, `api digest`, `api riskdigest` and `api seed`.
 
 ## Ports
 
@@ -66,6 +59,7 @@ api users add
 
 ## Related
 
+- [CLI reference](./cli-reference.md)
 - [Configuration reference](./configuration.md)
 - [Notifications](./notifications.md)
 - [Authentication and permissions](./authentication-and-permissions.md)
