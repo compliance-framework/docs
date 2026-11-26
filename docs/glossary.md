@@ -1,81 +1,61 @@
 ---
 sidebar_position: 1
 sidebar_label: Glossary
+description: The terms CCF docs use, with the meaning they have in CCF. Each term appears once; synonyms point to the main entry.
 ---
 
 # Glossary
 
 ## Compliance Framework Glossary
 
-These definitions are internal to Compliance Framework, and are here to help users onboard rather than provide a definitive final definition for the industry. Sometimes they are direct quotes from sources, sometimes made up by us, but mostly are industry terms we may come across.
-If there is a dispute about the meaning of a term in an issue, then this should be the arbiter (or updated accordingly).
+These definitions help users onboard. They aren't a final definition for the industry. Where a term comes from OSCAL or NIST, the definition links to the source. If a term's meaning is disputed in an issue, this page is the arbiter, or is updated to fix it.
 
-| Name                          | Definition                                                                                                                                                                                                                                      |
-|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Assessment                    | [The overall process of evaluating a specific system, control, or process. It includes planning, executing various tests or checks, and drawing conclusions about compliance, performance, or quality.](https://csrc.nist.gov/glossary/term/assessment) |
-| Assessment Plan               | ["Planning of a periodic or continuous assessment of a specific system"](https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/assessment-plan/)                                                                                     |
-| Assessment Layer              | [Level of the OSCAL architecture stack.](https://pages.nist.gov/OSCAL/learn/concepts/layer/)                                                                                                                                                |
-| Assessment Results            | [information produced from a set of assessment activities, to include when the assessment was performed, the assessment scope, evidence collected during an assessment, and any assessment findings. The assessment model supports information from periodic and continuous assessments](https://pages.nist.gov/OSCAL/learn/concepts/layer/) |
-| Attestation                   | [A formal declaration or statement confirming the truth of something, based on an Assessment and its Observations.](https://csrc.nist.gov/glossary/term/attestation)                                                                            |
-| Assessment Action             | Specific tasks or activities within the overall Assessment. These are the actual tests, evaluations, or analyses carried out. For Compliance Framework, this is the code that runs the compliance checks.                                       |
-| Assessment Implementation     | The activities performed to ensure that the control is being adhered to.                                                                                                                                                                        |
-| Assessment Template           | Set of rules that can be applied to, and associated with multiple controls.                                                                                                                                                                     |
-| Assessor                      | Role that validates the Control Requirements.                                                                                                                                                                                                   |
-| Authorizing Official          | Someone with the authority to formally assume responsibility for operating an information system at an acceptable level of risk.                                                                                                                |
-| Baseline                      | See 'Control Baseline'.                                                                                                                                                                                                                         |
-| Catalog                       | See 'Control Catalog'.                                                                                                                                                                                                                          |
-| Catalog Model                 | ['A structured, machine-readable representation of a Catalog of Controls'](https://pages.nist.gov/OSCAL/learn/concepts/layer/control/catalog/)                                                                                              |
-| Compliance Framework Owner    | The application owner of Compliance Framework.                                                                                                                                                                                                  |
-| Component                     | A way to describe subject assets which may be used as parts of an information system.                                                                                                                                                           |
-| Control                       | [Policies and procedures designed to ensure systems are secure and/or stable and/or resilient. (aka Requirement, or Guideline)](https://pages.nist.gov/OSCAL/learn/concepts/terminology/)                                                   |
-| Control Baseline              | ['A specific set of selected security Control Requirements from one or more Control Catalogs for use in managing risks in an information system' Also known as an 'Overlay'.](https://pages.nist.gov/OSCAL/learn/concepts/terminology/)     |
-|                               | ['The set of controls that are applicable to information or an information system to meet legal, regulatory, or policy requirements, as well as address protection needs for the purpose of managing risk' (NIST 800-37)](https://csrc.nist.gov/publications/detail/sp/800-37/rev-2/final) |
-| Control Catalog               | ['An organized collection of controls'](https://pages.nist.gov/OSCAL/learn/concepts/terminology/)                                                                                                                                           |
-| Control Definition            | [Provides for the shared definition of control information that can be used by multiple organizations when documenting control implementations and performing assessments.](https://pages.nist.gov/OSCAL/learn/concepts/terminology/)       |
-| Control Implementation        | Activities performed to enforce a Control.                                                                                                                                                                                                      |
-| Control Layer                 | A layer of the OSCAL that consists of the Catalog Model and the Profile Model.                                                                                                                                                                  |
-| Control Objective             | Statement that describes outcome or intent related to the management or mitigation of risk in an information system or environment. They are intended to clarify intent, guide control selection, facilitate assessment, and support compliance. |
-| Control Plan                  |                                                                                                                                                                                                                                                 |
-| Control Profile               | [A Baseline of selected Controls from one or more Control Catalogs](https://pages.nist.gov/OSCAL/learn/concepts/layer/control/profile/)                                                                                                     |
-| Control Owner                 | Role responsible for the management, implementation, and monitoring of specific security or privacy controls within an organisation.                                                                                                            |
-| Control Requirements          | See 'Control'                                                                                                                                                                                                                                   |
-| Component                     | Entity that is the subject of a Control, eg a Virtual Machine instance. A Component's status is made up of collective results of ComponentRequirements pertaining to that Component.                                                            |
-| Detective Control             | A control that records that a qualifying event has taken place, usually with a view to following up with a check that the event was valid.                                                                                                      |
-| DORA                          | Digital Operational Resilience Act Digital Operational Resilience Act (DORA) - Regulation (EU) 2022/2554                                                                                                                                        |
-| Environment                   | Set of conditions or circumstances under which a System operates. In OSCAL documentation, the environment can be described in the System Security Plan and the Control Profiles.                                                                |
-| Finding                       | [Identifies findings resulting from Observations and Risks, and can include the Control Objective status.](https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/assessment-results/)                                                |
-| FINOS                         | [Fintech Open Source Foundation.](https://www.finos.org/)                                                                                                                                                                                       |
-| Framework Author              |                                                                                                                                                                                                                                                 |
-| GRC                           | Governance, Risk and Control                                                                                                                                                                                                                    |
-| Implementation                | Used to express the security and privacy implementation of system or a software, hardware, or service offering. See also 'Control Implementation' and 'Assessment Implementation'                                                               |
-| Implementation Layer          | [Provides Models for describing how controls are implemented in a specific System](https://pages.nist.gov/OSCAL/learn/concepts/layer/)                                                                                                      |
-| Implementation Owner          | Role responsible for implementing a set of controls within a System or environment.                                                                                                                                                             |
-| KRI                           | Key Risk Indicator: a metric for measuring the probability of an event and its consequences will exceed the organisation's risk appetite                                                                                                        |
-| Model                         | [An information structure supporting a specific operational purpose](https://pages.nist.gov/OSCAL/learn/concepts/layer/) |
-| Observation                   | The Findings or results from an Assessment Action. These are specific details or data gathered during the testing phase.                                                                                                                        |
-| OSCAL                         | Open Security Controls Assessment Language OSCAL - Open Security Controls Assessment Language                                                                                                                                                   |
-| Overlay                       | See 'Control Baseline'.                                                                                                                                                                                                                         |
-| Plan                          | [A roadmap for an Implementation of an Assessment](https://csrc.nist.gov/glossary/term/assessment_plan)                                                                                                                                         |
-| Profile                       | See 'Control Profile'.                                                                                                                                                                                                                          |
-| Profile Model                 | ['A structured machine-readable representation of a Baseline'](https://pages.nist.gov/OSCAL/learn/concepts/layer/control/profile/)                                                                                                          |
-| Profile Author                | ['Profiles are authored by an organisation that defines or governs control baselines, eg the High, Moderate, and Low baselines defined for NIST's Special Publication (SP) 800-52 controls.'](https://pages.nist.gov/OSCAL/learn/concepts/layer/control/profile/#profile-authors)                                 |
-| Profile Consumers             | ['Profiles are consumed by System Owners and Authorizing Officials as the basis for the System Security Plan (SSP).'](https://pages.nist.gov/OSCAL/learn/concepts/layer/control/profile/#profile-consumers)                                 |
-| Preventative Control          | A Control that prevents an event from taking place, eg an organisational policy that prevents an S3 bucket being exposed to the internet.                                                                                                       |
-| Privacy Control               | ['The administrative, technical, and physical safeguards employed within an agency to ensure compliance with applicable privacy requirements and manage privacy risks.'](https://csrc.nist.gov/glossary/term/privacy_control)                   |
-| Reactive Control              | A Control that takes corrective action when an event takes place, eg shutting down a VM that has attached an unencrypted disk.                                                                                                                  |
-| Requirement                   | See Control                                                                                                                                                                                                                                     |
-| Result                        | [Findings from an Assessment](https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/)                                                                                                                                                |
-| Risk                          | [Identifies individual risks, including weakness description, risk statement, and other risk characteristics.](https://csrc.nist.gov/glossary/term/risk)                                                                                        |
-| Risk Level                    | Severity of risk, eg Acceptable, Critical, Low/Moderate/High Impact                                                                                                                                                                             |
-| RPO                           | Recovery Point Objective                                                                                                                                                                                                                        |
-| Senior Management Function 24 | The person in an organisation held responsible for operational failings.                                                                                                                                                                        |
-| Security Control              | ['The safeguards or countermeasures prescribed for an information system or an organization to protect the confidentiality, integrity, and availability of the system and its information.'](https://csrc.nist.gov/glossary/term/privacy_control) |
-| SSP                           | See 'System Security Plan'.                                                                                                                                                                                                                     |
-| System                        | Group of Components. A System can be horizontal or vertical. Horizontal is organisationally cross-cutting, for example 'Azure'. Vertical is a grouping for an organisational vertical, eg an application.                                        |
-| System Owner                  | Implementors of Controls.                                                                                                                                                                                                                       |
-| System Security Plan          | [A description of the control implementation of an information system.](https://pages.nist.gov/OSCAL/learn/concepts/layer/implementation/ssp/)                                                                                              |
-| SMF24                         | See 'Senior Management Function 24'                                                                                                                                                                                                             |
-| Variance                      | Deviations or exceptions from established security standards, policies, or procedures.                                                                                                                                                          |
+Each term has one entry. A synonym points to the entry that defines it.
+
+| Name | Definition |
+|------|------------|
+| Assessment | [The overall process of evaluating a specific system, control, or process. It includes planning, executing various tests or checks, and drawing conclusions about compliance, performance, or quality.](https://csrc.nist.gov/glossary/term/assessment) |
+| Assessment Plan | ["Planning of a periodic or continuous assessment of a specific system"](https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/assessment-plan/) |
+| Assessment Results | [Information produced from a set of assessment activities, including when the assessment was performed, its scope, the evidence collected and any findings.](https://pages.nist.gov/OSCAL/learn/concepts/layer/) |
+| Assessor | Role that validates that a system meets its controls. |
+| Attestation | [A formal declaration or statement confirming the truth of something, based on an assessment and its observations.](https://csrc.nist.gov/glossary/term/attestation) |
+| Authorizing Official | Someone with the authority to formally assume responsibility for operating an information system at an acceptable level of risk. |
+| Baseline | See 'Control Baseline'. |
+| Catalog | [An organized collection of controls](https://pages.nist.gov/OSCAL/learn/concepts/terminology/), in OSCAL format. See [Concepts](./concepts.md#catalog). |
+| Component | Entity that is the subject of a control, for example a virtual machine instance. A system is made up of components. |
+| Control | [A policy or procedure designed to ensure systems are secure, stable or resilient. Also called a requirement.](https://pages.nist.gov/OSCAL/learn/concepts/terminology/) See [Concepts](./concepts.md#control). |
+| Control Baseline | [A specific set of selected controls from one or more catalogs for use in managing risks in an information system.](https://pages.nist.gov/OSCAL/learn/concepts/terminology/) Also known as a profile or an overlay. |
+| Control Implementation | Activities performed to enforce a control, and the description of them in a system security plan. |
+| Control Objective | Statement that describes the outcome or intent of a control in managing or mitigating risk. It clarifies intent, guides control selection and facilitates assessment. |
+| Control Owner | Role responsible for the management, implementation and monitoring of specific controls within an organization. |
+| Detective Control | A control that records that a qualifying event has taken place, usually so that someone can follow up and check that the event was valid. |
+| DORA | Digital Operational Resilience Act: Regulation (EU) 2022/2554. |
+| Environment | Set of conditions or circumstances under which a system operates. |
+| Evidence | A result about one subject, with labels that say where it comes from. See [Concepts](./concepts.md#evidence). |
+| Filter | A saved search over evidence labels, linked to the controls the matching evidence supports. See [Concepts](./concepts.md#filter). |
+| Finding | [A result of observations and risks in an assessment, which can include the status of a control objective.](https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/assessment-results/) |
+| FINOS | [Fintech Open Source Foundation.](https://www.finos.org/) |
+| GRC | Governance, Risk and Compliance. |
+| Implementation Owner | Role responsible for implementing a set of controls within a system or environment. |
+| KRI | Key Risk Indicator: a metric for measuring the probability that an event and its consequences will exceed the organization's risk appetite. |
+| Model | [An information structure supporting a specific operational purpose.](https://pages.nist.gov/OSCAL/learn/concepts/layer/) |
+| Observation | A specific detail or piece of data gathered during an assessment. |
+| OSCAL | Open Security Controls Assessment Language. |
+| Overlay | See 'Control Baseline'. |
+| Preventative Control | A control that prevents an event from taking place, for example a policy that prevents an S3 bucket being exposed to the internet. |
+| Privacy Control | [The administrative, technical and physical safeguards employed within an agency to ensure compliance with applicable privacy requirements and manage privacy risks.](https://csrc.nist.gov/glossary/term/privacy_control) |
+| Profile | See 'Control Baseline'. A profile selects the controls of one or more catalogs that apply to a system. See [Concepts](./concepts.md#catalog). |
+| Reactive Control | A control that takes corrective action when an event takes place, for example shutting down a VM that has an unencrypted disk attached. |
+| Requirement | See 'Control'. |
+| Risk | [An individual risk, including its weakness description, risk statement and other characteristics.](https://csrc.nist.gov/glossary/term/risk) |
+| Risk Level | Severity of a risk, for example Acceptable, Critical, or Low, Moderate or High impact. |
+| RPO | Recovery Point Objective. |
+| Security Control | [The safeguards or countermeasures prescribed for an information system or an organization to protect the confidentiality, integrity and availability of the system and its information.](https://csrc.nist.gov/glossary/term/security_control) |
+| SSP | See 'System Security Plan'. |
+| System | The thing you're answerable for, such as an application, a platform or a cloud account, made up of components. See [Concepts](./concepts.md#system). |
+| System Owner | Role responsible for operating a system and implementing its controls. |
+| System Security Plan | [A description of the control implementation of an information system.](https://pages.nist.gov/OSCAL/learn/concepts/layer/implementation/ssp/) |
+| Variance | A deviation or exception from established security standards, policies or procedures. |
 
 ## Internal Architecture Glossary
 
