@@ -89,7 +89,7 @@ A link shown as a clickable card: the "what to do next" at the end of a tutorial
   </Card>
   <Card title="Introduction" href="/introduction">
 
-    What CCF does, for readers new to the framework.
+    What the Continuous Compliance Framework (CCF) does, for readers new to it.
 
   </Card>
   <Card title="A card without a link holds text" icon="✍️">
@@ -108,7 +108,12 @@ A link shown as a clickable card: the "what to do next" at the end of a tutorial
   </Card>
   <Card title="Introduction" href="/introduction">
 
-    What CCF does, for readers new to the framework.
+    What the Continuous Compliance Framework (CCF) does, for readers new to it.
+
+  </Card>
+  <Card title="A card without a link holds text" icon="✍️">
+
+    Omit `href` for a card that only explains something.
 
   </Card>
 </CardGroup>
@@ -278,15 +283,29 @@ The components nest, so one step can hold everything the reader needs: a stage o
 <Steps>
   <Step title="Add the page to the sidebar">
 
-    Open `sidebars.js` and add the page's id to `tutorialsSidebar`:
+    Open `sidebars.js` and add the page's id to `tutorialsSidebar`, after the page that should precede it:
 
-    <CodeGroup items={[{title: 'sidebars.js', code: "...", language: 'js'}]} />
+    <CodeGroup
+      items={[
+        {
+          title: 'sidebars.js',
+          code: "tutorialsSidebar: [\n  'tutorials/index',\n  'tutorials/components',\n],",
+          language: 'js',
+        },
+      ]}
+    />
 
     <Warning title="Keep the ids exact">
 
-      A doc id is the file's path under `docs/` without the extension.
+      A doc id is the file's path under `docs/` without the extension. A wrong one fails the build.
 
     </Warning>
+
+    <Accordion title="How do I check the id?">
+
+      Run `yarn build`: it reports the ids it can't resolve.
+
+    </Accordion>
 
   </Step>
 </Steps>
