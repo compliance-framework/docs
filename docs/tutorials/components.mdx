@@ -193,6 +193,12 @@ Never link a versioned page to `current`, the unreleased docs: link between inst
 
 </Danger>
 
+<Callout type="info" title="The long form">
+
+Pass `type` yourself (`note`, `tip`, `info`, `warning` or `danger`) when you build the type in, for example from a page's own data.
+
+</Callout>
+
 ```mdx title="Usage"
 <Note>
 
@@ -200,15 +206,33 @@ Tutorials are unversioned: they document the current release.
 
 </Note>
 
+<Tip title="Open one by default">
+
+Pass `defaultOpen` to an Accordion when most readers need the detail inside it.
+
+</Tip>
+
+<Info>
+
+Every component on this page is registered on the MDX scope, so no tutorial page imports it.
+
+</Info>
+
 <Warning title="Relative links stay inside docs/">
 
-The build checks relative Markdown links and fails on a broken one.
+The build checks relative Markdown links and fails on a broken one. Link `STYLE.md` by name from a tutorial, not as a relative link that leaves `docs/`.
 
 </Warning>
 
-<Callout type="warning" title="Relative links stay inside docs/">
+<Danger>
 
-The long form, when you pass `type` yourself: `note`, `tip`, `info`, `warning` or `danger`.
+Never link a versioned page to `current`, the unreleased docs: link between instances to a released version line.
+
+</Danger>
+
+<Callout type="info" title="The long form">
+
+Pass `type` yourself (`note`, `tip`, `info`, `warning` or `danger`) when you build the type in, for example from a page's own data.
 
 </Callout>
 ```
