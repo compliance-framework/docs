@@ -30,6 +30,10 @@ const sidebars = {
     },
     'glossary',
   ],
+
+  // Curated by hand; the navbar "Tutorials" item links to this sidebar
+  // (see the docSidebar item in docusaurus.config.ts).
+  tutorialsSidebar: ['tutorials/index'],
 };
 
 module.exports = sidebars;

@@ -175,6 +175,9 @@ const config: Config = {
       items: [
         {type: 'doc', docId: 'introduction/index', label: 'CCF'},
         ...instanceNavbarItems,
+        // The general tutorials in docs/tutorials/, unversioned like the CCF pages.
+        // Stays highlighted on every page of its sidebar, i.e. every /tutorials page.
+        {type: 'docSidebar', sidebarId: 'tutorialsSidebar', label: 'Tutorials'},
         ...catalogNavbarItems,
         ...pluginNavbarItems,
         {
