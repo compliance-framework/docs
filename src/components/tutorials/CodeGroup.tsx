@@ -5,6 +5,7 @@
 import React, {type KeyboardEvent, type ReactNode, useId, useRef, useState} from 'react';
 import clsx from 'clsx';
 import CopyBlock from './CopyBlock';
+import {clampTab, initialTab, nextTab} from './codeGroupTabs.mjs';
 
 export type CodeGroupItem = {
   /** The tab's label: the file the snippet belongs to, such as `compliance.yaml`. */
@@ -27,22 +28,16 @@ export type CodeGroupProps = {
 export default function CodeGroup({items, defaultTab, className}: CodeGroupProps): ReactNode {
   const group = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [selected, setSelected] = useState(() => Math.max(0, items.findIndex((item) => item.title === defaultTab)));
+  const [selected, setSelected] = useState(() => initialTab(items, defaultTab));
   if (items.length === 0) {
     return null;
   }
-  // items can shrink below the selected index only in a hot reload, so clamp instead of crashing.
-  const active = Math.min(selected, items.length - 1);
+  const active = clampTab(selected, items.length);
 
-  // The tablist moves the selection with the arrow keys, and to either end with Home and End.
+  // The tablist moves the selection with the arrow keys, and to either end with Home and End; the
+  // decision of where a key goes lives in codeGroupTabs.mjs, where `yarn test` covers it.
   function onSelectKey(event: KeyboardEvent<HTMLDivElement>) {
-    const last = items.length - 1;
-    const moved =
-      event.key === 'ArrowRight' ? (active + 1) % items.length
-      : event.key === 'ArrowLeft' ? (active - 1 + items.length) % items.length
-      : event.key === 'Home' ? 0
-      : event.key === 'End' ? last
-      : undefined;
+    const moved = nextTab(active, event.key, items.length);
     if (moved === undefined) {
       return;
     }
@@ -56,7 +51,7 @@ export default function CodeGroup({items, defaultTab, className}: CodeGroupProps
       className={clsx(
         'ccf-code-group my-4 overflow-hidden rounded-[var(--ifm-code-border-radius)] border',
         'border-[var(--ifm-color-emphasis-300)] bg-[var(--ifm-background-surface-color)]',
-        'shadow-[var(--ifm-global-shadow-lw)]',
+        'shadow-[shadow:var(--ifm-global-shadow-lw)]',
         className,
       )}
     >
