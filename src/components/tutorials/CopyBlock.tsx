@@ -6,6 +6,7 @@
 import React, {type ReactNode} from 'react';
 import CodeBlock from '@theme/CodeBlock';
 import clsx from 'clsx';
+import {snippetText} from './snippetText.mjs';
 
 export type CopyBlockProps = {
   /** The snippet. Give this or a plain-text child, not both. */
@@ -19,20 +20,6 @@ export type CopyBlockProps = {
   /** Classes added to the block. */
   className?: string;
 };
-
-/**
- * The text the block shows and copies: the `code` prop, or the children joined. Blank lines at the
- * ends are dropped and the indentation every line shares is removed, so a snippet written as an
- * indented template literal in MDX reads the way the author wrote it and copies what the reader
- * sees.
- */
-export function snippetText(code: string | undefined, children: CopyBlockProps['children']): string {
-  const raw = code ?? (Array.isArray(children) ? children.join('') : (children ?? ''));
-  const lines = raw.replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
-  const indents = lines.filter((line) => line.trim() !== '').map((line) => /^[ \t]*/.exec(line)![0].length);
-  const indent = indents.length > 0 ? Math.min(...indents) : 0;
-  return lines.map((line) => line.slice(indent)).join('\n');
-}
 
 export default function CopyBlock({code, children, language, title, className}: CopyBlockProps): ReactNode {
   return (
