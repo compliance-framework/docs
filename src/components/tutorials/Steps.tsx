@@ -3,8 +3,9 @@
 // step is ordinary Markdown, so a step can hold commands (CopyBlock), prose or a callout.
 // src/theme/MDXComponents/index.tsx registers them as <Steps> and <Step>, so tutorial pages use
 // them without an import. The circle and the connecting line are drawn in src/css/custom.css.
-import React, {type ReactElement, type ReactNode, isValidElement} from 'react';
+import React, {type ReactElement, type ReactNode} from 'react';
 import clsx from 'clsx';
+import {titledChildren} from './titledChildren.mjs';
 
 export type StepProps = {
   /** The step's headline, in a few words: what the reader does in this step. */
@@ -33,16 +34,10 @@ export type StepsProps = {
   className?: string;
 };
 
-// The <Step> children, in order, ignoring the text and whitespace MDX leaves between them.
-function stepElements(children: ReactNode): ReactElement<StepProps>[] {
-  return React.Children.toArray(children).filter(
-    (child): child is ReactElement<StepProps> =>
-      isValidElement<StepProps>(child) && typeof child.props.title === 'string',
-  );
-}
-
 export default function Steps({children, className}: StepsProps): ReactNode {
-  const steps = stepElements(children);
+  // The <Step> children, in order; titledChildren skips the text and whitespace MDX leaves
+  // between them, and what no number could be given to.
+  const steps = titledChildren(children) as ReactElement<StepProps>[];
   if (steps.length === 0) {
     return null;
   }

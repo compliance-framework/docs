@@ -7,13 +7,13 @@ import React, {
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
-  isValidElement,
   useId,
   useRef,
   useState,
 } from 'react';
 import clsx from 'clsx';
 import {clampTab, initialTab, nextTab} from './codeGroupTabs.mjs';
+import {titledChildren} from './titledChildren.mjs';
 
 export type TabProps = {
   /** The tab's label, such as `Ubuntu` or `Install with yarn`. */
@@ -39,16 +39,10 @@ export type TabsProps = {
   className?: string;
 };
 
-// The <Tab> children, in order, ignoring the text and whitespace MDX leaves between them.
-function tabElements(children: ReactNode): ReactElement<TabProps>[] {
-  return React.Children.toArray(children).filter(
-    (child): child is ReactElement<TabProps> =>
-      isValidElement<TabProps>(child) && typeof child.props.title === 'string',
-  );
-}
-
 export default function Tabs({children, defaultTab, className}: TabsProps): ReactNode {
-  const tabs = tabElements(children);
+  // The <Tab> children, in order; titledChildren skips the text and whitespace MDX leaves
+  // between them, and what no tab row could label.
+  const tabs = titledChildren(children) as ReactElement<TabProps>[];
   const group = useId();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const [selected, setSelected] = useState(() =>
@@ -121,6 +115,7 @@ export default function Tabs({children, defaultTab, className}: TabsProps): Reac
         id={`${group}-panel`}
         role="tabpanel"
         aria-labelledby={`${group}-tab-${active}`}
+        tabIndex={0}
         className="ccf-tabs-panel px-4 pt-3"
       >
         {tabs[active].props.children}

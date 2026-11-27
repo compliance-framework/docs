@@ -6,6 +6,7 @@
 import React, {type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import clsx from 'clsx';
+import {isInternalHref} from './cardLink.mjs';
 
 export type CardProps = {
   /** The card's headline: where the link leads. */
@@ -19,11 +20,6 @@ export type CardProps = {
   /** Classes added to the card. */
   className?: string;
 };
-
-// A root-relative href names a page of this site; // would be a protocol-relative external one.
-function isInternalHref(href: string): boolean {
-  return href.startsWith('/') && !href.startsWith('//');
-}
 
 const cardBox = clsx(
   'ccf-card group block rounded-[var(--ifm-global-radius)] border p-4 no-underline',
