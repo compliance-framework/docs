@@ -80,6 +80,25 @@ Mark a setting added in this line with *(new in 0.21)* in its Purpose cell, and 
 ## Related
 ```
 
+### Tutorials page
+
+One hands-on walk through a task, in `docs/tutorials/` (the **Tutorials** tab). It starts from a clean state and ends with a result the reader can inspect in the UI. Use the tutorial components (showcased in `docs/tutorials/components.mdx`) instead of raw HTML: `Steps` for the stages, `CopyBlock` for commands and files, `CodeGroup` when a step has more than one file, `Tabs` for variants of one step, the callouts for caveats and `Accordion` for details only some readers need.
+
+```md
+# <Tutorial title: what the reader can do at the end>
+
+<What the tutorial ends with, in one or two sentences, and who it's for.>
+
+## Before you start
+<!-- The CCF version, the access the reader needs (roles, or a running system), and any earlier tutorial to do first. -->
+## <Step titles, in order>
+<!-- One `##` per stage: what the reader does, then what they should see. Name UI labels in bold. Give each command its own CopyBlock. -->
+## Check your work
+<!-- How the reader sees the result in the UI, and what it means. -->
+## Next steps
+<!-- CardGroup links to the tutorials that build on this one. -->
+```
+
 ### Upgrade guide
 
 For minor and major releases. One page per target line, for example "Upgrade to 0.21".

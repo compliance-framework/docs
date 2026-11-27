@@ -78,6 +78,12 @@ A plugin's policy bundles are the ones its `policies` list in `instances.yaml` n
 
 Release docs (notes, API reference, configuration reference, feature and upgrade guides, catalog rows and version cuts) are mostly written by the factory when a release ships. You can still open a pull request for any of them.
 
+## Writing tutorials
+
+Tutorials are hands-on walks through a task, in `docs/tutorials/`. They are general pages like the introduction and the glossary: not versioned, served under the **Tutorials** tab. The sidebar is `tutorialsSidebar` in `sidebars.js`: add your page's id there, or it builds but stays out of the navigation.
+
+Write a tutorial to the [tutorials page](STYLE.md#tutorials-page) skeleton in STYLE.md. Use the MDX components the tutorials are built from rather than raw HTML: they are showcased, rendering live with a usage snippet for each, in [docs/tutorials/components.mdx](docs/tutorials/components.mdx), and registered on every page's MDX scope, so no tutorial imports them.
+
 ## Pull requests
 
 1. Branch from `main` and keep each pull request to one change: one release, one fix or one new page.
