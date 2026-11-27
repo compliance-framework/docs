@@ -14,7 +14,7 @@
  */
 export function snippetText(code, children) {
   const raw = code ?? (Array.isArray(children) ? children.join('') : (children ?? ''));
-  const lines = raw.replace(/^\n+/, '').replace(/\s+$/, '').split('\n');
+  const lines = raw.replace(/^(\s*\n)+/, '').replace(/\s+$/, '').split('\n');
   const indents = lines.filter((line) => line.trim() !== '').map((line) => /^[ \t]*/.exec(line)[0].length);
   const indent = indents.length > 0 ? Math.min(...indents) : 0;
   return lines.map((line) => line.slice(indent)).join('\n');

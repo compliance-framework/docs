@@ -27,7 +27,7 @@ export type CodeGroupProps = {
 export default function CodeGroup({items, defaultTab, className}: CodeGroupProps): ReactNode {
   const group = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [selected, setSelected] = useState(Math.max(0, items.findIndex((item) => item.title === defaultTab)));
+  const [selected, setSelected] = useState(() => Math.max(0, items.findIndex((item) => item.title === defaultTab)));
   if (items.length === 0) {
     return null;
   }

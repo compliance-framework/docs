@@ -6,6 +6,7 @@ import {snippetText} from './snippetText.mjs';
 test('the code prop is the text, minus the blank lines at its ends', () => {
   assert.equal(snippetText('kubectl get pods\n', undefined), 'kubectl get pods');
   assert.equal(snippetText('\n\nccf evidence list\n\n', undefined), 'ccf evidence list');
+  assert.equal(snippetText(undefined, '  \n  plugins:\n    - name: k8s'), 'plugins:\n  - name: k8s');
 });
 
 test('children are joined, so a snippet can be split across expressions', () => {
