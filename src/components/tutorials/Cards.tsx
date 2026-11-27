@@ -58,7 +58,9 @@ export default function Card({title, href, icon, children, className}: CardProps
     <>
       {heading}
       {children ? (
-        <span className="mt-1 block text-[var(--ifm-font-color-secondary)]">{children}</span>
+        // A div, not a span: MDX hands the children as <p> elements, and a <p> may not sit
+        // inside a phrasing-only <span>.
+        <div className="mt-1 text-[var(--ifm-font-color-secondary)]">{children}</div>
       ) : null}
     </>
   );
