@@ -35,3 +35,20 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* The tutorial blocks (src/components/tutorials) read the site's Infima variables, so they follow
+   the light and dark themes on their own. These two rules reach into Docusaurus's code block. */
+
+/* A reader is meant to copy these snippets, so their buttons stay visible instead of fading in
+   only when the block is hovered. !important beats the theme's own hover opacity rules. */
+.ccf-copy-block button.clean-btn {
+  opacity: 1 !important;
+}
+
+/* Inside a code group, the group's own border, radius and shadow are the block's chrome, so the
+   file shown drops its own, along with the margin that separates two standalone blocks. */
+.ccf-code-group .ccf-copy-block {
+  border-radius: 0;
+  box-shadow: none;
+  margin-bottom: 0;
+}
