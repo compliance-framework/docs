@@ -1,0 +1,342 @@
+---
+sidebar_label: Components
+description: Every code block and MDX component a tutorial page can use, rendering live, each with the snippet that produced it.
+---
+
+# Tutorial components
+
+This page is for docs authors. Every block a tutorial can use is here, rendering live so you can click through it, each with the snippet that produced it. Copy a snippet into your page and change the words. Nothing needs an import: `src/theme/MDXComponents/index.tsx` registers all of them on the MDX scope of every page.
+
+Start a new tutorial from the [Tutorials overview](./index.md) and follow the **Tutorials page** skeleton in `STYLE.md`. The component sources are in `src/components/tutorials/`; each file's header comment says what the component is for, and the plain helpers next to them have `yarn test` cases.
+
+## CopyBlock
+
+One snippet the reader copies in one click: a command, a config file or file contents, with a title row and a copy button that stays visible. Pass the snippet as the `code` prop, or as text children (a template literal that spans several lines); shared leading indentation is dropped, so it copies exactly what the reader sees. `language` picks the highlighting (`sh`, `yaml`, `json`, ...) and `title` labels the block.
+
+<CopyBlock title="Build the site" language="sh">
+  {`yarn build`}
+</CopyBlock>
+
+```mdx title="Usage"
+<CopyBlock title="Build the site" language="sh">
+  {`yarn build`}
+</CopyBlock>
+```
+
+## CodeGroup
+
+The files of one step, shown as tabs so the page stays short. The reader opens the file they need, and each tab keeps its own copy button. `items` takes one `{title, code, language}` object per file; `defaultTab` names the tab to open first.
+
+<CodeGroup
+  defaultTab="Terminal"
+  items={[
+    {title: 'Terminal', code: 'yarn build', language: 'sh'},
+    {title: 'package.json', code: '"build": "docusaurus build",', language: 'json'},
+  ]}
+/>
+
+```mdx title="Usage"
+<CodeGroup
+  defaultTab="Terminal"
+  items={[
+    {title: 'Terminal', code: 'yarn build', language: 'sh'},
+    {title: 'package.json', code: '"build": "docusaurus build",', language: 'json'},
+  ]}
+/>
+```
+
+## Tabs and Tab
+
+The variants of one step, shown as tabs: install with yarn or with npm, run on Ubuntu or on RHEL. The reader opens the one that matches their setup. `defaultTab` opens one first; the tab row moves with the arrow keys and jumps to either end with **Home** and **End**. Each `<Tab>` carries a `title` and its content.
+
+<Tabs defaultTab="yarn">
+  <Tab title="yarn">
+
+    <CopyBlock language="sh" code={`yarn build`} />
+
+  </Tab>
+  <Tab title="npm">
+
+    <CopyBlock language="sh" code={`npm run build`} />
+
+  </Tab>
+</Tabs>
+
+```mdx title="Usage"
+<Tabs defaultTab="yarn">
+  <Tab title="yarn">
+
+    <CopyBlock language="sh" code={`yarn build`} />
+
+  </Tab>
+  <Tab title="npm">
+
+    <CopyBlock language="sh" code={`npm run build`} />
+
+  </Tab>
+</Tabs>
+```
+
+## Card and CardGroup
+
+A link shown as a clickable card: the "what to do next" at the end of a tutorial. An internal `href` starts with a single `/` and navigates in place; any other `href` opens in a new tab. `icon` is a short glyph before the title. `CardGroup` lays the cards in a grid; `cols` is how many columns a wide screen shows (1 to 4, default 2).
+
+<CardGroup cols={2}>
+  <Card title="Tutorials overview" icon="🧭" href="/tutorials">
+
+    The tutorial groups and where to start.
+
+  </Card>
+  <Card title="Introduction" href="/introduction">
+
+    What the Continuous Compliance Framework (CCF) does, for readers new to it.
+
+  </Card>
+  <Card title="A card without a link holds text" icon="✍️">
+
+    Omit `href` for a card that only explains something.
+
+  </Card>
+</CardGroup>
+
+```mdx title="Usage"
+<CardGroup cols={2}>
+  <Card title="Tutorials overview" icon="🧭" href="/tutorials">
+
+    The tutorial groups and where to start.
+
+  </Card>
+  <Card title="Introduction" href="/introduction">
+
+    What the Continuous Compliance Framework (CCF) does, for readers new to it.
+
+  </Card>
+  <Card title="A card without a link holds text" icon="✍️">
+
+    Omit `href` for a card that only explains something.
+
+  </Card>
+</CardGroup>
+```
+
+## Steps and Step
+
+A task broken into numbered stages, read top to bottom: the circle numbers each step and the line joins them, so the reader sees how far they have come. A step's content is ordinary Markdown, so it can hold commands, prose or a callout.
+
+<Steps>
+  <Step title="Build the site">
+
+    Run the build from the repo root:
+
+    <CopyBlock language="sh" code={`yarn build`} />
+
+  </Step>
+  <Step title="Preview it">
+
+    Serve the built site locally.
+
+    <CopyBlock language="sh" code={`yarn serve`} />
+
+  </Step>
+</Steps>
+
+```mdx title="Usage"
+<Steps>
+  <Step title="Build the site">
+
+    Run the build from the repo root:
+
+    <CopyBlock language="sh" code={`yarn build`} />
+
+  </Step>
+  <Step title="Preview it">
+
+    Serve the built site locally.
+
+    <CopyBlock language="sh" code={`yarn serve`} />
+
+  </Step>
+</Steps>
+```
+
+## Callout, Note, Tip, Info, Warning and Danger
+
+The notes a tutorial makes beside its steps. The type picks the accent color and the icon; the five types follow the admonitions Docusaurus itself ships. `title` adds a bold line before the text. `<Note>`, `<Tip>`, `<Info>`, `<Warning>` and `<Danger>` are `<Callout>` with the type already set.
+
+<Note>
+
+Tutorials are unversioned: they document the current release.
+
+</Note>
+
+<Tip title="Open one by default">
+
+Pass `defaultOpen` to an Accordion when most readers need the detail inside it.
+
+</Tip>
+
+<Info>
+
+Every component on this page is registered on the MDX scope, so no tutorial page imports it.
+
+</Info>
+
+<Warning title="Relative links stay inside docs/">
+
+The build checks relative Markdown links and fails on a broken one. Link `STYLE.md` by name from a tutorial, not as a relative link that leaves `docs/`.
+
+</Warning>
+
+<Danger>
+
+Never link a versioned page to `current`, the unreleased docs: link between instances to a released version line.
+
+</Danger>
+
+<Callout type="info" title="The long form">
+
+Pass `type` yourself (`note`, `tip`, `info`, `warning` or `danger`) when you build the type in, for example from a page's own data.
+
+</Callout>
+
+```mdx title="Usage"
+<Note>
+
+Tutorials are unversioned: they document the current release.
+
+</Note>
+
+<Tip title="Open one by default">
+
+Pass `defaultOpen` to an Accordion when most readers need the detail inside it.
+
+</Tip>
+
+<Info>
+
+Every component on this page is registered on the MDX scope, so no tutorial page imports it.
+
+</Info>
+
+<Warning title="Relative links stay inside docs/">
+
+The build checks relative Markdown links and fails on a broken one. Link `STYLE.md` by name from a tutorial, not as a relative link that leaves `docs/`.
+
+</Warning>
+
+<Danger>
+
+Never link a versioned page to `current`, the unreleased docs: link between instances to a released version line.
+
+</Danger>
+
+<Callout type="info" title="The long form">
+
+Pass `type` yourself (`note`, `tip`, `info`, `warning` or `danger`) when you build the type in, for example from a page's own data.
+
+</Callout>
+```
+
+## Accordion and AccordionGroup
+
+A question or a detail the reader opens only when they need it: what a flag does, what the output looks like. Each item is a native `details` element, so it works before the page's scripts load; `defaultOpen` starts one open. `AccordionGroup` joins several items into one bordered list.
+
+<AccordionGroup>
+  <Accordion title="Why a native details element?">
+
+    So the item opens and closes before the page's scripts load, with no state to manage.
+
+  </Accordion>
+  <Accordion title="Can an accordion hold more than text?" defaultOpen>
+
+    Yes: its content is ordinary Markdown, so it can hold a CopyBlock, a table or a callout.
+
+  </Accordion>
+</AccordionGroup>
+
+```mdx title="Usage"
+<AccordionGroup>
+  <Accordion title="Why a native details element?">
+
+    So the item opens and closes before the page's scripts load, with no state to manage.
+
+  </Accordion>
+  <Accordion title="Can an accordion hold more than text?" defaultOpen>
+
+    Yes: its content is ordinary Markdown, so it can hold a CopyBlock, a table or a callout.
+
+  </Accordion>
+</AccordionGroup>
+```
+
+## Combine them
+
+The components nest, so one step can hold everything the reader needs: a stage of a `Steps` list with its command in a `CodeGroup`, a caveat in a `Warning` and the longer explanation in an `Accordion`.
+
+<Steps>
+  <Step title="Add the page to the sidebar">
+
+    Open `sidebars.js` and add the page's id to `tutorialsSidebar`, after the page that should precede it:
+
+    <CodeGroup
+      items={[
+        {
+          title: 'sidebars.js',
+          code: "tutorialsSidebar: [\n  'tutorials/index',\n  'tutorials/components',\n],",
+          language: 'js',
+        },
+      ]}
+    />
+
+    <Warning title="Keep the ids exact">
+
+      A doc id is the file's path under `docs/` without the extension. A wrong one fails the build.
+
+    </Warning>
+
+    <Accordion title="How do I check the id?">
+
+      Run `yarn build`: it reports the ids it can't resolve.
+
+    </Accordion>
+
+  </Step>
+</Steps>
+
+```mdx title="Usage"
+<Steps>
+  <Step title="Add the page to the sidebar">
+
+    Open `sidebars.js` and add the page's id to `tutorialsSidebar`, after the page that should precede it:
+
+    <CodeGroup
+      items={[
+        {
+          title: 'sidebars.js',
+          code: "tutorialsSidebar: [\n  'tutorials/index',\n  'tutorials/components',\n],",
+          language: 'js',
+        },
+      ]}
+    />
+
+    <Warning title="Keep the ids exact">
+
+      A doc id is the file's path under `docs/` without the extension. A wrong one fails the build.
+
+    </Warning>
+
+    <Accordion title="How do I check the id?">
+
+      Run `yarn build`: it reports the ids it can't resolve.
+
+    </Accordion>
+
+  </Step>
+</Steps>
+```
+
+## Related
+
+- [Tutorials overview](./index.md): the tutorial groups and where a new tutorial belongs.
+- `STYLE.md`: voice, the **Tutorials page** skeleton, media and links.
+- `CONTRIBUTING.md`: where tutorials live and how a docs pull request is reviewed.
