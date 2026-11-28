@@ -37,7 +37,8 @@
 }
 
 /* The tutorial blocks (src/components/tutorials) read the site's Infima variables, so they follow
-   the light and dark themes on their own. These two rules reach into Docusaurus's code block. */
+   the light and dark themes on their own. The first two rules reach into Docusaurus's code block;
+   the rest style the callouts, the step list and the accordion. */
 
 /* A reader is meant to copy these snippets, so their buttons stay visible instead of fading in
    only when the block is hovered. !important beats the theme's own hover opacity rules. */
@@ -50,5 +51,118 @@
 .ccf-code-group .ccf-copy-block {
   border-radius: 0;
   box-shadow: none;
+  margin-bottom: 0;
+}
+
+/* Callouts: the five accents follow Infima's own semantic palette (the -darker tones the theme
+   uses for buttons and alerts), darkened further in light mode so the icon and the left border
+   read on a white page and lightened in dark mode to read on a black one. */
+.ccf-callout {
+  border-left-color: var(--ccf-callout-accent);
+  background-color: color-mix(in srgb, var(--ccf-callout-accent) 12%, var(--ifm-background-surface-color));
+}
+.ccf-callout--note {
+  --ccf-callout-accent: var(--ifm-color-secondary-darkest);
+}
+.ccf-callout--tip {
+  --ccf-callout-accent: var(--ifm-color-success-darker);
+}
+.ccf-callout--info {
+  --ccf-callout-accent: var(--ifm-color-info-darker);
+}
+.ccf-callout--warning {
+  --ccf-callout-accent: var(--ifm-color-warning-darker);
+}
+.ccf-callout--danger {
+  --ccf-callout-accent: var(--ifm-color-danger-darker);
+}
+[data-theme='dark'] .ccf-callout--note {
+  --ccf-callout-accent: var(--ifm-color-secondary);
+}
+[data-theme='dark'] .ccf-callout--tip {
+  --ccf-callout-accent: var(--ifm-color-success-light);
+}
+[data-theme='dark'] .ccf-callout--info {
+  --ccf-callout-accent: var(--ifm-color-info-light);
+}
+[data-theme='dark'] .ccf-callout--warning {
+  --ccf-callout-accent: var(--ifm-color-warning-light);
+}
+[data-theme='dark'] .ccf-callout--danger {
+  --ccf-callout-accent: var(--ifm-color-danger-light);
+}
+/* The writer's last paragraph should not leave the callout taller than its padding. */
+.ccf-callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Steps: the line that joins one step's number circle to the next. The circle is 1.75rem wide,
+   so the 2px line sits at its middle; the list item's bottom padding is the gap it crosses. */
+.ccf-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 2rem;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--ifm-color-emphasis-300);
+}
+.ccf-step-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Accordion: one bordered item on its own; inside a group, the group wears the border and the
+   items are separated by a line. */
+.ccf-accordion {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background-color: var(--ifm-background-surface-color);
+}
+.ccf-accordion-group {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background-color: var(--ifm-background-surface-color);
+  overflow: hidden;
+}
+.ccf-accordion-group > .ccf-accordion {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  background-color: transparent;
+}
+.ccf-accordion-group > .ccf-accordion:last-child {
+  border-bottom: 0;
+}
+/* The summary is the whole clickable row; list-style hides the disclosure marker in Firefox and
+   the ::-webkit-details-marker rule hides it in Safari. */
+.ccf-accordion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ccf-accordion-summary::-webkit-details-marker {
+  display: none;
+}
+.ccf-accordion-chevron {
+  transition: transform var(--ifm-transition-fast) var(--ifm-transition-timing-default);
+}
+.ccf-accordion[open] .ccf-accordion-chevron {
+  transform: rotate(90deg);
+}
+.ccf-accordion-body {
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+  padding: 0.75rem 1rem;
+}
+.ccf-accordion-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* A tab panel, like the step and the callout body, should not carry its last paragraph's margin. */
+.ccf-tabs-panel > :last-child {
   margin-bottom: 0;
 }

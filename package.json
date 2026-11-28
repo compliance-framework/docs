@@ -15,7 +15,7 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "test": "node --test scripts/openapi-display.test.mjs scripts/gen-config-ref.test.mjs scripts/sync-catalog.test.mjs src/components/tutorials/snippetText.test.mjs src/components/tutorials/codeGroupTabs.test.mjs",
+    "test": "node --test scripts/openapi-display.test.mjs scripts/gen-config-ref.test.mjs scripts/sync-catalog.test.mjs src/components/tutorials/snippetText.test.mjs src/components/tutorials/codeGroupTabs.test.mjs src/components/tutorials/titledChildren.test.mjs src/components/tutorials/cardLink.test.mjs",
     "spellcheck": "cspell \"**/*.md\" \"**/*.mdx\" --no-progress"
   },
   "dependencies": {
